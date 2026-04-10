@@ -8,11 +8,31 @@
 <meta name="apple-mobile-web-app-title" content="Strong Culture"/>
 <meta name="theme-color" content="#f97316"/>
 <meta name="mobile-web-app-capable" content="yes"/>
-<link rel="manifest" href="/manifest.json"/>
-<link rel="apple-touch-icon" href="/icon192.png"/>
-<link rel="apple-touch-icon" sizes="192x192" href="/icon192.png"/>
-<link rel="apple-touch-icon" sizes="512x512" href="/icon512.png"/>
-<link rel="icon" type="image/png" href="/icon192.png"/>
+<link rel="manifest" id="pwa-manifest"/>
+<script>
+// Inject manifest inline so no external file needed
+const manifestData = {
+  "name": "Strong Culture Coaching",
+  "short_name": "Strong Culture",
+  "description": "Your personal coaching app by Antz Brown",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#080808",
+  "theme_color": "#f97316",
+  "orientation": "portrait-primary",
+  "icons": [
+    {"src":"./icon192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
+    {"src":"./icon512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+  ]
+};
+const blob = new Blob([JSON.stringify(manifestData)], {type:'application/json'});
+document.getElementById('pwa-manifest').href = URL.createObjectURL(blob);
+</script>
+<link rel="apple-touch-icon" href="icon192.png"/>
+<link rel="apple-touch-icon" sizes="192x192" href="icon192.png"/>
+<link rel="apple-touch-icon" sizes="512x512" href="icon512.png"/>
+<link rel="icon" type="image/png" href="icon192.png"/>
 <title>Strong Culture Coaching</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
@@ -686,10 +706,10 @@ button{cursor:pointer;}
           <div class="mb-fat" id="mbf" style="width:27%;height:6px;"></div>
         </div>
         <div class="mb-grid">
-          <div class="mb-inp-card"><div class="mb-lbl" style="color:var(--green)">CALORIES</div><input type="number" class="big-inp" id="mb-cal" value="2200" oninput="mb_updateBar()"/><div style="font-size:10px;color:var(--sub);margin-top:3px;">kcal</div></div>
-          <div class="mb-inp-card"><div class="mb-lbl" style="color:var(--blue)">PROTEIN</div><input type="number" class="big-inp" id="mb-pro" value="180" style="color:var(--blue)" oninput="mb_updateBar()"/><div style="font-size:10px;color:var(--sub);margin-top:3px;">grams</div></div>
-          <div class="mb-inp-card"><div class="mb-lbl" style="color:var(--orange)">CARBS</div><input type="number" class="big-inp" id="mb-car" value="230" style="color:var(--orange)" oninput="mb_updateBar()"/><div style="font-size:10px;color:var(--sub);margin-top:3px;">grams</div></div>
-          <div class="mb-inp-card"><div class="mb-lbl" style="color:var(--red)">FAT</div><input type="number" class="big-inp" id="mb-fat" value="70" style="color:var(--red)" oninput="mb_updateBar()"/><div style="font-size:10px;color:var(--sub);margin-top:3px;">grams</div></div>
+          <div class="mb-inp-card"><div class="mb-lbl" style="color:var(--green)">CALORIES</div><input type="number" class="big-inp" id="mb-cal" value="2200" oninput="mb_onCalChange()"/><div style="font-size:10px;color:var(--sub);margin-top:3px;">kcal</div></div>
+          <div class="mb-inp-card"><div class="mb-lbl" style="color:var(--blue)">PROTEIN</div><input type="number" class="big-inp" id="mb-pro" value="180" style="color:var(--blue)" oninput="mb_onMacroChange('pro')"/><div style="font-size:10px;color:var(--sub);margin-top:3px;">grams</div></div>
+          <div class="mb-inp-card"><div class="mb-lbl" style="color:var(--orange)">CARBS</div><input type="number" class="big-inp" id="mb-car" value="230" style="color:var(--orange)" oninput="mb_onMacroChange('car')"/><div style="font-size:10px;color:var(--sub);margin-top:3px;">grams</div></div>
+          <div class="mb-inp-card"><div class="mb-lbl" style="color:var(--red)">FAT</div><input type="number" class="big-inp" id="mb-fat" value="70" style="color:var(--red)" oninput="mb_onMacroChange('fat')"/><div style="font-size:10px;color:var(--sub);margin-top:3px;">grams</div></div>
           <div class="mb-inp-card"><div class="mb-lbl" style="color:var(--blue)">WATER</div><input type="number" class="big-inp" id="mb-wat" value="3" step=".5" style="color:var(--blue)"/><div style="font-size:10px;color:var(--sub);margin-top:3px;">litres</div></div>
           <div class="mb-inp-card"><div class="mb-lbl" style="color:var(--sub)">MEALS</div><input type="number" class="big-inp" id="mb-meals" value="4" style="color:var(--sub)"/><div style="font-size:10px;color:var(--sub);margin-top:3px;">per day</div></div>
         </div>
@@ -1768,44 +1788,83 @@ function wb_addToDay0(name) {
 function mb_loadClient(id) {
   if (!id) return;
   const c = CLIENTS.find(x => x.id == id);
-  document.getElementById('mb-bw').value = c.cw;
-  document.getElementById('mb-cal').value = c.macros.cal;
-  document.getElementById('mb-pro').value = c.macros.pro;
-  document.getElementById('mb-car').value = c.macros.car;
-  document.getElementById('mb-fat').value = c.macros.fat;
-  document.getElementById('mb-wat').value = c.macros.wat;
+  document.getElementById('mb-bw').value    = c.cw;
+  document.getElementById('mb-cal').value   = c.macros.cal;
+  document.getElementById('mb-pro').value   = c.macros.pro;
+  document.getElementById('mb-car').value   = c.macros.car;
+  document.getElementById('mb-fat').value   = c.macros.fat;
+  document.getElementById('mb-wat').value   = c.macros.wat;
   document.getElementById('mb-meals').value = c.macros.meals;
   mb_updateBar();
 }
+
+// Called when CALORIES changes — keeps protein & fat, recalculates carbs
+function mb_onCalChange() {
+  const cal = parseInt(document.getElementById('mb-cal').value) || 0;
+  const pro = parseInt(document.getElementById('mb-pro').value) || 0;
+  const fat = parseInt(document.getElementById('mb-fat').value) || 0;
+  // Carbs absorb the difference
+  const car = Math.max(Math.round((cal - pro * 4 - fat * 9) / 4), 0);
+  document.getElementById('mb-car').value = car;
+  mb_updateBar();
+}
+
+// Called when PROTEIN, CARBS, or FAT changes — recalculates calories from macros
+function mb_onMacroChange(changed) {
+  const pro = parseInt(document.getElementById('mb-pro').value) || 0;
+  const car = parseInt(document.getElementById('mb-car').value) || 0;
+  const fat = parseInt(document.getElementById('mb-fat').value) || 0;
+  // Calories always = exact math from the three macros
+  const cal = (pro * 4) + (car * 4) + (fat * 9);
+  document.getElementById('mb-cal').value = cal;
+  mb_updateBar();
+}
+
+// TDEE-based full recalc from bodyweight + goal
 function mb_calc() {
-  const bw  = parseFloat(document.getElementById('mb-bw').value) || 80;
-  const act = parseFloat(document.getElementById('mb-activity').value) || 1.55;
+  const bw   = parseFloat(document.getElementById('mb-bw').value) || 80;
+  const act  = parseFloat(document.getElementById('mb-activity').value) || 1.55;
   const goal = document.getElementById('mb-goal').value;
   const tdee = Math.round(bw * 22 * act);
-  let cal, pro, car, fat;
-  if (goal==='fat-loss')   { cal=tdee-400; pro=Math.round(bw*2.2); fat=Math.round(bw*0.8); }
-  else if (goal==='muscle'){ cal=tdee+200; pro=Math.round(bw*2.0); fat=Math.round(bw*1.0); }
-  else if (goal==='bulk')  { cal=tdee+400; pro=Math.round(bw*2.0); fat=Math.round(bw*1.1); }
-  else if (goal==='cut')   { cal=tdee-600; pro=Math.round(bw*2.4); fat=Math.round(bw*0.7); }
-  else                     { cal=tdee;     pro=Math.round(bw*2.0); fat=Math.round(bw*0.9); }
-  car = Math.max(Math.round((cal - pro*4 - fat*9) / 4), 50);
-  document.getElementById('mb-cal').value = Math.max(cal, 1200);
+  let cal, pro, fat, car;
+  if      (goal === 'fat-loss')  { cal = tdee - 400; pro = Math.round(bw * 2.2); fat = Math.round(bw * 0.8); }
+  else if (goal === 'muscle')    { cal = tdee + 200; pro = Math.round(bw * 2.0); fat = Math.round(bw * 1.0); }
+  else if (goal === 'bulk')      { cal = tdee + 400; pro = Math.round(bw * 2.0); fat = Math.round(bw * 1.1); }
+  else if (goal === 'cut')       { cal = tdee - 600; pro = Math.round(bw * 2.4); fat = Math.round(bw * 0.7); }
+  else                           { cal = tdee;       pro = Math.round(bw * 2.0); fat = Math.round(bw * 0.9); }
+  cal = Math.max(cal, 1200);
+  car = Math.max(Math.round((cal - pro * 4 - fat * 9) / 4), 50);
+  // Recalc cal to be exact after rounding
+  cal = (pro * 4) + (car * 4) + (fat * 9);
+  document.getElementById('mb-cal').value = cal;
   document.getElementById('mb-pro').value = pro;
   document.getElementById('mb-car').value = car;
   document.getElementById('mb-fat').value = fat;
   mb_updateBar();
 }
+
 function mb_preset(p) { document.getElementById('mb-goal').value = p; mb_calc(); }
+
 function mb_updateBar() {
-  const p = parseInt(document.getElementById('mb-pro').value) || 0;
-  const c = parseInt(document.getElementById('mb-car').value) || 0;
-  const f = parseInt(document.getElementById('mb-fat').value) || 0;
-  const total = p*4 + c*4 + f*9 || 1;
-  document.getElementById('mbp').style.width = (p*4/total*100) + '%';
-  document.getElementById('mbc').style.width = (c*4/total*100) + '%';
-  document.getElementById('mbf').style.width = (f*9/total*100) + '%';
-  const cal = parseInt(document.getElementById('mb-cal').value) || 0;
-  document.getElementById('mb-summary').innerHTML = `<strong>${cal} kcal</strong> — <strong style="color:var(--blue)">${p}g P</strong> (${Math.round(p*4/cal*100)}%) · <strong style="color:var(--orange)">${c}g C</strong> (${Math.round(c*4/cal*100)}%) · <strong style="color:var(--red)">${f}g F</strong> (${Math.round(f*9/cal*100)}%)`;
+  const p   = parseInt(document.getElementById('mb-pro').value) || 0;
+  const c   = parseInt(document.getElementById('mb-car').value) || 0;
+  const f   = parseInt(document.getElementById('mb-fat').value) || 0;
+  const cal = parseInt(document.getElementById('mb-cal').value) || 1;
+  const total = (p * 4) + (c * 4) + (f * 9) || 1;
+  document.getElementById('mbp').style.width = (p * 4 / total * 100) + '%';
+  document.getElementById('mbc').style.width = (c * 4 / total * 100) + '%';
+  document.getElementById('mbf').style.width = (f * 9 / total * 100) + '%';
+  const pPct = cal > 0 ? Math.round(p * 4 / cal * 100) : 0;
+  const cPct = cal > 0 ? Math.round(c * 4 / cal * 100) : 0;
+  const fPct = cal > 0 ? Math.round(f * 9 / cal * 100) : 0;
+  // Show calorie math to confirm it adds up
+  const calcCal = (p * 4) + (c * 4) + (f * 9);
+  const match = calcCal === cal;
+  document.getElementById('mb-summary').innerHTML =
+    `<strong style="color:${match?'var(--green)':'var(--red)'}">${cal} kcal</strong> ${match ? '✓ balanced' : `⚠ macros = ${calcCal} kcal`}
+    <br/><strong style="color:var(--blue)">${p}g protein</strong> (${pPct}%) &nbsp;·&nbsp;
+    <strong style="color:var(--orange)">${c}g carbs</strong> (${cPct}%) &nbsp;·&nbsp;
+    <strong style="color:var(--red)">${f}g fat</strong> (${fPct}%)`;
 }
 function mb_assign() {
   const id = document.getElementById('mb-client').value;
@@ -1927,7 +1986,7 @@ function initClient() {
   // Service Worker registration
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch(() => {});
+    navigator.serviceWorker.register("sw.js").catch(() => {});
   });
 }
 
