@@ -638,6 +638,25 @@ button{cursor:pointer;}
 <div class="cp" id="cp-workout-builder">
   <div class="pt">WORKOUT BUILDER</div><div class="ol"></div>
   <p style="font-size:13px;color:var(--sub);margin-bottom:16px;">Build this week's program. Clients only ever see the current week — updates after each Sunday check-in.</p>
+
+  <!-- PRE-BUILT TEMPLATES -->
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-lbl">⚡ LOAD A PRE-BUILT PROGRAM</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+      <button class="btn btn-g btn-sm" onclick="wb_loadTemplate('fullbody1')">Full Body 1×/wk</button>
+      <button class="btn btn-g btn-sm" onclick="wb_loadTemplate('fullbody2')">Full Body 2×/wk</button>
+      <button class="btn btn-g btn-sm" onclick="wb_loadTemplate('upperlower3')">Upper/Lower 3×/wk</button>
+      <button class="btn btn-g btn-sm" onclick="wb_loadTemplate('ppl4')">Push/Pull/Legs 4×/wk</button>
+      <button class="btn btn-g btn-sm" onclick="wb_loadTemplate('ppl5')">PPL 5×/wk</button>
+      <button class="btn btn-g btn-sm" onclick="wb_loadTemplate('strength3')">Strength Focus 3×/wk</button>
+      <button class="btn btn-g btn-sm" onclick="wb_loadTemplate('fatloss3')">Fat Loss 3×/wk</button>
+      <button class="btn btn-g btn-sm" onclick="wb_loadTemplate('hypertrophy4')">Hypertrophy 4×/wk</button>
+      <button class="btn btn-g btn-sm" onclick="wb_loadTemplate('athletic5')">Athletic Performance 5×/wk</button>
+    </div>
+    <div id="tmpl-preview" style="font-size:12px;color:var(--sub);font-style:italic;"></div>
+  </div>
+
+  <!-- PROGRAM DETAILS -->
   <div class="card" style="margin-bottom:14px;">
     <div class="card-lbl">PROGRAM DETAILS</div>
     <div class="form-row">
@@ -645,24 +664,39 @@ button{cursor:pointer;}
       <div class="field" style="margin:0"><label>Assign to Client</label><select id="prog-client"><option value="">Select client...</option></select></div>
       <div class="field" style="margin:0"><label>Sessions This Week</label>
         <select id="prog-days" onchange="wb_setDays(parseInt(this.value))">
-          <option value="3">3 days/week</option><option value="4" selected>4 days/week</option>
-          <option value="5">5 days/week</option><option value="6">6 days/week</option>
+          <option value="1">1 day/week</option>
+          <option value="2">2 days/week</option>
+          <option value="3">3 days/week</option>
+          <option value="4" selected>4 days/week</option>
+          <option value="5">5 days/week</option>
+          <option value="6">6 days/week</option>
+          <option value="7">7 days/week</option>
         </select>
       </div>
     </div>
   </div>
+
   <div class="wb-grid">
     <div>
       <div id="wb-days"></div>
-      <div style="display:flex;gap:8px;margin-top:8px;">
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
         <button class="btn btn-g" onclick="wb_clear()">CLEAR</button>
+        <button class="btn btn-g" onclick="wb_addDay()">+ ADD DAY</button>
         <button class="btn btn-o" onclick="wb_saveAssign()">SAVE & PUSH TO CLIENT APP ✓</button>
       </div>
     </div>
-    <div class="ex-lib">
-      <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;color:var(--sub);">📚 EXERCISE LIBRARY</div>
-      <input class="ex-lib-search" placeholder="Search exercises..." oninput="filterLib(this.value)" id="lib-search"/>
-      <div class="ex-lib-list" id="ex-lib-list"></div>
+    <div>
+      <div class="ex-lib">
+        <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;color:var(--sub);">📚 EXERCISE LIBRARY</div>
+        <input class="ex-lib-search" placeholder="Search or type new exercise..." oninput="filterLib(this.value)" id="lib-search"/>
+        <div id="ex-lib-list" class="ex-lib-list"></div>
+        <div style="border-top:1px solid var(--border);margin-top:8px;padding-top:8px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--orange);margin-bottom:6px;">➕ ADD CUSTOM EXERCISE</div>
+          <input id="custom-ex-name" class="ex-lib-search" placeholder="Exercise name..." style="margin-bottom:5px;"/>
+          <textarea id="custom-ex-notes" style="width:100%;background:var(--black);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:8px;font-size:12px;outline:none;resize:none;min-height:60px;margin-bottom:5px;" placeholder="Form notes — how to perform it correctly..."></textarea>
+          <button class="btn btn-o btn-sm" style="width:100%;" onclick="wb_addCustomEx()">ADD TO LIBRARY ✓</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1699,89 +1733,369 @@ function populateClientSelects() {
   EX_LIB.forEach(e => { const o = document.createElement('option'); o.value = e; dl.appendChild(o); });
 }
 
+// ── WORKOUT BUILDER ──
+
+// Custom exercises added by coach (persists in session)
+let CUSTOM_EX = [];
+
+// Pre-built program templates
+const WB_TEMPLATES = {
+  fullbody1: {
+    name:'Full Body — 1 Session/Week', days:[
+      {day:'SAT',focus:'FULL BODY',exercises:[
+        {n:'Barbell Squat',s:'3',r:'8-10',t:'3-0-1'},{n:'Barbell Bench Press',s:'3',r:'8-10',t:'3-0-1'},
+        {n:'Barbell Bent Over Rows',s:'3',r:'10',t:'2-1-1'},{n:'Romanian Deadlift',s:'3',r:'10',t:'3-1-1'},
+        {n:'Overhead Press',s:'2',r:'10-12',t:'2-0-1'},{n:'Barbell Bicep Curl',s:'2',r:'12',t:'2-0-1'},
+      ]},
+    ],
+    desc:'One big full body session per week. Perfect for extremely busy clients. Hit all major patterns in one go.'
+  },
+  fullbody2: {
+    name:'Full Body — 2 Sessions/Week', days:[
+      {day:'MON',focus:'FULL BODY A',exercises:[
+        {n:'Barbell Squat',s:'3',r:'6-8',t:'3-0-1'},{n:'Barbell Bench Press',s:'3',r:'8-10',t:'3-0-1'},
+        {n:'Barbell Bent Over Rows',s:'3',r:'8-10',t:'2-1-1'},{n:'Overhead Press',s:'3',r:'10',t:'2-0-1'},
+        {n:'Romanian Deadlift',s:'2',r:'10',t:'3-1-1'},{n:'Barbell Bicep Curl',s:'2',r:'12',t:'2-0-1'},
+      ]},
+      {day:'THU',focus:'FULL BODY B',exercises:[
+        {n:'Romanian Deadlift',s:'3',r:'8',t:'3-1-1'},{n:'Incline DB Press',s:'3',r:'10-12',t:'3-0-1'},
+        {n:'Pull Ups',s:'3',r:'8',t:'2-0-2'},{n:'Cable Lateral Raise',s:'3',r:'15',t:'2-0-2'},
+        {n:'Barbell Squat',s:'2',r:'10',t:'3-0-1'},{n:'Tricep Dips Machine',s:'2',r:'12',t:'3-0-1'},
+      ]},
+    ],
+    desc:'Two balanced full body sessions with different exercise selection. Great for beginners or time-limited clients.'
+  },
+  upperlower3: {
+    name:'Upper / Lower — 3 Sessions/Week', days:[
+      {day:'MON',focus:'UPPER',exercises:[
+        {n:'Barbell Bench Press',s:'4',r:'8-10',t:'3-0-1'},{n:'Barbell Bent Over Rows',s:'4',r:'8-10',t:'2-1-1'},
+        {n:'Overhead Press',s:'3',r:'10',t:'2-0-1'},{n:'Lat Pulldown Machine',s:'3',r:'10',t:'2-1-2'},
+        {n:'Tricep Dips Machine',s:'2',r:'12',t:'3-0-1'},{n:'Barbell Bicep Curl',s:'2',r:'12',t:'2-0-1'},
+      ]},
+      {day:'WED',focus:'LOWER',exercises:[
+        {n:'Barbell Squat',s:'4',r:'6-8',t:'3-0-1'},{n:'Romanian Deadlift',s:'3',r:'10',t:'3-1-1'},
+        {n:'Leg Press High Foot',s:'3',r:'12',t:'3-0-1'},{n:'Seated Leg Curl',s:'3',r:'12',t:'2-1-3'},
+        {n:'Hip Thrust Barbell',s:'3',r:'12',t:'2-2-1'},{n:'Standing Calf Raise',s:'3',r:'15',t:'2-2-3'},
+      ]},
+      {day:'FRI',focus:'UPPER',exercises:[
+        {n:'Incline DB Press',s:'3',r:'10-12',t:'3-0-1'},{n:'Pull Ups',s:'3',r:'8',t:'2-0-2'},
+        {n:'Cable Lateral Raise',s:'3',r:'15',t:'2-0-2'},{n:'Seated Cable Rows',s:'3',r:'12',t:'2-2-1'},
+        {n:'Face Pulls',s:'3',r:'15',t:'2-2-2'},{n:'Hammer Curl',s:'2',r:'12',t:'2-0-1'},
+      ]},
+    ],
+    desc:'3 days — alternate upper and lower. Great balance of volume and recovery. Suits most intermediate clients.'
+  },
+  ppl4: {
+    name:'Push / Pull / Legs — 4 Sessions/Week', days:[
+      {day:'MON',focus:'PUSH',exercises:[
+        {n:'Barbell Bench Press',s:'4',r:'8-10',t:'3-0-1'},{n:'Incline DB Press',s:'3',r:'10-12',t:'3-0-1'},
+        {n:'Overhead Press',s:'3',r:'10',t:'2-0-1'},{n:'Cable Lateral Raise',s:'3',r:'15',t:'2-0-2'},
+        {n:'Tricep Dips Machine',s:'3',r:'12',t:'3-0-1'},
+      ]},
+      {day:'TUE',focus:'PULL',exercises:[
+        {n:'Barbell Deadlift',s:'3',r:'5',t:'1-0-1'},{n:'Barbell Bent Over Rows',s:'4',r:'8',t:'2-1-1'},
+        {n:'Lat Pulldown Machine',s:'3',r:'10',t:'2-1-2'},{n:'Seated Cable Rows',s:'3',r:'12',t:'2-2-1'},
+        {n:'Barbell Bicep Curl',s:'3',r:'12',t:'2-0-1'},
+      ]},
+      {day:'THU',focus:'LEGS',exercises:[
+        {n:'Barbell Squat',s:'4',r:'8',t:'3-0-1'},{n:'Romanian Deadlift',s:'3',r:'10',t:'3-1-1'},
+        {n:'Leg Press High Foot',s:'3',r:'12',t:'3-0-1'},{n:'Seated Leg Curl',s:'3',r:'12',t:'2-1-3'},
+        {n:'Hip Thrust Barbell',s:'3',r:'12',t:'2-2-1'},{n:'Standing Calf Raise',s:'4',r:'15',t:'2-2-3'},
+      ]},
+      {day:'SAT',focus:'UPPER',exercises:[
+        {n:'Pull Ups',s:'3',r:'8',t:'2-0-2'},{n:'Overhead Press',s:'3',r:'10',t:'2-0-1'},
+        {n:'Seated Cable Rows',s:'3',r:'12',t:'2-2-1'},{n:'Cable Lateral Raise',s:'3',r:'15',t:'2-0-2'},
+        {n:'Face Pulls',s:'3',r:'15',t:'2-2-2'},{n:'Hammer Curl',s:'2',r:'12',t:'2-0-1'},
+      ]},
+    ],
+    desc:'4 sessions — Push, Pull, Legs + upper accessory day. Excellent for building size and strength simultaneously.'
+  },
+  ppl5: {
+    name:'Push / Pull / Legs — 5 Sessions/Week', days:[
+      {day:'MON',focus:'PUSH',exercises:[
+        {n:'Barbell Bench Press',s:'4',r:'6-8',t:'3-0-1'},{n:'Incline DB Press',s:'3',r:'10-12',t:'3-0-1'},
+        {n:'Overhead Press',s:'4',r:'8-10',t:'2-0-1'},{n:'Cable Lateral Raise',s:'4',r:'15',t:'2-0-2'},
+        {n:'Tricep Dips Machine',s:'3',r:'12',t:'3-0-1'},
+      ]},
+      {day:'TUE',focus:'PULL',exercises:[
+        {n:'Barbell Deadlift',s:'4',r:'5',t:'1-0-1'},{n:'Barbell Bent Over Rows',s:'4',r:'8',t:'2-1-1'},
+        {n:'Pull Ups',s:'3',r:'8',t:'2-0-2'},{n:'Seated Cable Rows',s:'3',r:'12',t:'2-2-1'},
+        {n:'Barbell Bicep Curl',s:'3',r:'12',t:'2-0-1'},{n:'Hammer Curl',s:'2',r:'12',t:'2-0-1'},
+      ]},
+      {day:'WED',focus:'LEGS',exercises:[
+        {n:'Barbell Squat',s:'4',r:'6-8',t:'3-0-1'},{n:'Romanian Deadlift',s:'3',r:'10',t:'3-1-1'},
+        {n:'Leg Press High Foot',s:'3',r:'12',t:'3-0-1'},{n:'Seated Leg Curl',s:'4',r:'12',t:'2-1-3'},
+        {n:'Hip Thrust Barbell',s:'3',r:'12',t:'2-2-1'},{n:'Standing Calf Raise',s:'4',r:'15',t:'2-2-3'},
+      ]},
+      {day:'FRI',focus:'PUSH',exercises:[
+        {n:'Incline DB Press',s:'4',r:'8-10',t:'3-0-1'},{n:'Chest Fly Machine',s:'3',r:'12-15',t:'2-1-2'},
+        {n:'Overhead Press',s:'3',r:'10-12',t:'2-0-1'},{n:'Cable Lateral Raise',s:'4',r:'15',t:'2-0-2'},
+        {n:'Tricep Rope Pushdown',s:'3',r:'12',t:'2-0-1'},
+      ]},
+      {day:'SAT',focus:'PULL',exercises:[
+        {n:'Pull Ups',s:'4',r:'8',t:'2-0-2'},{n:'Lat Pulldown Machine',s:'3',r:'10',t:'2-1-2'},
+        {n:'Seated Cable Rows',s:'4',r:'12',t:'2-2-1'},{n:'Face Pulls',s:'3',r:'15',t:'2-2-2'},
+        {n:'Barbell Bicep Curl',s:'3',r:'10',t:'2-0-1'},
+      ]},
+    ],
+    desc:'5 sessions — full PPL twice weekly. High volume for advanced clients chasing maximum muscle growth.'
+  },
+  strength3: {
+    name:'Strength Focus — 3 Sessions/Week', days:[
+      {day:'MON',focus:'LOWER STRENGTH',exercises:[
+        {n:'Barbell Squat',s:'5',r:'5',t:'3-0-1'},{n:'Romanian Deadlift',s:'3',r:'6-8',t:'3-1-1'},
+        {n:'Leg Press High Foot',s:'3',r:'8',t:'3-0-1'},{n:'Standing Calf Raise',s:'3',r:'12',t:'2-2-3'},
+      ]},
+      {day:'WED',focus:'UPPER STRENGTH',exercises:[
+        {n:'Barbell Bench Press',s:'5',r:'5',t:'3-0-1'},{n:'Barbell Bent Over Rows',s:'5',r:'5',t:'2-1-1'},
+        {n:'Overhead Press',s:'3',r:'6-8',t:'2-0-1'},{n:'Pull Ups',s:'3',r:'6',t:'2-0-2'},
+        {n:'Tricep Dips Machine',s:'2',r:'10',t:'3-0-1'},
+      ]},
+      {day:'FRI',focus:'DEADLIFT + ACCESSORIES',exercises:[
+        {n:'Barbell Deadlift',s:'5',r:'3-5',t:'1-0-1'},{n:'Barbell Squat',s:'3',r:'6',t:'3-0-1'},
+        {n:'Lat Pulldown Machine',s:'3',r:'8',t:'2-1-2'},{n:'Seated Cable Rows',s:'3',r:'10',t:'2-2-1'},
+        {n:'Barbell Bicep Curl',s:'2',r:'10',t:'2-0-1'},
+      ]},
+    ],
+    desc:'3 days focused on the big lifts. Low rep, high intensity. Best for clients prioritising strength over size.'
+  },
+  fatloss3: {
+    name:'Fat Loss Circuit — 3 Sessions/Week', days:[
+      {day:'MON',focus:'FAT LOSS A',exercises:[
+        {n:'Barbell Squat',s:'4',r:'12-15',t:'2-0-1'},{n:'Barbell Bench Press',s:'4',r:'12-15',t:'2-0-1'},
+        {n:'Barbell Bent Over Rows',s:'4',r:'12-15',t:'2-0-1'},{n:'Overhead Press',s:'3',r:'15',t:'2-0-1'},
+        {n:'Burpees',s:'3',r:'10',t:'0-0-1'},{n:'Mountain Climbers',s:'3',r:'20',t:'0-0-1'},
+      ]},
+      {day:'WED',focus:'FAT LOSS B',exercises:[
+        {n:'Romanian Deadlift',s:'4',r:'12-15',t:'2-1-1'},{n:'Hip Thrust Barbell',s:'4',r:'15',t:'2-2-1'},
+        {n:'Leg Press High Foot',s:'3',r:'15',t:'2-0-1'},{n:'Pull Ups',s:'3',r:'max',t:'2-0-2'},
+        {n:'Star Jumps',s:'3',r:'20',t:'0-0-1'},{n:'Stairmaster',s:'1',r:'15min',t:''},
+      ]},
+      {day:'FRI',focus:'FAT LOSS C',exercises:[
+        {n:'Barbell Squat',s:'3',r:'15',t:'2-0-1'},{n:'Incline DB Press',s:'3',r:'15',t:'2-0-1'},
+        {n:'Seated Cable Rows',s:'3',r:'15',t:'2-1-1'},{n:'Cable Lateral Raise',s:'3',r:'15',t:'2-0-2'},
+        {n:'Kettlebell Swings',s:'4',r:'15',t:'0-0-1'},{n:'Treadmill Jog',s:'1',r:'20min',t:''},
+      ]},
+    ],
+    desc:'3 days of higher rep, circuit-style training with cardio finishers. Designed to maximise calorie burn.'
+  },
+  hypertrophy4: {
+    name:'Hypertrophy — 4 Sessions/Week', days:[
+      {day:'MON',focus:'CHEST + TRICEPS',exercises:[
+        {n:'Barbell Bench Press',s:'4',r:'8-10',t:'3-0-1'},{n:'Incline DB Press',s:'3',r:'10-12',t:'3-0-1'},
+        {n:'Chest Fly Machine',s:'3',r:'12-15',t:'2-1-2'},{n:'Tricep Dips Machine',s:'3',r:'10-12',t:'3-0-1'},
+        {n:'Tricep Rope Pushdown',s:'3',r:'12-15',t:'2-0-1'},
+      ]},
+      {day:'TUE',focus:'BACK + BICEPS',exercises:[
+        {n:'Barbell Bent Over Rows',s:'4',r:'8-10',t:'2-1-1'},{n:'Pull Ups',s:'3',r:'8',t:'2-0-2'},
+        {n:'Lat Pulldown Machine',s:'3',r:'10-12',t:'2-1-2'},{n:'Seated Cable Rows',s:'3',r:'12',t:'2-2-1'},
+        {n:'Barbell Bicep Curl',s:'3',r:'10-12',t:'2-0-1'},{n:'Hammer Curl',s:'2',r:'12',t:'2-0-1'},
+      ]},
+      {day:'THU',focus:'LEGS + GLUTES',exercises:[
+        {n:'Barbell Squat',s:'4',r:'8-10',t:'3-0-1'},{n:'Romanian Deadlift',s:'3',r:'10-12',t:'3-1-1'},
+        {n:'Hip Thrust Barbell',s:'4',r:'12-15',t:'2-2-1'},{n:'Seated Leg Curl',s:'3',r:'12-15',t:'2-1-3'},
+        {n:'Leg Press High Foot',s:'3',r:'12',t:'3-0-1'},{n:'Standing Calf Raise',s:'4',r:'15',t:'2-2-3'},
+      ]},
+      {day:'SAT',focus:'SHOULDERS + ARMS',exercises:[
+        {n:'Overhead Press',s:'4',r:'8-10',t:'2-0-1'},{n:'Cable Lateral Raise',s:'4',r:'15',t:'2-0-2'},
+        {n:'Face Pulls',s:'3',r:'15',t:'2-2-2'},{n:'Barbell Bicep Curl',s:'3',r:'10',t:'2-0-1'},
+        {n:'Tricep Rope Pushdown',s:'3',r:'12',t:'2-0-1'},{n:'Hammer Curl',s:'2',r:'12',t:'2-0-1'},
+      ]},
+    ],
+    desc:'4 days of targeted hypertrophy — chest/tri, back/bi, legs/glutes, shoulders/arms. Maximise size gains.'
+  },
+  athletic5: {
+    name:'Athletic Performance — 5 Sessions/Week', days:[
+      {day:'MON',focus:'STRENGTH LOWER',exercises:[
+        {n:'Barbell Squat',s:'5',r:'5',t:'3-0-1'},{n:'Barbell Deadlift',s:'3',r:'5',t:'1-0-1'},
+        {n:'Romanian Deadlift',s:'3',r:'8',t:'3-1-1'},{n:'Box Jumps',s:'3',r:'5',t:''},
+        {n:'Standing Calf Raise',s:'3',r:'15',t:'2-2-3'},
+      ]},
+      {day:'TUE',focus:'STRENGTH UPPER',exercises:[
+        {n:'Barbell Bench Press',s:'5',r:'5',t:'3-0-1'},{n:'Barbell Bent Over Rows',s:'5',r:'5',t:'2-1-1'},
+        {n:'Overhead Press',s:'3',r:'6-8',t:'2-0-1'},{n:'Pull Ups',s:'3',r:'8',t:'2-0-2'},
+        {n:'Face Pulls',s:'3',r:'15',t:'2-2-2'},
+      ]},
+      {day:'WED',focus:'CONDITIONING',exercises:[
+        {n:'Kettlebell Swings',s:'5',r:'15',t:''},{n:'Burpees',s:'4',r:'10',t:''},
+        {n:'Mountain Climbers',s:'4',r:'20',t:''},{n:'Box Jumps',s:'3',r:'8',t:''},
+        {n:'Treadmill Jog',s:'1',r:'20min',t:''},
+      ]},
+      {day:'FRI',focus:'HYPERTROPHY',exercises:[
+        {n:'Incline DB Press',s:'4',r:'10-12',t:'3-0-1'},{n:'Lat Pulldown Machine',s:'4',r:'10-12',t:'2-1-2'},
+        {n:'Leg Press High Foot',s:'4',r:'12',t:'3-0-1'},{n:'Hip Thrust Barbell',s:'3',r:'12',t:'2-2-1'},
+        {n:'Cable Lateral Raise',s:'3',r:'15',t:'2-0-2'},
+      ]},
+      {day:'SAT',focus:'POWER + MOBILITY',exercises:[
+        {n:'Barbell Squat',s:'3',r:'8',t:'3-0-1'},{n:'Barbell Deadlift',s:'3',r:'3',t:'1-0-1'},
+        {n:'Kettlebell Swings',s:'3',r:'15',t:''},{n:'Step Ups',s:'3',r:'12',t:''},
+        {n:'Stairmaster',s:'1',r:'15min',t:''},
+      ]},
+    ],
+    desc:'5 days blending strength, hypertrophy and conditioning. Best for athletic clients who want it all.'
+  },
+};
+
+function wb_loadTemplate(key) {
+  const tmpl = WB_TEMPLATES[key];
+  if (!tmpl) return;
+  wb_days = tmpl.days.map(d => ({...d, exercises: d.exercises.map(e => ({...e}))}));
+  document.getElementById('prog-name').value = tmpl.name;
+  document.getElementById('prog-days').value = wb_days.length;
+  document.getElementById('tmpl-preview').textContent = '✓ Loaded: ' + tmpl.desc;
+  wb_render();
+  showToast(tmpl.name + ' loaded!');
+}
+
 function wb_setDays(n) {
-  const focuses = ['PUSH','PULL','LEGS','UPPER','LOWER','FULL BODY'];
+  const focuses = ['FULL BODY','PUSH','PULL','LEGS','UPPER','LOWER'];
   const days = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
-  wb_days = Array.from({length:n}, (_,i) => {
-    const tmpl = LIVE_PROGRAM[i];
-    return {
-      day: days[i] || `D${i+1}`,
-      focus: tmpl?.focus || focuses[i] || 'SESSION',
-      exercises: tmpl?.exercises ? tmpl.exercises.map(ex => ({n:ex.name,s:String(ex.sets),r:ex.reps,t:ex.tempo.join('-')})) : []
-    };
-  });
+  // Trim or extend existing wb_days
+  if (wb_days.length < n) {
+    for (let i = wb_days.length; i < n; i++) {
+      wb_days.push({ day: days[i] || `D${i+1}`, focus: focuses[i % focuses.length], exercises: [] });
+    }
+  } else {
+    wb_days = wb_days.slice(0, n);
+  }
+  wb_render();
+}
+
+function wb_addDay() {
+  const days = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+  const focuses = ['FULL BODY','PUSH','PULL','LEGS','UPPER','LOWER'];
+  const i = wb_days.length;
+  wb_days.push({ day: days[i % 7] || `D${i+1}`, focus: focuses[i % focuses.length], exercises: [] });
+  document.getElementById('prog-days').value = Math.min(wb_days.length, 7);
   wb_render();
 }
 
 function wb_render() {
+  const allEx = [...EX_LIB, ...CUSTOM_EX.map(e => e.name)];
   document.getElementById('wb-days').innerHTML = wb_days.map((day, di) => `
     <div class="db-card">
       <div class="db-head">
-        <div>
-          <input class="din-day" value="${day.day}" onchange="wb_days[${di}].day=this.value"/>
-          <input class="din-focus" value="${day.focus}" placeholder="Focus" onchange="wb_days[${di}].focus=this.value"/>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <input class="din-day" value="${day.day}" onchange="wb_days[${di}].day=this.value" style="width:46px;"/>
+          <input class="din-focus" value="${day.focus}" placeholder="Focus" onchange="wb_days[${di}].focus=this.value" style="width:140px;"/>
         </div>
-        <div style="display:flex;gap:6px;">
-          <button class="btn btn-g btn-sm" onclick="wb_addEx(${di})">+ ADD</button>
-          <button class="btn btn-g btn-sm" onclick="wb_rmDay(${di})">✕ DAY</button>
+        <div style="display:flex;gap:5px;">
+          <button class="btn btn-g btn-sm" onclick="wb_addEx(${di})">+ EX</button>
+          <button class="btn btn-g btn-sm" onclick="wb_rmDay(${di})">✕</button>
         </div>
       </div>
-      ${day.exercises.length ? `<div class="ex-cols ex-cols-hdr" style="margin-bottom:5px;padding:0 2px;"><span>EXERCISE</span><span>SETS</span><span>REPS</span><span>TEMPO</span><span></span></div>` : ''}
+      ${day.exercises.length ? `<div class="ex-cols ex-cols-hdr" style="margin-bottom:4px;padding:0 2px;"><span>EXERCISE</span><span>SETS</span><span>REPS</span><span>TEMPO</span><span></span></div>` : ''}
       <div id="wb-exs-${di}">
         ${day.exercises.map((ex, ei) => `
           <div class="ex-cols">
-            <input class="ei" list="ex-dl" value="${ex.n}" placeholder="Exercise name" onchange="wb_days[${di}].exercises[${ei}].n=this.value"/>
-            <input class="ei" value="${ex.s}" placeholder="4" onchange="wb_days[${di}].exercises[${ei}].s=this.value"/>
+            <input class="ei" list="ex-dl" value="${ex.n}" placeholder="Exercise" onchange="wb_days[${di}].exercises[${ei}].n=this.value"/>
+            <input class="ei" value="${ex.s}" placeholder="3" onchange="wb_days[${di}].exercises[${ei}].s=this.value"/>
             <input class="ei" value="${ex.r}" placeholder="8-10" onchange="wb_days[${di}].exercises[${ei}].r=this.value"/>
             <input class="ei" value="${ex.t||'2-0-1'}" placeholder="2-0-1" onchange="wb_days[${di}].exercises[${ei}].t=this.value"/>
             <button class="btn-rm" onclick="wb_rmEx(${di},${ei})">×</button>
           </div>`).join('')}
       </div>
-      ${!day.exercises.length ? '<div style="text-align:center;padding:9px;font-size:12px;color:var(--sub);">Rest day — tap + ADD to add exercises</div>' : ''}
+      ${!day.exercises.length ? '<div style="text-align:center;padding:8px;font-size:12px;color:var(--sub);">No exercises yet — click + EX to add</div>' : ''}
       <button class="btn-add-ex" onclick="wb_addEx(${di})">+ ADD EXERCISE</button>
     </div>`).join('');
 }
 
 function wb_addEx(di) { wb_days[di].exercises.push({n:'',s:'3',r:'10',t:'2-0-1'}); wb_render(); }
 function wb_rmEx(di, ei) { wb_days[di].exercises.splice(ei, 1); wb_render(); }
-function wb_rmDay(di) { if (!confirm('Remove this day?')) return; wb_days.splice(di, 1); wb_render(); }
-function wb_clear() { document.getElementById('prog-name').value = ''; wb_setDays(4); }
+function wb_rmDay(di) { wb_days.splice(di, 1); wb_render(); }
+function wb_clear() { document.getElementById('prog-name').value = ''; wb_days = []; wb_setDays(4); document.getElementById('tmpl-preview').textContent = ''; }
+
+function wb_addCustomEx() {
+  const name = document.getElementById('custom-ex-name').value.trim();
+  const notes = document.getElementById('custom-ex-notes').value.trim();
+  if (!name) { showToast('Enter an exercise name'); return; }
+  if (CUSTOM_EX.find(e => e.name.toLowerCase() === name.toLowerCase()) || EX_LIB.includes(name)) {
+    showToast('Exercise already in library'); return;
+  }
+  CUSTOM_EX.push({ name, notes: notes || 'Perform with controlled form throughout the full range of motion.' });
+  // Add to datalist
+  const dl = document.getElementById('ex-dl');
+  const o = document.createElement('option'); o.value = name; dl.appendChild(o);
+  document.getElementById('custom-ex-name').value = '';
+  document.getElementById('custom-ex-notes').value = '';
+  filterLib(document.getElementById('lib-search').value);
+  showToast(name + ' added to library ✅');
+}
+
 function wb_saveAssign() {
   const name = document.getElementById('prog-name').value.trim();
   const cid  = document.getElementById('prog-client').value;
-  if (!name) { showToast('Enter a program name'); return; }
-  if (!cid)  { showToast('Select a client'); return; }
-  // Push to live program
+  if (!name) { showToast('Enter a program name first'); return; }
+  if (!cid)  { showToast('Select a client first'); return; }
+  if (!wb_days.length) { showToast('Add at least one session day'); return; }
+
+  // Build lookup for all exercise form notes
+  const formNotes = {};
+  CUSTOM_EX.forEach(e => { formNotes[e.name] = e.notes; });
+
+  // Extend LIVE_PROGRAM to fit
+  while (LIVE_PROGRAM.length < wb_days.length) {
+    LIVE_PROGRAM.push({day:'', focus:'', title:'', exercises:[]});
+  }
   wb_days.forEach((day, di) => {
-    if (LIVE_PROGRAM[di]) {
-      LIVE_PROGRAM[di].day = day.day;
-      LIVE_PROGRAM[di].focus = day.focus;
-      LIVE_PROGRAM[di].exercises = day.exercises.map(ex => ({
-        name:ex.n, sets:parseInt(ex.s)||3, reps:ex.r,
-        tempo:ex.t.split('-').map(Number)||[2,0,1,0], note:ex.t,
-        icon:'🏋️', primary:['Primary Muscle'], secondary:[], stab:['Core'],
-        cues:['Focus on form and full range of motion','Control the weight — don\'t let it control you','Breathe out on the effort'],
-        mistakes:['Rushing the reps','Using too much momentum'],
-        tip:'Every rep with full intent and control. Quality beats quantity.'
-      }));
-    }
+    LIVE_PROGRAM[di].day = day.day;
+    LIVE_PROGRAM[di].focus = day.focus;
+    LIVE_PROGRAM[di].title = day.focus + ' — ' + day.day;
+    LIVE_PROGRAM[di].exercises = day.exercises.filter(ex => ex.n.trim()).map(ex => {
+      // Try to find existing exercise data from the built-in library
+      const existing = LIVE_PROGRAM.flatMap(d => d.exercises).find(e => e.name === ex.n);
+      const customNote = formNotes[ex.n];
+      return {
+        name: ex.n,
+        sets: parseInt(ex.s) || 3,
+        reps: ex.r || '10',
+        tempo: ex.t ? ex.t.split('-').map(Number) : [2,0,1,0],
+        note: ex.t || '2-0-1',
+        icon: existing?.icon || '🏋️',
+        primary: existing?.primary || ['Primary Muscle'],
+        secondary: existing?.secondary || [],
+        stab: existing?.stab || ['Core'],
+        cues: existing?.cues || (customNote
+          ? [customNote]
+          : ['Maintain full control throughout the movement','Breathe out on the effort portion','Keep core braced throughout']),
+        mistakes: existing?.mistakes || ['Rushing the reps — slow down for better results','Using too much momentum','Cutting the range of motion short'],
+        tip: existing?.tip || (customNote || 'Focus on the muscle working, not just moving the weight. Every rep with full intent.')
+      };
+    });
   });
+  // Trim extra days if new program is shorter
+  LIVE_PROGRAM.splice(wb_days.length);
+
   const c = CLIENTS.find(x => x.id == cid);
   showToast(`"${name}" pushed to ${c.fn}'s app! 💪`);
-  renderExercises(currentDay); // refresh if client watching
+  renderDayTabs();
+  renderExercises(currentDay);
 }
 
 function renderExLib(q) {
-  document.getElementById('ex-lib-list').innerHTML = EX_LIB
-    .filter(e => e.toLowerCase().includes(q.toLowerCase()))
-    .map(e => `<div class="ex-lib-item" onclick="wb_addToDay0('${e}')"><span>${e}</span><span style="color:var(--sub);font-size:10px;">+ Day 1</span></div>`).join('');
+  const allEx = [
+    ...EX_LIB.map(n => ({name:n, custom:false})),
+    ...CUSTOM_EX.map(e => ({name:e.name, custom:true}))
+  ].filter(e => e.name.toLowerCase().includes(q.toLowerCase()));
+
+  document.getElementById('ex-lib-list').innerHTML = allEx.length
+    ? allEx.map(e => `
+        <div class="ex-lib-item" onclick="wb_addToDay0('${e.name.replace(/'/g,"\\'")}')">
+          <span>${e.name}${e.custom ? ' <span style="color:var(--orange);font-size:9px;">CUSTOM</span>' : ''}</span>
+          <span style="color:var(--sub);font-size:10px;">+ Add</span>
+        </div>`).join('')
+    : `<div style="padding:8px;font-size:12px;color:var(--sub);">No results — add it as a custom exercise below</div>`;
 }
+
 function filterLib(q) { renderExLib(q); }
+
 function wb_addToDay0(name) {
-  if (!wb_days.length) return;
-  wb_days[0].exercises.push({n:name, s:'3', r:'10', t:'2-0-1'});
+  if (!wb_days.length) { showToast('Add a day first'); return; }
+  // Find first day with exercises or just use day 0
+  let targetDay = 0;
+  wb_days[targetDay].exercises.push({n:name, s:'3', r:'10', t:'2-0-1'});
   wb_render();
-  showToast(name + ' added to Day 1');
+  showToast(name + ' added to ' + wb_days[targetDay].day);
 }
 
 // ── MACRO BUILDER ──
