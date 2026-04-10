@@ -1,0 +1,2445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Strong Culture"/>
+<meta name="theme-color" content="#f97316"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="/icon192.png"/>
+<link rel="apple-touch-icon" sizes="192x192" href="/icon192.png"/>
+<link rel="apple-touch-icon" sizes="512x512" href="/icon512.png"/>
+<link rel="icon" type="image/png" href="/icon192.png"/>
+<title>Strong Culture Coaching</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════ */
+:root{
+  --black:#080808;--dark:#0f0f0f;--card:#161616;--card2:#1e1e1e;--border:#222;--b2:#2a2a2a;
+  --orange:#f97316;--o2:#fb923c;--odim:rgba(249,115,22,0.12);
+  --text:#f0f0f0;--sub:#666;--muted:#3a3a3a;
+  --green:#22c55e;--red:#ef4444;--blue:#3b82f6;--purple:#a855f7;
+  --H:'Bebas Neue',sans-serif;--B:'DM Sans',sans-serif;
+  --r:14px;--r2:10px;--r3:8px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased;}
+html{height:100%;}
+body{background:var(--black);color:var(--text);font-family:var(--B);height:100%;overflow-x:hidden;}
+::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-thumb{background:var(--muted);border-radius:2px;}
+input,select,textarea{font-family:var(--B);}
+button{cursor:pointer;}
+
+/* ═══ LOGIN ═══ */
+#login-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;position:relative;}
+#login-screen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 50% at 50% 110%,rgba(249,115,22,0.13),transparent);pointer-events:none;}
+.ls-logo{text-align:center;margin-bottom:36px;position:relative;z-index:1;}
+.ls-flame{font-size:52px;display:block;margin-bottom:8px;filter:drop-shadow(0 0 20px rgba(249,115,22,0.8));}
+.ls-brand{font-family:var(--H);font-size:42px;letter-spacing:4px;color:var(--orange);}
+.ls-sub{font-size:11px;letter-spacing:5px;color:var(--sub);text-transform:uppercase;margin-top:4px;}
+.ls-box{background:var(--card);border:1px solid var(--b2);border-top:2px solid var(--orange);border-radius:var(--r);padding:28px;width:100%;max-width:360px;position:relative;z-index:1;}
+.ls-err{color:var(--red);font-size:13px;text-align:center;margin-bottom:12px;display:none;}
+.fl{display:block;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--sub);margin-bottom:6px;}
+.fi{width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:12px 14px;font-size:15px;outline:none;transition:border-color .2s;margin-bottom:12px;}
+.fi:focus{border-color:var(--orange);}
+.ls-btn{width:100%;background:var(--orange);color:#fff;border:none;border-radius:var(--r3);padding:14px;font-family:var(--H);font-size:22px;letter-spacing:2px;box-shadow:0 4px 20px rgba(249,115,22,0.4);transition:transform .1s;}
+.ls-btn:active{transform:scale(0.98);}
+.ls-hint{text-align:center;font-size:12px;color:var(--sub);margin-top:14px;line-height:1.8;}
+.ls-hint b{color:var(--orange);}
+
+/* ═══════════════════════════════════════════
+   SHARED COMPONENTS
+═══════════════════════════════════════════ */
+.hidden{display:none!important;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:12px;}
+.card-lbl{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--sub);margin-bottom:10px;}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:var(--r3);font-size:13px;font-weight:600;border:none;transition:all .15s;}
+.btn-o{background:var(--orange);color:#fff;box-shadow:0 2px 12px rgba(249,115,22,0.3);}
+.btn-o:hover{background:var(--o2);}
+.btn-p{background:var(--purple);color:#fff;}
+.btn-g{background:transparent;border:1px solid var(--b2);color:var(--sub);}
+.btn-g:hover{border-color:var(--text);color:var(--text);}
+.btn-sm{padding:5px 11px;font-size:11px;}
+.btn-red{background:var(--red);color:#fff;}
+.divider{height:1px;background:var(--border);margin:12px 0;}
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;letter-spacing:.5px;}
+.bo{background:var(--odim);color:var(--orange);border:1px solid rgba(249,115,22,0.3);}
+.bg{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.3);}
+.br{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.3);}
+.bp{background:rgba(168,85,247,.1);color:var(--purple);border:1px solid rgba(168,85,247,.3);}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--green);color:#000;padding:10px 20px;border-radius:99px;font-size:13px;font-weight:700;z-index:9999;transition:transform .3s;white-space:nowrap;box-shadow:0 4px 16px rgba(34,197,94,.4);}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:500;display:none;align-items:center;justify-content:center;padding:16px;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--card);border:1px solid var(--b2);border-top:2px solid var(--orange);border-radius:var(--r);padding:24px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;}
+.modal-title{font-family:var(--H);font-size:22px;letter-spacing:1px;margin-bottom:16px;}
+.modal-actions{display:flex;gap:8px;margin-top:16px;justify-content:flex-end;}
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--sub);margin-bottom:6px;}
+.field input,.field select,.field textarea{width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:10px 12px;font-size:14px;outline:none;transition:border-color .2s;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--orange);}
+.field textarea{resize:vertical;min-height:72px;}
+.field select option{background:var(--dark);}
+.form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:12px;}
+.bar-track{background:var(--card2);border-radius:99px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--orange),var(--o2));transition:width .6s ease;}
+
+/* ═══════════════════════════════════════════
+   COACH DASHBOARD
+═══════════════════════════════════════════ */
+#coach-app{display:none;}
+.coach-layout{display:flex;min-height:100vh;}
+
+/* Sidebar */
+.sb{width:220px;min-width:220px;background:var(--dark);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sb-logo{padding:18px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.sb-mark{width:34px;height:34px;background:var(--orange);border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:var(--H);font-size:15px;color:#000;}
+.sb-title{font-family:var(--H);font-size:15px;letter-spacing:1px;line-height:1.2;}
+.sb-title span{display:block;font-family:var(--B);font-size:10px;font-weight:400;color:var(--purple);letter-spacing:2px;text-transform:uppercase;}
+.sb-coach{padding:12px 16px;border-bottom:1px solid var(--border);background:rgba(168,85,247,.05);}
+.sb-cn{font-family:var(--H);font-size:16px;letter-spacing:1px;color:var(--purple);}
+.sb-cr{font-size:11px;color:var(--sub);margin-top:1px;}
+.sb-nav{flex:1;padding:10px 0;}
+.sb-sec{font-size:9px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;padding:10px 16px 3px;margin-top:6px;}
+.sb-item{display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:13px;font-weight:500;color:var(--sub);cursor:pointer;transition:all .15s;border-left:2px solid transparent;}
+.sb-item:hover{color:var(--text);background:rgba(255,255,255,.02);}
+.sb-item.on{color:var(--purple);border-left-color:var(--purple);background:rgba(168,85,247,.07);font-weight:600;}
+.sb-ic{font-size:14px;width:17px;text-align:center;flex-shrink:0;}
+.sb-badge{margin-left:auto;background:var(--red);color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:99px;}
+.sb-foot{padding:14px 16px;border-top:1px solid var(--border);}
+.btn-lo{width:100%;background:transparent;border:1px solid var(--border);color:var(--sub);padding:8px;font-size:12px;letter-spacing:1px;text-transform:uppercase;border-radius:var(--r3);}
+.btn-lo:hover{border-color:var(--red);color:var(--red);}
+
+/* Coach main */
+.coach-main{flex:1;overflow-y:auto;}
+.cp{display:none;padding:26px;max-width:1080px;}
+.cp.on{display:block;}
+.pt{font-family:var(--H);font-size:36px;letter-spacing:2px;margin-bottom:3px;}
+.pl{width:40px;height:3px;background:var(--purple);margin:6px 0 18px;}
+.ol{width:40px;height:3px;background:var(--orange);margin:6px 0 18px;}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px;}
+.stat-box{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;position:relative;overflow:hidden;}
+.stat-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.sb-o::before{background:var(--orange);}
+.sb-p::before{background:var(--purple);}
+.sb-g::before{background:var(--green);}
+.sb-r::before{background:var(--red);}
+.sv{font-family:var(--H);font-size:36px;line-height:1;}
+.sl{font-size:10px;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-top:4px;}
+
+/* Client cards */
+.client-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;}
+.cc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.cc:hover{border-color:rgba(249,115,22,.3);transform:translateY(-2px);}
+.cc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.cc.elite::before{background:var(--orange);}
+.cc.transformation::before{background:var(--purple);}
+.cc.strongstart::before{background:var(--green);}
+.cc-top{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.cc-av{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--H);font-size:17px;color:#000;flex-shrink:0;}
+.cc-name{font-family:var(--H);font-size:18px;letter-spacing:1px;}
+.cc-tier{font-size:11px;font-weight:600;letter-spacing:.5px;margin-top:1px;}
+.cc-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px;}
+.cc-s{background:var(--dark);border-radius:6px;padding:7px;text-align:center;}
+.cc-sv{font-family:var(--H);font-size:15px;color:var(--orange);}
+.cc-sl{font-size:9px;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-top:1px;}
+.cc-foot{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);padding-top:8px;font-size:12px;}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;}
+.dot-g{background:var(--green);}
+.dot-r{background:var(--red);}
+.dot-o{background:var(--orange);}
+
+/* Client detail */
+.back-btn{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--sub);cursor:pointer;margin-bottom:16px;transition:color .15s;}
+.back-btn:hover{color:var(--orange);}
+.cd-header{display:flex;align-items:center;gap:14px;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border);}
+.cd-av{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--H);font-size:23px;color:#000;}
+.cd-name{font-family:var(--H);font-size:28px;letter-spacing:2px;}
+.cd-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px;}
+.mtag{font-size:11px;background:var(--dark);border:1px solid var(--b2);padding:2px 9px;border-radius:4px;color:var(--sub);}
+.cd-acts{margin-left:auto;display:flex;gap:7px;flex-wrap:wrap;}
+
+/* Tabs */
+.tab-row{display:flex;border-bottom:1px solid var(--border);margin-bottom:20px;overflow-x:auto;}
+.tb{padding:9px 16px;font-family:var(--H);font-size:13px;letter-spacing:1px;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;background:none;border-top:none;border-left:none;border-right:none;white-space:nowrap;}
+.tb.on{color:var(--orange);border-bottom-color:var(--orange);}
+.tc{display:none;}
+.tc.on{display:block;}
+
+/* Workout builder */
+.wb-grid{display:grid;grid-template-columns:1fr 260px;gap:16px;align-items:start;}
+.db-card{background:var(--dark);border:1px solid var(--b2);border-radius:var(--r2);padding:14px;margin-bottom:10px;}
+.db-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.din-day{background:transparent;border:none;color:var(--orange);font-family:var(--H);font-size:18px;letter-spacing:1px;width:50px;outline:none;}
+.din-focus{background:transparent;border:none;color:var(--sub);font-size:12px;font-weight:600;letter-spacing:1px;width:120px;outline:none;}
+.ex-cols{display:grid;grid-template-columns:1fr 44px 68px 56px 24px;gap:5px;align-items:center;margin-bottom:6px;}
+.ex-cols-hdr{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+.ei{background:var(--black);border:1.5px solid var(--border);border-radius:6px;color:var(--text);padding:7px 8px;font-size:12px;outline:none;width:100%;transition:border-color .2s;}
+.ei:focus{border-color:var(--orange);}
+.btn-rm{background:transparent;border:1px solid var(--border);color:var(--muted);width:22px;height:26px;border-radius:4px;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.btn-rm:hover{border-color:var(--red);color:var(--red);}
+.btn-add-ex{width:100%;background:transparent;border:1px dashed var(--b2);color:var(--sub);padding:7px;border-radius:6px;font-size:11px;letter-spacing:1px;margin-top:4px;}
+.btn-add-ex:hover{border-color:var(--orange);color:var(--orange);}
+.ex-lib{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px;}
+.ex-lib-search{width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:8px 11px;font-size:13px;outline:none;margin-bottom:8px;}
+.ex-lib-search:focus{border-color:var(--orange);}
+.ex-lib-list{max-height:500px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;}
+.ex-lib-item{background:var(--dark);border:1px solid var(--border);border-radius:5px;padding:6px 9px;font-size:11px;cursor:pointer;transition:all .15s;display:flex;justify-content:space-between;align-items:center;}
+.ex-lib-item:hover{border-color:var(--orange);color:var(--orange);}
+
+/* Macro builder */
+.mb-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.mb-inp-card{background:var(--dark);border:1px solid var(--b2);border-radius:var(--r2);padding:12px;text-align:center;}
+.mb-lbl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+.big-inp{width:100%;background:var(--black);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:8px;font-family:var(--H);font-size:28px;text-align:center;outline:none;transition:border-color .2s;}
+.big-inp:focus{border-color:var(--orange);}
+.macro-bar{display:flex;height:6px;border-radius:99px;overflow:hidden;margin:10px 0;}
+.mb-pro{background:var(--blue);}
+.mb-car{background:var(--orange);}
+.mb-fat{background:var(--red);}
+
+/* Check-in cards */
+.ci-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;}
+.ci-card.pending{border-left:3px solid var(--red);}
+.ci-card.replied{border-left:3px solid var(--green);}
+.ci-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:7px;margin:10px 0;}
+.ci-m{background:var(--dark);padding:8px;text-align:center;border-radius:var(--r3);}
+.ci-mv{font-family:var(--H);font-size:18px;color:var(--orange);}
+.ci-ml{font-size:9px;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+.ci-notes{background:var(--dark);padding:10px 12px;font-size:13px;color:var(--sub);line-height:1.6;border-left:2px solid var(--orange);border-radius:0 5px 5px 0;}
+
+/* Messages */
+.msg-layout{display:flex;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;height:calc(100vh - 200px);min-height:380px;}
+.msg-sb{width:190px;border-right:1px solid var(--border);background:var(--dark);overflow-y:auto;}
+.msg-client{padding:10px 12px;border-bottom:1px solid var(--border);cursor:pointer;}
+.msg-client:hover{background:rgba(255,255,255,.02);}
+.msg-client.on{background:rgba(168,85,247,.07);border-left:2px solid var(--purple);}
+.msg-client-name{font-size:13px;font-weight:600;}
+.msg-client-preview{font-size:11px;color:var(--sub);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.msg-main{flex:1;display:flex;flex-direction:column;}
+.msg-hdr{padding:11px 14px;border-bottom:1px solid var(--border);background:var(--dark);display:flex;align-items:center;gap:9px;}
+.msg-hdr-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--H);font-size:13px;color:#000;flex-shrink:0;}
+.msg-list{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;}
+.mw{max-width:75%;display:flex;flex-direction:column;}
+.mw.in{align-self:flex-start;}
+.mw.out{align-self:flex-end;align-items:flex-end;}
+.mb2{padding:9px 12px;border-radius:var(--r2);font-size:13px;line-height:1.5;}
+.mw.in .mb2{background:var(--card2);border:1px solid var(--border);}
+.mw.out .mb2{background:var(--purple);}
+.mw.out .mb2 p{color:#fff;}
+.mt{font-size:10px;color:var(--muted);margin-top:3px;padding:0 3px;}
+.msg-inp-row{padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:7px;}
+.msg-inp{flex:1;background:var(--card2);border:1.5px solid var(--border);border-radius:99px;color:var(--text);padding:9px 14px;font-size:13px;outline:none;}
+.msg-inp:focus{border-color:var(--purple);}
+.msg-send{background:var(--purple);border:none;border-radius:50%;width:36px;height:36px;color:#fff;font-size:15px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+
+/* Data table */
+.data-table{width:100%;border-collapse:collapse;font-size:13px;}
+.data-table th{text-align:left;padding:9px 12px;color:var(--sub);font-size:9px;letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid var(--border);font-weight:600;}
+.data-table td{padding:11px 12px;border-bottom:1px solid rgba(34,34,34,.4);}
+.data-table tr:last-child td{border:none;}
+.data-table tr:hover td{background:rgba(255,255,255,.01);}
+
+/* ═══════════════════════════════════════════
+   CLIENT APP
+═══════════════════════════════════════════ */
+#client-app{display:none;position:fixed;inset:0;max-width:430px;left:50%;transform:translateX(-50%);}
+.topbar{position:absolute;top:0;left:0;right:0;height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:rgba(8,8,8,.92);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);z-index:50;}
+.tb-logo{font-family:var(--H);font-size:21px;letter-spacing:2px;color:var(--orange);display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;}
+.tb-right{display:flex;gap:8px;}
+.ic-btn{width:34px;height:34px;background:var(--card2);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;}
+.pages{position:absolute;top:54px;left:0;right:0;bottom:60px;overflow:hidden;}
+.page{position:absolute;inset:0;overflow-y:auto;display:none;-webkit-overflow-scrolling:touch;}
+.page.on{display:block;}
+.scr{padding:16px;}
+.tabs-bar{position:absolute;bottom:0;left:0;right:0;height:60px;background:rgba(10,10,10,.96);backdrop-filter:blur(16px);border-top:1px solid var(--border);display:flex;z-index:50;}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;position:relative;}
+.tab-ic{font-size:18px;transition:transform .2s;}
+.tab-lb{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--sub);transition:color .15s;}
+.tab.on .tab-lb{color:var(--orange);}
+.tab.on .tab-ic{transform:scale(1.1);}
+.tab.on::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:26px;height:2px;background:var(--orange);border-radius:0 0 3px 3px;}
+
+/* Home */
+.streak-card{background:linear-gradient(135deg,rgba(249,115,22,.14),rgba(249,115,22,.04));border:1px solid rgba(249,115,22,.22);border-radius:var(--r);padding:14px 16px;margin-bottom:11px;display:flex;align-items:center;gap:12px;}
+.streak-fire{font-size:34px;filter:drop-shadow(0 0 8px rgba(249,115,22,.7));}
+.streak-num{font-family:var(--H);font-size:38px;color:var(--orange);line-height:1;}
+.coach-banner{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--orange);border-radius:var(--r);padding:12px;margin-bottom:11px;display:flex;gap:10px;}
+.c-av{width:36px;height:36px;background:var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--H);font-size:14px;color:#fff;flex-shrink:0;}
+.today-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:11px;cursor:pointer;}
+.today-card:active{border-color:rgba(249,115,22,.5);}
+.today-ex{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--border);}
+.today-ex:last-child{border:none;}
+.today-ex span:last-child{color:var(--orange);font-weight:700;}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:11px;}
+.stat-cell{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:11px 7px;text-align:center;}
+.sc-v{font-family:var(--H);font-size:22px;color:var(--orange);line-height:1;}
+.sc-l{font-size:9px;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+.macro-mini{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;}
+.mm-item{background:var(--dark);border-radius:var(--r3);padding:9px;text-align:center;}
+.mm-v{font-family:var(--H);font-size:19px;line-height:1;}
+.mm-l{font-size:9px;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+
+/* Workout */
+.wk-header{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:13px;position:relative;overflow:hidden;}
+.wk-header::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--orange),transparent);}
+.wk-top{display:flex;justify-content:space-between;align-items:flex-start;}
+.wk-wk{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--orange);margin-bottom:3px;}
+.wk-title{font-family:var(--H);font-size:24px;letter-spacing:2px;}
+.wk-meta{font-size:11px;color:var(--sub);margin-top:3px;}
+.timer-badge{display:flex;align-items:center;gap:4px;font-family:var(--H);font-size:21px;color:var(--orange);letter-spacing:1px;}
+.t-dot{width:6px;height:6px;background:var(--orange);border-radius:50%;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.t-dot.run{animation:pulse 1s infinite;}
+.day-tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:14px;padding-bottom:2px;}
+.dt{flex-shrink:0;background:var(--card);border:1.5px solid var(--border);border-radius:var(--r3);padding:7px 12px;text-align:center;cursor:pointer;transition:all .2s;}
+.dt.on{background:var(--orange);border-color:var(--orange);color:#fff;}
+.dt.done{border-color:var(--green);color:var(--green);}
+.dt-name{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+.dt-f{font-size:9px;margin-top:1px;opacity:.7;}
+
+/* Exercise card */
+.ex-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);margin-bottom:9px;overflow:hidden;transition:border-color .2s;}
+.ex-card.open{border-color:rgba(249,115,22,.4);}
+.ex-hdr{display:flex;align-items:center;gap:10px;padding:12px 13px;cursor:pointer;user-select:none;}
+.ex-ico{width:42px;height:42px;background:var(--odim);border:1px solid rgba(249,115,22,.2);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.ex-inf{flex:1;min-width:0;}
+.ex-nm{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ex-sm{font-size:11px;color:var(--sub);margin-top:2px;}
+.ex-acts{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+.ex-badge{background:var(--odim);color:var(--orange);padding:3px 8px;border-radius:99px;font-size:10px;font-weight:700;white-space:nowrap;}
+.btn-demo{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);border-radius:5px;color:var(--blue);padding:4px 8px;font-size:10px;font-weight:700;}
+.ex-chev{font-size:10px;color:var(--sub);transition:transform .2s;margin-left:2px;}
+.ex-card.open .ex-chev{transform:rotate(180deg);}
+.ex-panel{display:none;padding:0 13px 13px;}
+.ex-card.open .ex-panel{display:block;}
+
+/* Lift history */
+.lift-hist{background:var(--dark);border-radius:var(--r3);padding:7px 10px;margin-bottom:9px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+.lh-lbl{font-size:10px;font-weight:700;color:var(--orange);}
+.lh-val{font-size:11px;color:var(--sub);}
+
+/* Tempo */
+.tempo-row{display:flex;align-items:center;gap:5px;margin-bottom:10px;flex-wrap:wrap;}
+.tempo-lbl{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--sub);margin-right:3px;}
+.tw{display:flex;flex-direction:column;align-items:center;}
+.tseg{width:30px;height:30px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:var(--H);font-size:15px;}
+.t1{background:rgba(249,115,22,.2);color:var(--orange);}
+.t2{background:rgba(59,130,246,.15);color:var(--blue);}
+.t3{background:rgba(249,115,22,.15);color:var(--o2);}
+.t4{background:rgba(34,197,94,.12);color:var(--green);}
+.tsl{font-size:8px;color:var(--sub);margin-top:2px;}
+
+/* Set chips */
+.sets-lbl{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--sub);margin-bottom:7px;}
+.sets-chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:9px;}
+.set-chip{background:var(--card2);border:1.5px solid var(--b2);border-radius:7px;padding:5px 9px;display:flex;flex-direction:column;align-items:center;min-width:52px;cursor:pointer;transition:all .2s;}
+.set-chip.logged{background:rgba(249,115,22,.15);border-color:var(--orange);}
+.set-chip.act{background:var(--orange);border-color:var(--orange);}
+.sc-kg{font-family:var(--H);font-size:15px;color:var(--sub);transition:color .2s;}
+.set-chip.logged .sc-kg{color:var(--orange);}
+.set-chip.act .sc-kg{color:#fff;}
+.sc-rp{font-size:9px;color:var(--muted);margin-top:1px;transition:color .2s;}
+.set-chip.logged .sc-rp{color:var(--orange);opacity:.8;}
+.set-chip.act .sc-rp{color:rgba(255,255,255,.8);}
+.sc-n{font-size:8px;color:var(--muted);}
+
+/* Log inputs */
+.log-inp-wrap{background:var(--dark);border-radius:var(--r3);padding:11px;margin-bottom:9px;}
+.log-inp-title{font-size:10px;font-weight:700;letter-spacing:1px;color:var(--sub);display:flex;justify-content:space-between;margin-bottom:8px;}
+.log-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:7px;}
+.log-field label{font-size:9px;color:var(--sub);display:block;margin-bottom:3px;letter-spacing:.5px;text-transform:uppercase;}
+.log-field input{width:100%;background:var(--black);border:1.5px solid var(--b2);border-radius:var(--r3);color:var(--text);padding:8px;font-size:15px;font-weight:600;text-align:center;outline:none;transition:border-color .2s;}
+.log-field input:focus{border-color:var(--orange);}
+.btn-log{width:100%;background:var(--orange);border:none;border-radius:var(--r3);color:#fff;padding:9px;font-family:var(--H);font-size:17px;letter-spacing:1px;transition:transform .1s,background .2s;}
+.btn-log:active{transform:scale(0.98);}
+.btn-log.done{background:var(--green);}
+
+/* Volume */
+.vol-row{display:flex;align-items:center;gap:7px;margin-bottom:9px;}
+.vol-lbl{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--sub);width:90px;flex-shrink:0;}
+.vol-bar{flex:1;}
+.vol-sub{font-size:9px;color:var(--sub);margin-top:2px;text-align:right;}
+
+/* Rest timer */
+.rest-row{display:flex;align-items:center;gap:7px;padding:7px 0;border-top:1px solid var(--border);}
+.rest-lbl{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--sub);}
+.rest-chips{display:flex;gap:5px;}
+.rc{background:var(--card2);border:1px solid var(--b2);border-radius:99px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;color:var(--sub);transition:all .15s;}
+.rc.act{background:var(--orange);border-color:var(--orange);color:#fff;}
+.rest-cd{font-family:var(--H);font-size:19px;color:var(--orange);letter-spacing:1px;margin-left:auto;}
+
+/* Video */
+.vid-thumb{width:100%;aspect-ratio:16/9;background:linear-gradient(135deg,var(--dark),var(--card2));border-radius:var(--r3);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;border:1px solid var(--border);margin-bottom:9px;}
+.vid-thumb::before{content:'';position:absolute;inset:0;background:radial-gradient(circle,rgba(249,115,22,.07),transparent);}
+.play-btn{width:46px;height:46px;background:var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 0 18px rgba(249,115,22,.5);position:relative;z-index:1;}
+.play-tri{width:0;height:0;border-style:solid;border-width:7px 0 7px 13px;border-color:transparent transparent transparent #fff;margin-left:3px;}
+.vid-lbl{font-size:11px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,.8);margin-top:8px;position:relative;z-index:1;}
+.vid-src{font-size:9px;color:var(--orange);margin-top:2px;position:relative;z-index:1;}
+.vid-frame{display:none;width:100%;aspect-ratio:16/9;border-radius:var(--r3);overflow:hidden;margin-bottom:9px;}
+.vid-frame iframe{width:100%;height:100%;border:none;display:block;}
+
+/* Detail tabs */
+.dtabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:10px;}
+.dtab{flex:1;text-align:center;padding:7px 3px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
+.dtab.on{color:var(--orange);border-bottom-color:var(--orange);}
+.dc{display:none;}
+.dc.on{display:block;}
+.cue-item{display:flex;gap:7px;font-size:12px;line-height:1.55;margin-bottom:7px;color:#ccc;}
+.cue-n{font-family:var(--H);font-size:13px;color:var(--orange);min-width:17px;flex-shrink:0;}
+.mistake{display:flex;gap:7px;font-size:12px;line-height:1.5;padding:7px 9px;background:rgba(239,68,68,.07);border-left:2px solid rgba(239,68,68,.4);border-radius:0 4px 4px 0;margin-bottom:5px;}
+.pro-tip{background:var(--odim);border-left:2px solid var(--orange);padding:9px 11px;border-radius:0 5px 5px 0;font-size:12px;line-height:1.6;color:#ddd;margin-top:8px;}
+.pro-tip b{color:var(--orange);}
+.m-grp{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px;margin-top:9px;}
+.m-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:3px;}
+.mtag-p{font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--odim);color:var(--orange);border:1px solid rgba(249,115,22,.3);}
+.mtag-s{font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;background:rgba(59,130,246,.1);color:var(--blue);border:1px solid rgba(59,130,246,.25);}
+.mtag-st{font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;background:rgba(102,102,102,.1);color:var(--sub);border:1px solid rgba(102,102,102,.2);}
+
+/* Sticky LOG NEXT SET */
+.sticky-log{position:sticky;bottom:0;padding:8px 16px 10px;background:linear-gradient(to bottom,transparent,rgba(8,8,8,.95) 30%);pointer-events:none;}
+.btn-big{pointer-events:all;width:100%;background:var(--orange);border:none;border-radius:var(--r2);padding:13px;font-family:var(--H);font-size:21px;letter-spacing:2px;color:#fff;box-shadow:0 5px 22px rgba(249,115,22,.4);transition:transform .1s;display:flex;align-items:center;justify-content:center;gap:7px;}
+.btn-big:active{transform:scale(0.98);}
+
+/* Progress */
+.ptoggle{display:flex;background:var(--card2);border-radius:99px;padding:3px;margin-bottom:12px;}
+.ptt{flex:1;text-align:center;padding:6px;border-radius:99px;font-size:11px;font-weight:700;letter-spacing:.5px;cursor:pointer;color:var(--sub);transition:all .2s;}
+.ptt.on{background:var(--orange);color:#fff;}
+.pb-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);}
+.pb-row:last-child{border:none;}
+.pb-ex{font-size:13px;font-weight:600;}
+.pb-dt{font-size:10px;color:var(--sub);margin-top:1px;}
+.pb-val{font-family:var(--H);font-size:19px;color:var(--orange);}
+.chart-bars{display:flex;align-items:flex-end;gap:2px;height:100px;}
+.c-bar{flex:1;border-radius:2px 2px 0 0;background:rgba(249,115,22,.4);transition:height .6s ease;cursor:pointer;}
+.c-bar.hi{background:var(--orange);}
+.c-xlbls{display:flex;gap:2px;margin-top:5px;}
+.c-xl{flex:1;text-align:center;font-size:8px;color:var(--sub);}
+.filt-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
+.filt-btn{background:var(--card2);border:1px solid var(--b2);border-radius:99px;padding:4px 10px;font-size:10px;font-weight:700;color:var(--sub);cursor:pointer;transition:all .15s;}
+.filt-btn.on{background:var(--orange);border-color:var(--orange);color:#fff;}
+.sess-row{padding:9px 0;border-bottom:1px solid var(--border);}
+.sess-row:last-child{border:none;}
+.sess-chips{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;}
+.sess-chip{background:var(--dark);border-radius:5px;padding:3px 7px;font-size:10px;color:var(--sub);}
+.sess-chip b{color:var(--orange);}
+
+/* Nutrition */
+.macro-rings{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:11px;}
+.mring-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:13px;text-align:center;}
+.ring-lbl{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--sub);margin-bottom:7px;}
+.ring-wrap{position:relative;width:72px;height:72px;margin:0 auto 6px;}
+.ring-wrap svg{transform:rotate(-90deg);}
+.ring-bg{fill:none;stroke:var(--border);stroke-width:6;}
+.ring-fill{fill:none;stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset .8s ease;}
+.ring-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.ring-val{font-family:var(--H);font-size:17px;line-height:1;}
+.ring-tgt{font-size:9px;color:var(--sub);}
+.ring-pct{font-size:10px;font-weight:700;margin-top:2px;}
+.mfp-banner{background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.2);border-radius:var(--r2);padding:12px;display:flex;align-items:center;gap:10px;margin-bottom:12px;cursor:pointer;}
+
+/* Check-In */
+.ci-locked-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:28px 18px;text-align:center;}
+.ci-countdown{background:var(--dark);border-radius:var(--r2);padding:12px;display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:0;margin-top:14px;align-items:center;}
+.ci-unit{text-align:center;padding:8px;}
+.ci-val{font-family:var(--H);font-size:30px;color:var(--orange);}
+.ci-lbl{font-size:9px;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-top:1px;}
+.ci-sep{font-family:var(--H);font-size:26px;color:var(--sub);}
+.ci-step{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:11px;}
+.ci-step-lbl{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--orange);margin-bottom:4px;}
+.ci-step-title{font-family:var(--H);font-size:20px;letter-spacing:1px;margin-bottom:12px;}
+.rating-wrap{display:flex;gap:4px;flex-wrap:wrap;}
+.rb{width:36px;height:36px;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--sub);font-family:var(--H);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.rb.on{background:var(--orange);border-color:var(--orange);color:#fff;}
+.ci-inp{width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:11px 12px;font-size:14px;outline:none;transition:border-color .2s;}
+.ci-inp:focus{border-color:var(--orange);}
+.ci-ta{width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:11px 12px;font-size:14px;outline:none;resize:none;min-height:72px;transition:border-color .2s;}
+.ci-ta:focus{border-color:var(--orange);}
+
+/* Messages (client) */
+.cmsg-wrap{display:flex;flex-direction:column;height:100%;}
+.cmsg-hdr{padding:11px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.cmsg-list{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;}
+.cmsg-inp-row{padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:7px;flex-shrink:0;}
+.cmsg-inp{flex:1;background:var(--card2);border:1.5px solid var(--border);border-radius:99px;color:var(--text);padding:9px 14px;font-size:14px;outline:none;}
+.cmsg-inp:focus{border-color:var(--orange);}
+.cmsg-send{background:var(--orange);border:none;border-radius:50%;width:38px;height:38px;color:#fff;font-size:15px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+
+/* Profile */
+.profile-hero{background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--border);border-radius:var(--r);padding:20px 16px;text-align:center;margin-bottom:11px;position:relative;overflow:hidden;}
+.profile-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 120%,rgba(249,115,22,.1),transparent);}
+.p-av{width:70px;height:70px;background:var(--orange);border-radius:50%;margin:0 auto 11px;display:flex;align-items:center;justify-content:center;font-family:var(--H);font-size:26px;color:#fff;box-shadow:0 0 24px rgba(249,115,22,.4);position:relative;z-index:1;}
+.p-name{font-family:var(--H);font-size:24px;letter-spacing:2px;position:relative;z-index:1;}
+.p-tier{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--orange);margin-top:3px;position:relative;z-index:1;}
+.p-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border-radius:var(--r3);overflow:hidden;margin-top:12px;position:relative;z-index:1;}
+.p-stat{background:var(--dark);padding:9px 5px;text-align:center;}
+.ps-v{font-family:var(--H);font-size:18px;color:var(--orange);}
+.ps-l{font-size:9px;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-top:1px;}
+.sr{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;}
+.sr:last-child{border:none;}
+.sr-title{font-size:14px;font-weight:500;}
+.sr-sub{font-size:11px;color:var(--sub);margin-top:1px;}
+.sr-val{font-size:12px;color:var(--orange);font-weight:600;}
+
+/* Install banner */
+.install-banner{background:linear-gradient(135deg,rgba(249,115,22,.13),rgba(249,115,22,.05));border:1px solid rgba(249,115,22,.22);border-radius:var(--r);padding:12px;margin-bottom:11px;display:flex;align-items:center;gap:10px;}
+.ib-title{font-size:13px;font-weight:700;color:var(--orange);margin-bottom:2px;}
+.ib-sub{font-size:12px;color:#ccc;line-height:1.5;}
+
+/* Sunday reminder pulse */
+@keyframes ring{0%,100%{transform:scale(1);}50%{transform:scale(1.12);}}
+.sun-pulse{animation:ring 2s ease-in-out infinite;}
+
+@media(max-width:800px){.sb{display:none;}.wb-grid{grid-template-columns:1fr;}.mb-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN SCREEN ═══ -->
+<div id="login-screen">
+  <div class="ls-logo">
+    <span class="ls-flame">🔥</span>
+    <div class="ls-brand">STRONG CULTURE</div>
+    <div class="ls-sub">Coaching</div>
+  </div>
+  <div class="ls-box">
+    <div class="ls-err" id="ls-err">Incorrect email or password</div>
+    <label class="fl">Email</label>
+    <input class="fi" type="email" id="l-email" placeholder="you@email.com" autocomplete="email"/>
+    <label class="fl">Password</label>
+    <input class="fi" type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password"/>
+    <button class="ls-btn" onclick="doLogin()">LET'S GO →</button>
+    <div class="ls-hint">
+      Client login: any email + <b>strongculture</b><br/>
+      Coach login: any email + <b>coach123</b>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     COACH DASHBOARD
+═══════════════════════════════════════════════ -->
+<div id="coach-app">
+<div class="coach-layout">
+
+<aside class="sb">
+  <div class="sb-logo">
+    <div class="sb-mark">SC</div>
+    <div class="sb-title">STRONG CULTURE<span>Coach Panel</span></div>
+  </div>
+  <div class="sb-coach">
+    <div class="sb-cn">ANTZ BROWN</div>
+    <div class="sb-cr">Head Coach · NASM Qualified</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-sec">Overview</div>
+    <div class="sb-item on" onclick="showCP('dashboard',this)"><span class="sb-ic">⊞</span> Dashboard</div>
+    <div class="sb-item" onclick="showCP('clients',this)"><span class="sb-ic">👥</span> All Clients</div>
+    <div class="sb-sec">Coaching</div>
+    <div class="sb-item" onclick="showCP('checkins',this)"><span class="sb-ic">✅</span> Check-Ins <span class="sb-badge" id="ci-badge">3</span></div>
+    <div class="sb-item" onclick="showCP('workout-builder',this)"><span class="sb-ic">📋</span> Workout Builder</div>
+    <div class="sb-item" onclick="showCP('macro-builder',this)"><span class="sb-ic">🥗</span> Macro Builder</div>
+    <div class="sb-sec">Comms</div>
+    <div class="sb-item" onclick="showCP('messages',this)"><span class="sb-ic">💬</span> Messages</div>
+    <div class="sb-sec">Manage</div>
+    <div class="sb-item" onclick="showCP('add-client',this)"><span class="sb-ic">➕</span> Add Client</div>
+  </nav>
+  <div class="sb-foot"><button class="btn-lo" onclick="doLogout()">Sign Out</button></div>
+</aside>
+
+<main class="coach-main">
+
+<!-- DASHBOARD -->
+<div class="cp on" id="cp-dashboard">
+  <div class="pt">DASHBOARD</div><div class="pl"></div>
+  <p id="dash-greet" style="font-size:14px;color:var(--sub);margin-bottom:18px;"></p>
+  <div class="stats-row">
+    <div class="stat-box sb-o"><div class="sv" style="color:var(--orange)" id="d-clients">6</div><div class="sl">Active Clients</div><div style="font-size:11px;color:var(--green);margin-top:3px;">3 on Stripe ✓</div></div>
+    <div class="stat-box sb-r"><div class="sv" style="color:var(--red)" id="d-pending">3</div><div class="sl">Pending Check-Ins</div></div>
+    <div class="stat-box sb-g"><div class="sv" style="color:var(--green)">$2,470</div><div class="sl">Weekly Revenue</div><div style="font-size:11px;color:var(--green);margin-top:3px;">↑ from $2,180</div></div>
+    <div class="stat-box sb-p"><div class="sv" style="color:var(--purple)">87%</div><div class="sl">Avg Adherence</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+    <div class="card"><div class="card-lbl">PENDING CHECK-INS</div><div id="dash-pending"></div></div>
+    <div class="card"><div class="card-lbl">CLIENT TIERS</div><div id="dash-tiers"></div></div>
+  </div>
+  <div class="card"><div class="card-lbl">RECENT ACTIVITY</div><div id="dash-activity"></div></div>
+</div>
+
+<!-- ALL CLIENTS -->
+<div class="cp" id="cp-clients">
+  <div class="pt">ALL CLIENTS</div><div class="pl"></div>
+  <div style="display:flex;gap:7px;margin-bottom:16px;flex-wrap:wrap;">
+    <button class="btn btn-o btn-sm" onclick="showCP('add-client',null)">+ ADD CLIENT</button>
+    <button class="btn btn-g btn-sm" style="border-color:var(--orange);color:var(--orange);" onclick="filterCC('all',this)">All</button>
+    <button class="btn btn-g btn-sm" onclick="filterCC('elite',this)">Elite</button>
+    <button class="btn btn-g btn-sm" onclick="filterCC('transformation',this)">Transformation</button>
+    <button class="btn btn-g btn-sm" onclick="filterCC('strongstart',this)">Strong Start</button>
+  </div>
+  <div class="client-grid" id="client-grid"></div>
+</div>
+
+<!-- CLIENT DETAIL -->
+<div class="cp" id="cp-client-detail">
+  <div class="back-btn" onclick="showCP('clients',null);renderClientGrid(CLIENTS)">← Back to clients</div>
+  <div id="cd-header"></div>
+  <div class="tab-row">
+    <button class="tb on" onclick="showCT('overview',this)">Overview</button>
+    <button class="tb" onclick="showCT('plan',this)">Plan & Macros</button>
+    <button class="tb" onclick="showCT('workout',this)">This Week</button>
+    <button class="tb" onclick="showCT('checkins',this)">Check-Ins</button>
+    <button class="tb" onclick="showCT('logs',this)">Logs</button>
+    <button class="tb" onclick="showCT('msg',this)">Message</button>
+  </div>
+  <div id="ct-overview" class="tc on"></div>
+  <div id="ct-plan" class="tc"></div>
+  <div id="ct-workout" class="tc"></div>
+  <div id="ct-checkins" class="tc"></div>
+  <div id="ct-logs" class="tc"></div>
+  <div id="ct-msg" class="tc"></div>
+</div>
+
+<!-- CHECK-INS -->
+<div class="cp" id="cp-checkins">
+  <div class="pt">CHECK-INS</div><div class="pl"></div>
+  <div style="display:flex;gap:7px;margin-bottom:16px;">
+    <button class="btn btn-g btn-sm" style="border-color:var(--orange);color:var(--orange);" onclick="filterCI('all',this)">All</button>
+    <button class="btn btn-g btn-sm" onclick="filterCI('pending',this)">Pending</button>
+    <button class="btn btn-g btn-sm" onclick="filterCI('replied',this)">Replied</button>
+  </div>
+  <div id="all-ci"></div>
+</div>
+
+<!-- WORKOUT BUILDER -->
+<div class="cp" id="cp-workout-builder">
+  <div class="pt">WORKOUT BUILDER</div><div class="ol"></div>
+  <p style="font-size:13px;color:var(--sub);margin-bottom:16px;">Build this week's program. Clients only ever see the current week — updates after each Sunday check-in.</p>
+  <div class="card" style="margin-bottom:14px;">
+    <div class="card-lbl">PROGRAM DETAILS</div>
+    <div class="form-row">
+      <div class="field" style="margin:0"><label>Program Name</label><input type="text" id="prog-name" placeholder="Week 4 — Hypertrophy"/></div>
+      <div class="field" style="margin:0"><label>Assign to Client</label><select id="prog-client"><option value="">Select client...</option></select></div>
+      <div class="field" style="margin:0"><label>Sessions This Week</label>
+        <select id="prog-days" onchange="wb_setDays(parseInt(this.value))">
+          <option value="3">3 days/week</option><option value="4" selected>4 days/week</option>
+          <option value="5">5 days/week</option><option value="6">6 days/week</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="wb-grid">
+    <div>
+      <div id="wb-days"></div>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button class="btn btn-g" onclick="wb_clear()">CLEAR</button>
+        <button class="btn btn-o" onclick="wb_saveAssign()">SAVE & PUSH TO CLIENT APP ✓</button>
+      </div>
+    </div>
+    <div class="ex-lib">
+      <div style="font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;color:var(--sub);">📚 EXERCISE LIBRARY</div>
+      <input class="ex-lib-search" placeholder="Search exercises..." oninput="filterLib(this.value)" id="lib-search"/>
+      <div class="ex-lib-list" id="ex-lib-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MACRO BUILDER -->
+<div class="cp" id="cp-macro-builder">
+  <div class="pt">MACRO BUILDER</div><div class="ol"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;">
+    <div>
+      <div class="card">
+        <div class="card-lbl">CLIENT & GOAL</div>
+        <div class="field"><label>Select Client</label><select id="mb-client" onchange="mb_loadClient(this.value)"><option value="">Choose client...</option></select></div>
+        <div class="field"><label>Goal</label>
+          <select id="mb-goal" onchange="mb_calc()">
+            <option value="fat-loss">Fat Loss</option><option value="muscle">Muscle Building</option>
+            <option value="maintenance">Maintenance</option><option value="bulk">Lean Bulk</option><option value="cut">Aggressive Cut</option>
+          </select>
+        </div>
+        <div class="field"><label>Bodyweight (kg)</label><input type="number" id="mb-bw" placeholder="e.g. 82" step=".5" oninput="mb_calc()"/></div>
+        <div class="field"><label>Activity Level</label>
+          <select id="mb-activity" onchange="mb_calc()">
+            <option value="1.2">Sedentary</option><option value="1.375">Lightly active</option>
+            <option value="1.55" selected>Moderately active</option><option value="1.725">Very active</option>
+          </select>
+        </div>
+        <div class="card-lbl" style="margin-top:8px;">PRESETS</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;">
+          <button class="btn btn-g btn-sm" onclick="mb_preset('fat-loss')">Fat Loss</button>
+          <button class="btn btn-g btn-sm" onclick="mb_preset('muscle')">Muscle</button>
+          <button class="btn btn-g btn-sm" onclick="mb_preset('maintenance')">Maintenance</button>
+          <button class="btn btn-g btn-sm" onclick="mb_preset('cut')">Aggressive Cut</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-lbl">MACRO TARGETS</div>
+        <div class="macro-bar" id="mb-bar">
+          <div class="mb-pro" id="mbp" style="width:33%;height:6px;"></div>
+          <div class="mb-car" id="mbc" style="width:40%;height:6px;"></div>
+          <div class="mb-fat" id="mbf" style="width:27%;height:6px;"></div>
+        </div>
+        <div class="mb-grid">
+          <div class="mb-inp-card"><div class="mb-lbl" style="color:var(--green)">CALORIES</div><input type="number" class="big-inp" id="mb-cal" value="2200" oninput="mb_updateBar()"/><div style="font-size:10px;color:var(--sub);margin-top:3px;">kcal</div></div>
+          <div class="mb-inp-card"><div class="mb-lbl" style="color:var(--blue)">PROTEIN</div><input type="number" class="big-inp" id="mb-pro" value="180" style="color:var(--blue)" oninput="mb_updateBar()"/><div style="font-size:10px;color:var(--sub);margin-top:3px;">grams</div></div>
+          <div class="mb-inp-card"><div class="mb-lbl" style="color:var(--orange)">CARBS</div><input type="number" class="big-inp" id="mb-car" value="230" style="color:var(--orange)" oninput="mb_updateBar()"/><div style="font-size:10px;color:var(--sub);margin-top:3px;">grams</div></div>
+          <div class="mb-inp-card"><div class="mb-lbl" style="color:var(--red)">FAT</div><input type="number" class="big-inp" id="mb-fat" value="70" style="color:var(--red)" oninput="mb_updateBar()"/><div style="font-size:10px;color:var(--sub);margin-top:3px;">grams</div></div>
+          <div class="mb-inp-card"><div class="mb-lbl" style="color:var(--blue)">WATER</div><input type="number" class="big-inp" id="mb-wat" value="3" step=".5" style="color:var(--blue)"/><div style="font-size:10px;color:var(--sub);margin-top:3px;">litres</div></div>
+          <div class="mb-inp-card"><div class="mb-lbl" style="color:var(--sub)">MEALS</div><input type="number" class="big-inp" id="mb-meals" value="4" style="color:var(--sub)"/><div style="font-size:10px;color:var(--sub);margin-top:3px;">per day</div></div>
+        </div>
+        <div id="mb-summary" style="background:var(--dark);border-radius:var(--r3);padding:10px;font-size:13px;color:var(--sub);margin-bottom:12px;line-height:1.7;"></div>
+        <div class="field"><label>Coach Notes for Client</label><textarea id="mb-notes" placeholder="e.g. Hit protein first. Fill carbs around training. Flexible on food choices — just hit the numbers..."></textarea></div>
+        <button class="btn btn-o" style="width:100%;" onclick="mb_assign()">PUSH MACROS TO CLIENT APP ✓</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MESSAGES -->
+<div class="cp" id="cp-messages">
+  <div class="pt">MESSAGES</div><div class="pl"></div>
+  <div class="msg-layout">
+    <div class="msg-sb" id="coach-msg-sb"></div>
+    <div class="msg-main">
+      <div class="msg-hdr">
+        <div class="msg-hdr-av" id="coach-msg-av" style="background:var(--orange)">AJ</div>
+        <div><div style="font-family:var(--H);font-size:17px;letter-spacing:1px;" id="coach-msg-name">ALEX JOHNSON</div>
+        <div style="font-size:11px;color:var(--purple);" id="coach-msg-tier">TRANSFORMATION</div></div>
+      </div>
+      <div class="msg-list" id="coach-msg-list"></div>
+      <div class="msg-inp-row">
+        <input class="msg-inp" id="coach-msg-inp" placeholder="Message your client..." onkeydown="if(event.key==='Enter')coach_sendMsg()"/>
+        <button class="msg-send" onclick="coach_sendMsg()">↑</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD CLIENT -->
+<div class="cp" id="cp-add-client">
+  <div class="pt">ADD CLIENT</div><div class="pl"></div>
+  <div style="max-width:560px;">
+    <div class="card">
+      <div class="card-lbl">CLIENT DETAILS</div>
+      <div class="form-row">
+        <div class="field" style="margin:0"><label>First Name</label><input type="text" id="nc-fn" placeholder="Sarah"/></div>
+        <div class="field" style="margin:0"><label>Last Name</label><input type="text" id="nc-ln" placeholder="Mitchell"/></div>
+      </div>
+      <div class="field"><label>Email</label><input type="email" id="nc-em" placeholder="client@email.com"/></div>
+      <div class="form-row">
+        <div class="field" style="margin:0"><label>Plan / Tier</label>
+          <select id="nc-tier">
+            <option value="elite">Elite ($149/wk)</option>
+            <option value="transformation" selected>Transformation ($89/wk)</option>
+            <option value="strongstart">Strong Start ($50/wk)</option>
+          </select>
+        </div>
+        <div class="field" style="margin:0"><label>Goal</label>
+          <select id="nc-goal">
+            <option>Fat Loss</option><option>Muscle Building</option><option>Strength</option><option>General Fitness</option>
+          </select>
+        </div>
+        <div class="field" style="margin:0"><label>Sessions/Week</label><input type="number" id="nc-sess" placeholder="4" min="1" max="7"/></div>
+      </div>
+      <div class="form-row">
+        <div class="field" style="margin:0"><label>Starting Weight (kg)</label><input type="number" id="nc-sw" placeholder="85" step=".1"/></div>
+        <div class="field" style="margin:0"><label>Target Weight (kg)</label><input type="number" id="nc-tw" placeholder="78" step=".1"/></div>
+      </div>
+      <div class="field"><label>Notes / Background</label><textarea id="nc-notes" placeholder="Training history, injuries, lifestyle..."></textarea></div>
+    </div>
+    <div class="card">
+      <div class="card-lbl">APP PASSWORD</div>
+      <p style="font-size:13px;color:var(--sub);margin-bottom:10px;">This is what the client uses to log into the app. You control it — only you can change it.</p>
+      <div class="field"><label>Password</label><input type="text" id="nc-pass" placeholder="e.g. StrongCulture2026!"/></div>
+    </div>
+    <button class="btn btn-o" style="padding:13px 26px;font-size:15px;" onclick="addClient()">ADD CLIENT ✓</button>
+  </div>
+</div>
+
+</main>
+</div>
+</div><!-- /coach-app -->
+
+<!-- ═══════════════════════════════════════════════
+     CLIENT APP
+═══════════════════════════════════════════════ -->
+<div id="client-app">
+  <div class="topbar">
+    <div class="tb-logo" id="logo-tap" onclick="clientLogoTap()">🔥 <span>STRONG CULTURE</span></div>
+    <div class="tb-right">
+      <div class="ic-btn" id="timer-topbar" style="display:none;background:transparent;border:none;font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--orange);width:auto;padding:0 4px;">00:00</div>
+      <div class="ic-btn" onclick="goTab('messages')">💬</div>
+      <div class="ic-btn" onclick="goTab('profile')">👤</div>
+    </div>
+  </div>
+
+  <div class="pages">
+    <!-- HOME -->
+    <div class="page on" id="pg-home">
+      <div class="scr">
+        <div class="install-banner" id="install-banner">
+          <div style="font-size:28px;flex-shrink:0;">📲</div>
+          <div><div class="ib-title">Add to Home Screen</div><div class="ib-sub">Tap Share → "Add to Home Screen" for the full app experience.</div></div>
+        </div>
+        <div style="margin-bottom:14px;">
+          <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--sub);" id="h-greeting">GOOD MORNING</div>
+          <div style="font-family:var(--H);font-size:28px;letter-spacing:2px;" id="h-name">ALEX JOHNSON</div>
+        </div>
+        <div class="streak-card">
+          <div class="streak-fire">🔥</div>
+          <div><div class="streak-num" id="h-streak">3</div><div style="font-size:12px;color:var(--sub);margin-top:2px;">Week streak — keep it going!</div></div>
+          <div style="margin-left:auto;text-align:right;"><div style="font-family:var(--H);font-size:22px;color:var(--orange);">WK 4</div><div style="font-size:9px;color:var(--sub);">PROGRAM</div></div>
+        </div>
+        <div class="coach-banner">
+          <div class="c-av">AB</div>
+          <div><div style="font-size:11px;font-weight:700;color:var(--orange);">ANTZ BROWN · Coach</div><div style="font-size:13px;color:#ccc;line-height:1.55;margin-top:2px;" id="h-coach-msg">Push day today. Shoulder blade retraction on bench — watch the demo. Let's go! 💪</div></div>
+        </div>
+        <div class="today-card" onclick="goTab('workout')">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--sub);">TODAY'S WORKOUT</div>
+            <div style="font-size:11px;color:var(--orange);font-weight:700;">PUSH →</div>
+          </div>
+          <div style="font-family:var(--H);font-size:22px;letter-spacing:1px;margin-bottom:9px;" id="today-title">UPPER BODY STRENGTH</div>
+          <div id="today-ex-list"></div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-cell"><div class="sc-v">8</div><div class="sc-l">Sessions</div></div>
+          <div class="stat-cell"><div class="sc-v" style="color:var(--green)">-4.2</div><div class="sc-l">kg Lost</div></div>
+          <div class="stat-cell"><div class="sc-v">87%</div><div class="sc-l">Adherence</div></div>
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;">
+            <div class="card-lbl" style="margin:0">MACROS TODAY</div>
+            <div style="font-size:10px;color:var(--orange);font-weight:700;cursor:pointer;" onclick="goTab('nutrition')">VIEW →</div>
+          </div>
+          <div style="margin-bottom:8px;">
+            <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;"><span>Calories</span><span style="color:var(--orange)" id="h-cal-disp">1,840 / 2,200 kcal</span></div>
+            <div class="bar-track" style="height:5px;"><div class="bar-fill" style="width:84%;height:100%;"></div></div>
+          </div>
+          <div class="macro-mini">
+            <div class="mm-item"><div class="mm-v" style="color:var(--blue)" id="h-pro-disp">165g</div><div class="mm-l">Protein</div></div>
+            <div class="mm-item"><div class="mm-v" style="color:var(--orange)" id="h-car-disp">180g</div><div class="mm-l">Carbs</div></div>
+            <div class="mm-item"><div class="mm-v" style="color:var(--red)" id="h-fat-disp">58g</div><div class="mm-l">Fat</div></div>
+          </div>
+        </div>
+        <div id="sunday-reminder" style="display:none;" class="card" style="border-color:var(--orange)">
+          <div style="text-align:center;padding:6px 0;">
+            <div class="sun-pulse" style="font-size:32px;margin-bottom:8px;">🔔</div>
+            <div style="font-family:var(--H);font-size:20px;letter-spacing:2px;color:var(--orange);margin-bottom:5px;">CHECK-IN UNLOCKED!</div>
+            <div style="font-size:13px;color:var(--sub);margin-bottom:12px;">Sunday check-in is open. Takes 2 minutes.</div>
+            <button class="btn-big" style="padding:11px;" onclick="goTab('checkin')">DO MY CHECK-IN →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WORKOUT -->
+    <div class="page" id="pg-workout">
+      <div class="scr">
+        <div class="wk-header">
+          <div class="wk-top">
+            <div>
+              <div class="wk-wk">WEEK 3 · DAY 2</div>
+              <div class="wk-title" id="wk-title">UPPER BODY STRENGTH</div>
+              <div class="wk-meta" id="wk-meta">Push · Chest, Shoulders & Triceps</div>
+            </div>
+            <div class="timer-badge"><div class="t-dot run"></div><span id="timer-val">00:00</span></div>
+          </div>
+        </div>
+        <div class="day-tabs" id="day-tabs"></div>
+        <div id="exercise-list"></div>
+      </div>
+      <div class="sticky-log">
+        <button class="btn-big" onclick="logNextSet()">LOG NEXT SET <span>→</span></button>
+      </div>
+    </div>
+
+    <!-- PROGRESS -->
+    <div class="page" id="pg-progress">
+      <div class="scr">
+        <div style="font-family:var(--H);font-size:30px;letter-spacing:2px;margin-bottom:4px;">PROGRESS</div>
+        <div class="ptoggle">
+          <div class="ptt on" id="ptt-p" onclick="switchPTab('progress')">Progress</div>
+          <div class="ptt" id="ptt-b" onclick="switchPTab('bodyweight')">Bodyweight</div>
+        </div>
+        <div id="ptab-progress">
+          <div class="card">
+            <div class="card-lbl">YOUR STATS — THIS MONTH</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;text-align:center;">
+              <div style="padding:8px;border-right:1px solid var(--border)"><div style="font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">KG Lifted</div><div style="font-family:var(--H);font-size:20px;color:var(--orange)">28,450</div></div>
+              <div style="padding:8px;border-right:1px solid var(--border)"><div style="font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Since Last Wk</div><div style="font-family:var(--H);font-size:20px;color:var(--green)">+840</div></div>
+              <div style="padding:8px"><div style="font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Sessions</div><div style="font-family:var(--H);font-size:20px;color:var(--orange)">8</div></div>
+            </div>
+            <div class="divider"></div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;text-align:center;">
+              <div style="padding:8px;border-right:1px solid var(--border)"><div style="font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">PBs This Month</div><div style="font-family:var(--H);font-size:20px;color:var(--orange)">7</div></div>
+              <div style="padding:8px;border-right:1px solid var(--border)"><div style="font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Time Trained</div><div style="font-family:var(--H);font-size:20px;color:var(--orange)">14h</div></div>
+              <div style="padding:8px"><div style="font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Adherence</div><div style="font-family:var(--H);font-size:20px;color:var(--orange)">87%</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <div class="card-lbl" style="margin:0">PERSONAL BESTS</div>
+              <div class="filt-row" style="margin:0;gap:4px;">
+                <div class="filt-btn on" onclick="filterPBs('all',this)">All</div>
+                <div class="filt-btn" onclick="filterPBs('chest',this)">Chest</div>
+                <div class="filt-btn" onclick="filterPBs('legs',this)">Legs</div>
+                <div class="filt-btn" onclick="filterPBs('back',this)">Back</div>
+              </div>
+            </div>
+            <input style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:8px 11px;font-size:13px;outline:none;margin-bottom:10px;" placeholder="🔍  Search..." oninput="searchPBs(this.value)"/>
+            <div id="pb-list"></div>
+          </div>
+        </div>
+        <div id="ptab-bodyweight" style="display:none;">
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+              <div><div style="font-family:var(--H);font-size:34px;color:var(--orange)">82.0<span style="font-size:17px">kg</span></div><div style="font-size:12px;color:var(--green)">↓ -5.2kg from start</div></div>
+              <div class="filt-row" style="margin:0;gap:4px;">
+                <div class="filt-btn on" id="bw-w" onclick="switchBWR('week',this)">Wk</div>
+                <div class="filt-btn" id="bw-m" onclick="switchBWR('month',this)">Mo</div>
+                <div class="filt-btn" id="bw-a" onclick="switchBWR('all',this)">All</div>
+              </div>
+            </div>
+            <div class="divider"></div>
+            <div style="background:var(--dark);border-radius:var(--r3);padding:10px;">
+              <div class="chart-bars" id="bw-chart"></div>
+              <div class="c-xlbls" id="bw-labels"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-lbl">SESSION HISTORY</div>
+            <div id="sess-hist"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NUTRITION -->
+    <div class="page" id="pg-nutrition">
+      <div class="scr">
+        <div style="font-family:var(--H);font-size:30px;letter-spacing:2px;margin-bottom:3px;">NUTRITION</div>
+        <div style="font-size:13px;color:var(--sub);margin-bottom:14px;">Targets set by Antz — flexible diet</div>
+        <div class="mfp-banner" onclick="showToast('Open MyFitnessPal to log your food')">
+          <div style="font-size:26px;flex-shrink:0;">📱</div>
+          <div><div style="font-size:14px;font-weight:700;color:var(--blue)">Log in MyFitnessPal</div><div style="font-size:12px;color:var(--sub);margin-top:2px;">Track your food in MFP — Antz can review your intake.</div></div>
+          <div style="margin-left:auto;font-size:15px;color:var(--sub);">›</div>
+        </div>
+        <div class="card" style="margin-bottom:9px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
+            <div class="card-lbl" style="margin:0">CALORIES</div>
+            <div style="font-family:var(--H);font-size:20px;color:var(--orange);" id="n-cal-disp">1,840 <span style="font-size:13px;color:var(--sub);">/ 2,200</span></div>
+          </div>
+          <div class="bar-track" style="height:6px;"><div class="bar-fill" style="width:84%;height:100%;"></div></div>
+        </div>
+        <div class="macro-rings">
+          <div class="mring-card"><div class="ring-lbl">PROTEIN</div><div class="ring-wrap"><svg width="72" height="72" viewBox="0 0 72 72"><circle class="ring-bg" cx="36" cy="36" r="30"/><circle class="ring-fill" cx="36" cy="36" r="30" stroke="#3b82f6" stroke-dasharray="188.5" id="ring-pro" stroke-dashoffset="40"/></svg><div class="ring-inner"><div class="ring-val" style="color:var(--blue)" id="rp-val">165</div><div class="ring-tgt" id="rp-tgt">/ 180g</div></div></div><div class="ring-pct" id="rp-pct" style="color:var(--blue)">92%</div></div>
+          <div class="mring-card"><div class="ring-lbl">CARBS</div><div class="ring-wrap"><svg width="72" height="72" viewBox="0 0 72 72"><circle class="ring-bg" cx="36" cy="36" r="30"/><circle class="ring-fill" cx="36" cy="36" r="30" stroke="#f97316" stroke-dasharray="188.5" id="ring-car" stroke-dashoffset="57"/></svg><div class="ring-inner"><div class="ring-val" style="color:var(--orange)" id="rc-val">180</div><div class="ring-tgt" id="rc-tgt">/ 230g</div></div></div><div class="ring-pct" id="rc-pct" style="color:var(--orange)">78%</div></div>
+          <div class="mring-card"><div class="ring-lbl">FAT</div><div class="ring-wrap"><svg width="72" height="72" viewBox="0 0 72 72"><circle class="ring-bg" cx="36" cy="36" r="30"/><circle class="ring-fill" cx="36" cy="36" r="30" stroke="#ef4444" stroke-dasharray="188.5" id="ring-fat" stroke-dashoffset="75"/></svg><div class="ring-inner"><div class="ring-val" style="color:var(--red)" id="rf-val">58</div><div class="ring-tgt" id="rf-tgt">/ 70g</div></div></div><div class="ring-pct" id="rf-pct" style="color:var(--red)">83%</div></div>
+          <div class="mring-card"><div class="ring-lbl">WATER</div><div class="ring-wrap"><svg width="72" height="72" viewBox="0 0 72 72"><circle class="ring-bg" cx="36" cy="36" r="30"/><circle class="ring-fill" cx="36" cy="36" r="30" stroke="#22c55e" stroke-dasharray="188.5" stroke-dashoffset="48"/></svg><div class="ring-inner"><div class="ring-val" style="color:var(--green)">2.1</div><div class="ring-tgt">/ 3L</div></div></div><div class="ring-pct" style="color:var(--green)">70%</div></div>
+        </div>
+        <div class="card"><div class="card-lbl">FLEXIBLE DIET — LOG IN MFP</div>
+          <div style="background:var(--dark);border-radius:var(--r3);padding:11px;font-size:13px;color:#ccc;line-height:1.7;margin-bottom:11px;">Your macro targets are set by Antz. You choose <strong style="color:var(--orange)">what</strong> you eat — just hit your numbers. Use MyFitnessPal to track and aim to be within 5g of each macro.</div>
+          <div id="meals-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHECK-IN -->
+    <div class="page" id="pg-checkin">
+      <div class="scr">
+        <div style="font-family:var(--H);font-size:30px;letter-spacing:2px;margin-bottom:3px;">WEEKLY CHECK-IN</div>
+        <div style="font-size:13px;color:var(--sub);margin-bottom:14px;">Unlocks every Sunday at midnight NZT</div>
+        <div id="ci-locked-view">
+          <div class="ci-locked-card">
+            <div style="font-size:46px;margin-bottom:12px;">🔒</div>
+            <div style="font-family:var(--H);font-size:26px;letter-spacing:2px;margin-bottom:7px;">CHECK-IN LOCKED</div>
+            <div style="font-size:14px;color:var(--sub);line-height:1.7;margin-bottom:16px;">Your weekly check-in unlocks every Sunday at midnight NZT. Come back then to submit your progress and get your program for the week ahead.</div>
+            <div class="ci-countdown">
+              <div class="ci-unit"><div class="ci-val" id="ci-d">5</div><div class="ci-lbl">Days</div></div>
+              <div class="ci-sep">:</div>
+              <div class="ci-unit"><div class="ci-val" id="ci-h">14</div><div class="ci-lbl">Hrs</div></div>
+              <div class="ci-sep">:</div>
+              <div class="ci-unit"><div class="ci-val" id="ci-m">32</div><div class="ci-lbl">Mins</div></div>
+            </div>
+          </div>
+        </div>
+        <div id="ci-form-view" style="display:none;">
+          <div style="background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.25);border-radius:var(--r2);padding:11px 13px;margin-bottom:13px;display:flex;align-items:center;gap:8px;font-size:13px;color:#ddd;">
+            <span>🔔</span><span>Check-in is open! Submit before midnight Sunday. Updated plan will be ready by Monday.</span>
+          </div>
+          <div class="ci-step">
+            <div class="ci-step-lbl">01 — BODY STATS</div>
+            <div class="ci-step-title">MEASUREMENTS</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
+              <div><div style="font-size:11px;color:var(--sub);margin-bottom:5px;">Weight (kg)</div><input class="ci-inp" type="number" id="ci-weight" placeholder="e.g. 82.5" step="0.1"/></div>
+              <div><div style="font-size:11px;color:var(--sub);margin-bottom:5px;">Waist (cm)</div><input class="ci-inp" type="number" id="ci-waist" placeholder="e.g. 88"/></div>
+            </div>
+          </div>
+          <div class="ci-step">
+            <div class="ci-step-lbl">02 — TRAINING</div>
+            <div class="ci-step-title">HOW DID YOU TRAIN?</div>
+            <div style="margin-bottom:12px;"><div style="font-size:12px;font-weight:600;margin-bottom:7px;">Workouts completed</div><div class="rating-wrap">${[0,1,2,3,4,5,6,7].map(n=>`<button class="rb" onclick="pickR('wr',this)">${n}</button>`).join('')}</div></div>
+            <div><div style="font-size:12px;font-weight:600;margin-bottom:7px;">Energy levels (1–10)</div><div class="rating-wrap">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<button class="rb" onclick="pickR('er',this)">${n}</button>`).join('')}</div></div>
+          </div>
+          <div class="ci-step">
+            <div class="ci-step-lbl">03 — LIFESTYLE</div>
+            <div class="ci-step-title">NUTRITION & SLEEP</div>
+            <div style="margin-bottom:12px;"><div style="font-size:12px;font-weight:600;margin-bottom:7px;">Nutrition adherence (1–10)</div><div class="rating-wrap">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<button class="rb" onclick="pickR('nr',this)">${n}</button>`).join('')}</div></div>
+            <div style="margin-bottom:12px;"><div style="font-size:12px;font-weight:600;margin-bottom:7px;">Average sleep (hrs/night)</div><div class="rating-wrap">${['4','5','6','7','8','9+'].map(n=>`<button class="rb" onclick="pickR('slr',this)">${n}</button>`).join('')}</div></div>
+            <div><div style="font-size:12px;font-weight:600;margin-bottom:7px;">Stress levels (1–10)</div><div class="rating-wrap">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<button class="rb" onclick="pickR('str',this)">${n}</button>`).join('')}</div></div>
+          </div>
+          <div class="ci-step">
+            <div class="ci-step-lbl">04 — WINS & NOTES</div>
+            <div class="ci-step-title">CELEBRATE & COMMUNICATE</div>
+            <div style="margin-bottom:11px;"><div style="font-size:12px;font-weight:600;margin-bottom:7px;">🏆 Biggest win this week</div><input class="ci-inp" type="text" id="ci-win" placeholder="e.g. New PB on bench!"/></div>
+            <div style="margin-bottom:11px;"><div style="font-size:12px;font-weight:600;margin-bottom:7px;">📋 Workouts you'd like next week</div><div class="rating-wrap">${[1,2,3,4,5,6,7].map(n=>`<button class="rb" onclick="pickR('nw',this)">${n}</button>`).join('')}</div></div>
+            <div><div style="font-size:12px;font-weight:600;margin-bottom:7px;">💬 Anything for Antz?</div><textarea class="ci-ta" id="ci-notes" placeholder="Questions, struggles, life stuff..."></textarea></div>
+          </div>
+          <button class="btn-big" style="width:100%;margin-bottom:18px;" onclick="submitCI()">SUBMIT CHECK-IN 🔥</button>
+        </div>
+        <div id="ci-success-view" style="display:none;text-align:center;padding:40px 18px;">
+          <div style="font-size:56px;margin-bottom:12px;filter:drop-shadow(0 0 14px rgba(249,115,22,.7));">🔥</div>
+          <div style="font-family:var(--H);font-size:34px;letter-spacing:3px;margin-bottom:7px;">CHECK-IN SENT!</div>
+          <div style="font-size:14px;color:var(--sub);margin-bottom:22px;line-height:1.6;">Antz will review and have your updated plan ready by Monday morning.</div>
+          <button class="btn-big" style="width:auto;padding:11px 26px;" onclick="resetCI()">DONE</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MESSAGES -->
+    <div class="page" id="pg-messages">
+      <div class="cmsg-wrap">
+        <div class="cmsg-hdr">
+          <div class="c-av">AB</div>
+          <div><div style="font-size:14px;font-weight:700;">Antz Brown</div><div style="font-size:11px;font-weight:600;color:var(--green);">● Online · Head Coach</div></div>
+        </div>
+        <div class="cmsg-list" id="client-msg-list"></div>
+        <div class="cmsg-inp-row">
+          <input class="cmsg-inp" id="client-msg-inp" placeholder="Message Antz..." onkeydown="if(event.key==='Enter')client_sendMsg()"/>
+          <button class="cmsg-send" onclick="client_sendMsg()">↑</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="page" id="pg-profile">
+      <div class="scr">
+        <div class="profile-hero">
+          <div class="p-av" id="p-av">AJ</div>
+          <div class="p-name" id="p-name">ALEX JOHNSON</div>
+          <div class="p-tier" id="p-tier">⚡ TRANSFORMATION</div>
+          <div class="p-stats">
+            <div class="p-stat"><div class="ps-v">82.0</div><div class="ps-l">kg Now</div></div>
+            <div class="p-stat"><div class="ps-v">-5.2</div><div class="ps-l">kg Lost</div></div>
+            <div class="p-stat"><div class="ps-v">WK 4</div><div class="ps-l">Program</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-lbl">MY PLAN</div>
+          <div class="sr"><div class="sr-left"><div class="sr-title">Goal</div><div class="sr-sub">Set by Antz</div></div><div class="sr-val" id="pr-goal">Fat Loss</div></div>
+          <div class="sr"><div class="sr-left"><div class="sr-title">Tier</div></div><div class="sr-val" id="pr-tier">Transformation</div></div>
+          <div class="sr"><div class="sr-left"><div class="sr-title">Sessions/Week</div></div><div class="sr-val" id="pr-sess">4×</div></div>
+          <div class="sr"><div class="sr-left"><div class="sr-title">Start Date</div></div><div class="sr-val">Jan 6, 2026</div></div>
+        </div>
+        <div class="card">
+          <div class="card-lbl">MACRO TARGETS</div>
+          <div class="sr"><div class="sr-title">Calories</div><div class="sr-val" id="pr-cal">2,200 kcal</div></div>
+          <div class="sr"><div class="sr-title">Protein</div><div class="sr-val" style="color:var(--blue)" id="pr-pro">180g</div></div>
+          <div class="sr"><div class="sr-title">Carbs</div><div class="sr-val" id="pr-car">230g</div></div>
+          <div class="sr"><div class="sr-title">Fat</div><div class="sr-val" style="color:var(--red)" id="pr-fat">70g</div></div>
+          <div class="sr"><div class="sr-title">Water</div><div class="sr-val" style="color:var(--green)" id="pr-wat">3L</div></div>
+        </div>
+        <div class="card">
+          <div class="card-lbl">ADD TO HOME SCREEN</div>
+          <div style="background:var(--dark);border-radius:var(--r3);padding:11px;font-size:13px;color:#ccc;line-height:1.8;">
+            <strong style="color:var(--orange)">iPhone:</strong> Share button → "Add to Home Screen" → Add<br/>
+            <strong style="color:var(--orange)">Android:</strong> Menu (⋮) → "Add to Home Screen" → Add
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-lbl">ACCOUNT</div>
+          <div class="sr" onclick="doLogout()"><div class="sr-title" style="color:var(--red)">Sign Out</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM TABS -->
+  <div class="tabs-bar">
+    <div class="tab on" id="tab-home" onclick="goTab('home')"><div class="tab-ic">🏠</div><div class="tab-lb">Home</div></div>
+    <div class="tab" id="tab-workout" onclick="goTab('workout')"><div class="tab-ic">🏋️</div><div class="tab-lb">Workout</div></div>
+    <div class="tab" id="tab-progress" onclick="goTab('progress')"><div class="tab-ic">📈</div><div class="tab-lb">Progress</div></div>
+    <div class="tab" id="tab-nutrition" onclick="goTab('nutrition')"><div class="tab-ic">🥗</div><div class="tab-lb">Nutrition</div></div>
+    <div class="tab" id="tab-checkin" onclick="goTab('checkin')"><div class="tab-ic">✅</div><div class="tab-lb">Check-In</div></div>
+  </div>
+</div><!-- /client-app -->
+
+<!-- MODALS -->
+<div class="modal-bg" id="modal-ci-reply">
+  <div class="modal">
+    <div class="modal-title" id="modal-ci-title">REPLY TO CHECK-IN</div>
+    <div id="modal-ci-summary" style="background:var(--dark);padding:11px;border-radius:var(--r3);font-size:13px;color:var(--sub);border-left:2px solid var(--orange);margin-bottom:14px;line-height:1.7;"></div>
+    <div class="field"><label>Your Response</label><textarea id="ci-reply-txt" style="height:100px;" placeholder="Write your feedback and encouragement..."></textarea></div>
+    <div class="field"><label>Workout Adjustment</label>
+      <select id="ci-wk-adj">
+        <option>No change — keep current program</option>
+        <option>Increase volume (+1 set per exercise)</option>
+        <option>Deload week — reduce intensity 40%</option>
+        <option>Add an extra session</option>
+        <option>Remove a session — prioritise recovery</option>
+      </select>
+    </div>
+    <div class="field"><label>Macro Adjustment</label>
+      <select id="ci-mac-adj">
+        <option>No change</option>
+        <option>Increase calories by 150 kcal</option>
+        <option>Decrease calories by 150 kcal</option>
+        <option>Increase protein by 20g</option>
+        <option>Full macro reset</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-g" onclick="closeModal('modal-ci-reply')">CANCEL</button>
+      <button class="btn btn-o" onclick="sendCIReply()">SEND REPLY ✓</button>
+    </div>
+  </div>
+</div>
+<div class="modal-bg" id="modal-edit-plan">
+  <div class="modal">
+    <div class="modal-title" id="modal-ep-title">EDIT CLIENT PLAN</div>
+    <div class="form-row">
+      <div class="field" style="margin:0"><label>Tier</label>
+        <select id="ep-tier"><option value="elite">Elite</option><option value="transformation">Transformation</option><option value="strongstart">Strong Start</option></select>
+      </div>
+      <div class="field" style="margin:0"><label>Goal</label>
+        <select id="ep-goal"><option>Fat Loss</option><option>Muscle Building</option><option>Strength</option><option>General Fitness</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field" style="margin:0"><label>Sessions/Week</label><input type="number" id="ep-sess" min="1" max="7"/></div>
+      <div class="field" style="margin:0"><label>Current Weight (kg)</label><input type="number" id="ep-cw" step=".1"/></div>
+      <div class="field" style="margin:0"><label>Target Weight (kg)</label><input type="number" id="ep-tw" step=".1"/></div>
+    </div>
+    <div class="field"><label>Coach Notes</label><textarea id="ep-notes"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-g" onclick="closeModal('modal-edit-plan')">CANCEL</button>
+      <button class="btn btn-o" onclick="savePlan()">SAVE CHANGES ✓</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<datalist id="ex-dl"></datalist>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  DATA
+// ══════════════════════════════════════════════════════
+
+// ACCOUNTS — coach edits these to control who can log in
+const ACCOUNTS = {
+  'antz@strongculture.com':  { pass:'coach123',    role:'coach' },
+  'coach':                   { pass:'coach123',    role:'coach' },
+  'client@strongculture.com':{ pass:'strongculture', role:'client', clientId:1 },
+  'alex@strongculture.com':  { pass:'strongculture', role:'client', clientId:1 },
+  'sarah@strongculture.com': { pass:'strongculture', role:'client', clientId:2 },
+  'james@strongculture.com': { pass:'strongculture', role:'client', clientId:3 },
+};
+const COACH_PASS = 'coach123';
+const CLIENT_PASS = 'strongculture';
+
+// Drive video IDs
+const DV = {
+  'Barbell Bench Press':'1NB-u6RFDACSCdgaGcgbtBjZu_4oF7Jr4',
+  'Incline DB Press':'1GMVmhdZIqecaOBNzGDkm_Utx6t4pVch6',
+  'Cable Lateral Raise':'1MkXBJO3pCfIJGVqh9tFzlxFqZe5d3Tnz',
+  'Overhead Press':'1Kml7IIZ923nfXi2GSZDjmeI1o8jXvdQm',
+  'Tricep Dips Machine':'1LgYU7o5vPlbUSiQT66rRlq6lf6Gh4Lp0',
+  'Barbell Deadlift':'1L-rt5Kn0TIewijm9tKcfGirmLZStn_Rh',
+  'Barbell Bent Over Rows':'1Ku0_bHvQWTuSGjpxGt4Rl_FiY5-HQU9g',
+  'Lat Pulldown Machine':'1LkI0aCpg03KPziLGXhpN3GLzsqYGm6Q6',
+  'Seated Cable Rows':'1LNQWN16ybZtNygwoT7qy3QhlMcpOd5G1',
+  'Barbell Bicep Curl':'1IAxj2EuTGrjPv27ORf9foGy5RndulDWx',
+  'Barbell Squat':'1PSc9zEoicmLFV6gtVU_x47mLItua36rD',
+  'Romanian Deadlift':'1KzeQ3LW2mAGvaI9q150_e-M5uHyjdGmg',
+  'Leg Press High Foot':'1LVzBkLyrSY89DHRxnJuSuIbmvr6W5UyG',
+  'Seated Leg Curl':'1L5HIAZLgXKIGYL39e0DdlkGSUNkH2PuQ',
+  'Standing Calf Raise':'1Nn9p-yWMCeTkIRhYR-H7tHv8Vvyj3hAw',
+  'Hip Thrust Barbell':'1IsJXZJqLCGPiLwRZH3P9JInl6y2b3m2H',
+  'Pull Ups':'1NICvVrWTdxKdusNYQe7A-GMRnxqHtm7x',
+  'Face Pulls':'1MHmpPIRJ4FNJ3OM5R2CG0VbCRTLMzAap',
+};
+
+const EX_LIB = [
+  'Barbell Bench Press','Incline Dumbbell Press','Dumbbell Chest Flys','Chest Fly Machine','Pushups','Diamond Pushups',
+  'Barbell Bent Over Rows','Dumbbell Bent Over Rows','Seated Cable Rows','Lat Pulldown Machine','Pull Ups',
+  'Assisted Pull Up Machine','High Row Machine','Reverse Flys Machine','Face Pulls',
+  'Barbell Military Press','Seated Dumbbell Shoulder Press','Cable Lateral Raise','Overhead Press','Dumbbell Lateral Raise',
+  'Barbell Bicep Curl','Dumbbell Bicep Curl','Hammer Curl','EZ Bar Curl',
+  'Tricep Dips Machine','Tricep Rope Pushdown','Skull Crushers','Close Grip Bench Press',
+  'Barbell Deadlift','Romanian Deadlift','Sumo Deadlift','Hip Thrust Barbell','Hip Thrust Machine','Back Extension Glute Focus',
+  'Barbell Squat','Goblet Squat','Hack Squat Machine','Leg Press High Foot','Leg Press Low Foot',
+  'Seated Leg Extension','Seated Leg Curl','Standing Calf Raise','Seated Calf Raise','Donkey Calf Raise',
+  'Bodyweight Squat','Bodyweight Reverse Lunge','Walking Lunge','Step Ups','Box Jumps',
+  'Kettlebell Swings','Burpees','Mountain Climbers','Stairmaster','Treadmill Jog',
+  'Bicycle Crunches','Crunches','Russian Twists','Laying Leg Raises','Plank','Side Planks',
+];
+
+// Client data store
+let CLIENTS = [
+  {id:1,fn:'Alex',ln:'Johnson',email:'alex@strongculture.com',pass:'strongculture',tier:'transformation',goal:'Fat Loss',sess:4,sw:87.2,cw:82.0,tw:78,week:4,adherence:88,ciDue:true,color:'#a855f7',notes:'Consistent. Watch weekend nutrition.',streak:3,
+    macros:{cal:2200,pro:180,car:230,fat:70,wat:3,meals:4},
+    coachMsg:'Push day today. Shoulder blade retraction on bench — watch the demo. Let\'s go! 💪',
+    checkins:[{date:'Mar 24',weight:82.0,waist:88,workouts:4,energy:7,nutrition:8,sleep:7,stress:4,win:'New bench PB!',notes:'Good week. Nutrition solid Mon-Thu, slipped on weekend.',nextWeek:4,replied:false}]},
+  {id:2,fn:'Sarah',ln:'Mitchell',email:'sarah@strongculture.com',pass:'strongculture',tier:'elite',goal:'Muscle Building',sess:5,sw:62,cw:63.5,tw:66,week:8,adherence:94,ciDue:false,color:'#f97316',notes:'Elite client. Progress excellent.',streak:6,
+    macros:{cal:2600,pro:195,car:290,fat:75,wat:3.5,meals:5},
+    coachMsg:'5 sessions this week Sarah — you\'re built different. 🔥',
+    checkins:[{date:'Mar 17',weight:63.5,waist:70,workouts:5,energy:9,nutrition:9,sleep:8,stress:3,win:'5 sessions + OHP PB!',notes:'Best week yet.',nextWeek:5,replied:true}]},
+  {id:3,fn:'James',ln:'Torres',email:'james@strongculture.com',pass:'strongculture',tier:'strongstart',goal:'General Fitness',sess:3,sw:95,cw:91.2,tw:85,week:3,adherence:72,ciDue:true,color:'#22c55e',notes:'Struggling with consistency.',streak:1,
+    macros:{cal:2200,pro:165,car:230,fat:65,wat:2.5,meals:4},
+    coachMsg:'Keep it simple James. 3 solid sessions, hit the macros. You\'ve got this.',
+    checkins:[{date:'Mar 24',weight:91.2,waist:96,workouts:2,energy:5,nutrition:5,sleep:6,stress:7,win:'Made it to gym twice',notes:'Work was really stressful. Only 2 sessions.',nextWeek:3,replied:false}]},
+  {id:4,fn:'Neil',ln:'Watson',email:'neil@strongculture.com',pass:'strongculture',tier:'elite',goal:'Strength',sess:5,sw:88,cw:89.5,tw:92,week:12,adherence:96,ciDue:false,color:'#f97316',notes:'Powerlifting focus.',streak:8,
+    macros:{cal:3200,pro:210,car:380,fat:90,wat:4,meals:5},coachMsg:'Heavy week Neil. PRs incoming.',checkins:[]},
+  {id:5,fn:'Lisa',ln:'Park',email:'lisa@strongculture.com',pass:'strongculture',tier:'transformation',goal:'Fat Loss',sess:4,sw:74,cw:70.3,tw:65,week:6,adherence:80,ciDue:true,color:'#a855f7',notes:'Good progress. More cardio adherence.',streak:2,
+    macros:{cal:1750,pro:145,car:165,fat:50,wat:2.5,meals:4},coachMsg:'Great progress Lisa! Dial the weekend nutrition and we\'ll smash that goal.',
+    checkins:[{date:'Mar 23',weight:70.3,waist:78,workouts:3,energy:6,nutrition:7,sleep:7,stress:5,win:'Down 0.5kg!',notes:'Hit 3 sessions. Feeling leaner!',nextWeek:4,replied:false}]},
+  {id:6,fn:'Marcus',ln:'Lee',email:'marcus@strongculture.com',pass:'strongculture',tier:'strongstart',goal:'General Fitness',sess:3,sw:78,cw:76.1,tw:72,week:2,adherence:75,ciDue:false,color:'#22c55e',notes:'New client. Settling in well.',streak:2,
+    macros:{cal:2000,pro:155,car:200,fat:58,wat:2.5,meals:4},coachMsg:'Welcome to Week 3 Marcus! Keep the momentum going.',checkins:[]},
+];
+
+// Live editable program (shared between coach and client views)
+let LIVE_PROGRAM = [
+  {day:'MON',focus:'PUSH',title:'Upper Body Strength',exercises:[
+    {name:'Barbell Bench Press',sets:4,reps:'8-10',tempo:[3,0,1,0],note:'3s descent',icon:'🏋️',primary:['Chest','Anterior Delt'],secondary:['Triceps'],stab:['Rotator Cuff'],cues:['Retract shoulder blades hard into the bench','Grip just outside shoulder-width, full thumb wrap','Feet flat, slight arch in lower back','Lower to lower chest — 3 second descent','Press explosively, drive through your feet','Squeeze chest hard at the top'],mistakes:['Flaring elbows to 90° — shoulder stress','Bouncing off chest','Hips leaving bench'],tip:'Before you unrack — big belly breath, brace like you\'re about to be punched. Hold it through every rep.'},
+    {name:'Incline DB Press',sets:3,reps:'10-12',tempo:[3,0,1,1],note:'Peak squeeze',icon:'💪',primary:['Upper Chest'],secondary:['Front Delt','Triceps'],stab:['Rotator Cuff'],cues:['Set bench 30-45°','Elbows at 45-60° from torso','Press up and slightly inward','Squeeze hard at top for 1 second','Lower slowly — feel upper chest stretch','Blades retracted throughout'],mistakes:['Bench above 45°','Dumbbells drifting too wide','Rushing the eccentric'],tip:'Rotate pinkies inward at top for peak upper pec contraction. Feel it immediately.'},
+    {name:'Cable Lateral Raise',sets:3,reps:'15',tempo:[2,0,2,0],note:'Light, strict form',icon:'🦾',primary:['Medial Delt'],secondary:['Front Delt'],stab:['Traps'],cues:['Lead with elbow not hand','Just above parallel','Pinky slightly higher at top','3-second descent','No shrugging or body swing'],mistakes:['Too heavy — traps dominate','Above parallel','Fast reps'],tip:'Cables beat dumbbells — constant tension throughout.'},
+    {name:'Overhead Press',sets:3,reps:'10',tempo:[2,0,1,0],note:'Full lockout',icon:'⬆️',primary:['Anterior Delt','Medial Delt'],secondary:['Triceps','Upper Traps'],stab:['Core'],cues:['Grip just outside shoulder-width','Elbows slightly in front of bar','Brace core and glutes','Press straight up — move head back','Full lockout — shrug traps','Lower under control'],mistakes:['Excessive lower back arch','Forward press path','Not locking out'],tip:'"Squeeze oranges in armpits" — external rotation for a stronger press position.'},
+    {name:'Tricep Dips Machine',sets:3,reps:'12',tempo:[3,0,1,1],note:'Full extension',icon:'⬇️',primary:['Triceps'],secondary:['Chest'],stab:['Core'],cues:['Arms pinned to sides','Push to full extension','Squeeze hard at top','Control the return','Slight forward lean'],mistakes:['Elbows flaring forward','No full extension','Too fast'],tip:'Supinate wrists at bottom — builds the horseshoe shape.'},
+  ]},
+  {day:'TUE',focus:'PULL',title:'Back & Biceps',exercises:[
+    {name:'Barbell Deadlift',sets:3,reps:'5',tempo:[1,0,1,0],note:'Full lockout',icon:'🏋️',primary:['Hamstrings','Glutes','Lower Back'],secondary:['Lats','Traps'],stab:['Core'],cues:['Bar over mid-foot, hip-width','Hinge down — grip just outside legs','Big breath, brace before pulling','Push floor away — leg press the floor','Bar stays on legs','Lock out hips and knees simultaneously'],mistakes:['Jerking off floor','Rounding lower back','Bar drifting away'],tip:'"Take the slack out" before pulling — smooth, powerful, safe.'},
+    {name:'Barbell Bent Over Rows',sets:4,reps:'8',tempo:[2,1,1,0],note:'Drive elbows to hips',icon:'🏋️',primary:['Lats','Rhomboids'],secondary:['Rear Delt','Biceps'],stab:['Core'],cues:['Hinge to 45°, neutral spine','Engage lats — protect your armpits','Drive elbows back toward hips','Touch bar to lower sternum','Brief squeeze at top','Lower with control'],mistakes:['Rounding lower back','Pulling to chest','Body swing'],tip:'"Crack a walnut between shoulder blades" at initiation.'},
+    {name:'Lat Pulldown Machine',sets:3,reps:'10',tempo:[2,1,2,0],note:'Full stretch at top',icon:'⬇️',primary:['Lats'],secondary:['Biceps','Rear Delt'],stab:['Core'],cues:['Slight backward lean 10-15°','Pull blades DOWN first','Elbows toward back pockets','Squeeze at bottom','Full stretch every rep'],mistakes:['Behind the neck','Biceps initiating','No stretch at top'],tip:'"Elbows to back pockets" — keeps lats doing the work.'},
+    {name:'Seated Cable Rows',sets:3,reps:'12',tempo:[2,2,1,0],note:'2-second hold',icon:'↔️',primary:['Mid Traps','Rhomboids'],secondary:['Lats','Biceps'],stab:['Core'],cues:['Slight forward lean','Pull to lower sternum','Hold 2 seconds','Feel mid-back contract','Full stretch on return'],mistakes:['Torso swing','Pulling too high','No scapular retraction'],tip:'Paused reps — drop 20% weight, hold 2s. Game changer for back thickness.'},
+    {name:'Barbell Bicep Curl',sets:3,reps:'12',tempo:[2,0,1,1],note:'Full supination',icon:'💪',primary:['Biceps'],secondary:['Brachialis'],stab:['Core'],cues:['Upper arms pinned — no swing','Smooth arc','Pinky up at top','Squeeze 1 second','3s negative','Full extension at bottom'],mistakes:['Swinging torso','No supination','Short ROM'],tip:'Add hammer curls — brachialis pushes the peak UP.'},
+  ]},
+  {day:'WED',focus:'REST',title:'Active Recovery',exercises:[]},
+  {day:'THU',focus:'LEGS',title:'Legs & Glutes',exercises:[
+    {name:'Barbell Squat',sets:4,reps:'8',tempo:[3,0,1,0],note:'Below parallel',icon:'🦵',primary:['Quads','Glutes'],secondary:['Hamstrings','Adductors'],stab:['Core','Calves'],cues:['Bar on upper traps, not neck','Shoulder-width stance, toes 15-30° out','Big breath, brace hard','Knees out over toes','Break parallel','Drive floor away'],mistakes:['Knee cave','Good morning squat','Above parallel'],tip:'Pull bar DOWN into traps — creates stable shelf, stops forward lean.'},
+    {name:'Romanian Deadlift',sets:3,reps:'10',tempo:[3,1,1,0],note:'Hamstring stretch',icon:'🏋️',primary:['Hamstrings','Glutes'],secondary:['Adductors','Lower Back'],stab:['Core'],cues:['Push hips BACK','Bar trails thighs down','Lower to mid-shin stretch','Neutral spine throughout','Drive hips forward at top','Squeeze glutes hard'],mistakes:['Too much knee bend','Rounding lower back','Bar drifting away'],tip:'Push glutes back to touch a wall behind you — that\'s the hip hinge pattern.'},
+    {name:'Leg Press High Foot',sets:3,reps:'12',tempo:[3,0,1,0],note:'No hard lockout',icon:'🦵',primary:['Quads','Glutes'],secondary:['Hamstrings'],stab:['Core'],cues:['High foot placement','Lower to 90° knees','Drive through full foot','No explosive lockout','Back stays on seat'],mistakes:['Back peeling off seat','Partial ROM','Toes pointing forward'],tip:'Single leg version fixes strength imbalances and isolates glutes.'},
+    {name:'Seated Leg Curl',sets:3,reps:'12',tempo:[2,1,3,0],note:'3-second negative',icon:'🦵',primary:['Hamstrings'],secondary:['Calves'],stab:['Core'],cues:['Pad just above heels','Press hips into seat','Full contraction','Squeeze 1 second','3-second descent'],mistakes:['Hips rising','Momentum swinging','Short ROM'],tip:'4-second negatives — drop 30%, transform hamstring development.'},
+    {name:'Hip Thrust Barbell',sets:3,reps:'12',tempo:[2,2,1,0],note:'2-second squeeze',icon:'🍑',primary:['Glutes'],secondary:['Hamstrings','Adductors'],stab:['Core'],cues:['Upper back on bench at shoulder blades','Hip-width feet, knees 90° at top','Drive through heels','Full extension — parallel to floor','2-second squeeze','Chin tucked'],mistakes:['Hyperextending lower back','Feet too far','No pause'],tip:'"Squeeze a coin between glutes" — deliberate squeeze changes everything.'},
+    {name:'Standing Calf Raise',sets:4,reps:'15',tempo:[2,2,3,0],note:'Full stretch + pause',icon:'🦶',primary:['Gastrocnemius','Soleus'],secondary:[],stab:['Peroneals'],cues:['Heel below toe on step','Rise as high as possible','2-second pause at top','3-second descent','Feel deep stretch'],mistakes:['Short ROM','Bouncing through reps','No stretch'],tip:'Take sets to full failure with 3-second bottom pause. Burns — that\'s exactly right.'},
+  ]},
+  {day:'FRI',focus:'UPPER',title:'Upper Body Volume',exercises:[
+    {name:'Pull Ups',sets:3,reps:'8',tempo:[2,0,2,0],note:'Dead hang at bottom',icon:'⬆️',primary:['Lats'],secondary:['Biceps','Rear Delt'],stab:['Core'],cues:['Full dead hang start','Blades DOWN before bending elbows','Elbows toward back pockets','Chin clears bar','Full hang on descent'],mistakes:['Kipping','No dead hang','Biceps initiating'],tip:'Not there yet? Jump to top, 5-second negatives. Fastest way to build pull-up strength.'},
+    {name:'Overhead Press',sets:3,reps:'10',tempo:[2,0,1,0],note:'Full lockout',icon:'⬆️',primary:['Anterior Delt','Medial Delt'],secondary:['Triceps'],stab:['Core'],cues:['Grip just outside shoulder-width','Brace hard before pressing','Press straight up','Full lockout'],mistakes:['Arch','Forward path','No lockout'],tip:'"Squeeze oranges in armpits" for strongest position.'},
+    {name:'Seated Cable Rows',sets:3,reps:'12',tempo:[2,2,1,0],note:'2-second hold',icon:'↔️',primary:['Mid Traps','Rhomboids'],secondary:['Lats','Biceps'],stab:['Core'],cues:['Slight forward lean','Pull to sternum','2-second hold','Full stretch'],mistakes:['Body swing','Too high','No retraction'],tip:'Paused reps — back thickness secret weapon.'},
+    {name:'Face Pulls',sets:3,reps:'15',tempo:[2,2,2,0],note:'External rotation',icon:'😤',primary:['Rear Delt','External Rotators'],secondary:['Mid Traps'],stab:['Rotator Cuff'],cues:['Cable at eye height, rope','Hands beside ears at finish','Elbows at shoulder height','1-second pause','Light weight'],mistakes:['Cable too low','Not splitting rope','Going heavy'],tip:'Insurance for your shoulders. End of every push session. Non-negotiable.'},
+    {name:'Cable Lateral Raise',sets:3,reps:'15',tempo:[2,0,2,0],note:'Strict form',icon:'🦾',primary:['Medial Delt'],secondary:['Front Delt'],stab:['Traps'],cues:['Lead with elbow','Just above parallel','Pinky up at top','3-second down'],mistakes:['Too heavy','Above parallel','Fast reps'],tip:'Constant tension beats dumbbells for lateral delts every time.'},
+  ]},
+  {day:'SAT',focus:'REST',title:'Rest Day',exercises:[]},
+  {day:'SUN',focus:'CHECK-IN',title:'Check-In Day',exercises:[]},
+];
+
+const MEALS = {
+  Breakfast:[{n:'Oats + Banana + Protein',c:480,p:38,ca:62,f:8}],
+  Lunch:[{n:'Chicken Breast, Rice & Broccoli',c:540,p:52,ca:58,f:6}],
+  Dinner:[{n:'Lean Beef Mince & Sweet Potato',c:620,p:48,ca:55,f:16}],
+  Snacks:[{n:'Greek Yoghurt & Berries',c:200,p:18,ca:22,f:4}],
+};
+
+const PBs = [
+  {name:'Barbell Bench Press',cat:'chest',val:'82.5kg × 8',vol:'4,630kg',date:'Mar 26'},
+  {name:'Barbell Squat',cat:'legs',val:'102.5kg × 7',vol:'5,780kg',date:'Mar 24'},
+  {name:'Barbell Deadlift',cat:'legs',val:'140kg × 5',vol:'6,230kg',date:'Mar 22'},
+  {name:'Overhead Press',cat:'chest',val:'70kg × 8',vol:'2,240kg',date:'Mar 20'},
+  {name:'Barbell Bent Over Rows',cat:'back',val:'90kg × 8',vol:'3,120kg',date:'Mar 19'},
+  {name:'Lat Pulldown Machine',cat:'back',val:'75kg × 10',vol:'2,640kg',date:'Mar 18'},
+  {name:'Hip Thrust Barbell',cat:'legs',val:'120kg × 12',vol:'5,040kg',date:'Mar 17'},
+];
+
+const SESS_HIST = [
+  {date:'Mar 26',title:'Upper Body',ex:'Barbell Bench Press',sets:[{w:80,r:8},{w:80,r:8},{w:82.5,r:7},{w:82.5,r:6}]},
+  {date:'Mar 24',title:'Legs',ex:'Barbell Squat',sets:[{w:100,r:8},{w:100,r:8},{w:102.5,r:7}]},
+  {date:'Mar 22',title:'Back & Biceps',ex:'Barbell Deadlift',sets:[{w:130,r:5},{w:135,r:5},{w:140,r:4}]},
+];
+
+const MSGS = {
+  1:[{out:false,text:'Welcome to the app! Every exercise has a demo video and full technique guide — tap any exercise to open it.',time:'Mon 9am'},{out:false,text:'Push session today. Focus on shoulder blade retraction on bench.',time:'Today 8am'},{out:true,text:'That shoulder blade cue is a game changer!',time:'Today 8:32am'},{out:false,text:'Exactly — it\'ll protect your shoulders AND add kg long-term. Go smash it 🔥',time:'Today 8:35am'}],
+  2:[{out:false,text:'Sarah — 5/5 sessions and a new OHP PB. Best week of the program. 🏆',time:'Mon'},{out:true,text:'Thank you! Feeling amazing.',time:'Mon'}],
+  3:[{out:true,text:'Hey Antz, really struggling with work. Only made it twice.',time:'6h ago'},{out:false,text:'I hear you James. Life happens. Reset this week — 3 sessions, no stress.',time:'5h ago'}],
+};
+
+// ══════════════════════════════════════════════════════
+//  SHARED STATE
+// ══════════════════════════════════════════════════════
+let currentRole = null;
+let currentUser = null;
+let currentClientId = 1;
+let currentDetailId = null;
+let currentCIReplyId = null;
+let editingPlanId = null;
+let currentMsgClient = 1;
+let currentCoachMsgClient = 1;
+let logData = {};
+let currentDay = 0;
+let timerSecs = 0;
+let timerRunning = false;
+let timerInt = null;
+let restInt = null;
+let restSecs = 0;
+let logoTaps = 0;
+let logoTapTimer = null;
+
+// Workout builder state
+let wb_days = [];
+
+// ══════════════════════════════════════════════════════
+//  LOGIN / LOGOUT
+// ══════════════════════════════════════════════════════
+function doLogin() {
+  const email = document.getElementById('l-email').value.trim().toLowerCase();
+  const pass  = document.getElementById('l-pass').value;
+  const err   = document.getElementById('ls-err');
+
+  // Check if coach
+  if (pass === COACH_PASS) {
+    err.style.display = 'none';
+    currentRole = 'coach';
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('coach-app').style.display = 'block';
+    initCoach();
+    return;
+  }
+
+  // Check if client
+  if (pass === CLIENT_PASS) {
+    err.style.display = 'none';
+    currentRole = 'client';
+    // Try to find matching client
+    const acct = ACCOUNTS[email];
+    if (acct && acct.role === 'client') {
+      currentClientId = acct.clientId;
+    } else {
+      currentClientId = 1; // Default to Alex for demo
+    }
+    currentUser = CLIENTS.find(c => c.id === currentClientId) || CLIENTS[0];
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('client-app').style.display = 'block';
+    initClient();
+    return;
+  }
+
+  err.style.display = 'block';
+}
+
+document.getElementById('l-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+function doLogout() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('coach-app').style.display = 'none';
+  document.getElementById('client-app').style.display = 'none';
+  if (timerInt) clearInterval(timerInt);
+  timerRunning = false;
+  document.getElementById('l-email').value = '';
+  document.getElementById('l-pass').value = '';
+}
+
+// ══════════════════════════════════════════════════════
+//  COACH — INIT & NAV
+// ══════════════════════════════════════════════════════
+function initCoach() {
+  const h = new Date().getHours();
+  document.getElementById('dash-greet').textContent = (h<12?'Good morning':h<17?'Good afternoon':'Good evening') + ', Antz. Here\'s your overview.';
+  renderDashboard();
+  renderClientGrid(CLIENTS);
+  renderAllCI('all');
+  renderCoachMsgSidebar();
+  renderCoachMsg(CLIENTS[0]);
+  populateClientSelects();
+  wb_setDays(4);
+  renderExLib('');
+  mb_updateBar();
+  updateCIBadge();
+}
+
+function showCP(name, el) {
+  document.querySelectorAll('.cp').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('on'));
+  document.getElementById('cp-' + name)?.classList.add('on');
+  if (el?.classList) el.classList.add('on');
+}
+
+// ── DASHBOARD ──
+function renderDashboard() {
+  const pending = CLIENTS.flatMap(c => c.checkins.filter(ci => !ci.replied).map(ci => ({...ci, client:c})));
+  document.getElementById('d-pending').textContent = pending.length;
+  const el = document.getElementById('dash-pending');
+  if (!pending.length) { el.innerHTML = '<p style="color:var(--sub);font-size:13px;">All caught up! 🎉</p>'; }
+  else el.innerHTML = pending.slice(0,3).map(ci => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+      <div><div style="font-weight:600;font-size:13px;">${ci.client.fn} ${ci.client.ln}</div>
+      <div style="font-size:11px;color:var(--sub)">${ci.date} · Wants ${ci.nextWeek} sessions</div></div>
+      <button class="btn btn-o btn-sm" onclick="openCIReply(${ci.client.id})">REPLY</button>
+    </div>`).join('');
+
+  const tColors = {elite:'var(--orange)',transformation:'var(--purple)',strongstart:'var(--green)'};
+  const tiers = {elite:0,transformation:0,strongstart:0};
+  CLIENTS.forEach(c => tiers[c.tier]++);
+  const total = CLIENTS.length;
+  document.getElementById('dash-tiers').innerHTML = Object.entries(tiers).map(([k,v]) => `
+    <div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
+        <span style="color:${tColors[k]};font-weight:600;">${k.charAt(0).toUpperCase()+k.slice(1)}</span>
+        <span>${v} clients</span>
+      </div>
+      <div class="bar-track" style="height:5px;"><div class="bar-fill" style="width:${v/total*100}%;height:100%;"></div></div>
+    </div>`).join('');
+
+  document.getElementById('dash-activity').innerHTML = [
+    {dot:'dot-o',txt:'<b>Alex Johnson</b> submitted Week 4 check-in — Wants 4 sessions next week',time:'2h ago'},
+    {dot:'dot-g',txt:'<b>Sarah Mitchell</b> completed all 5 sessions this week 🔥',time:'Yesterday'},
+    {dot:'dot-r',txt:'<b>James Torres</b> only completed 2 sessions — needs support',time:'6h ago'},
+    {dot:'dot-o',txt:'<b>Lisa Park</b> submitted check-in — down 0.5kg this week',time:'Mar 25'},
+    {dot:'dot-g',txt:'<b>Neil Watson</b> logged new squat PB — 145kg × 5',time:'Mar 24'},
+  ].map(a => `<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid rgba(34,34,34,.4);">
+    <div class="dot ${a.dot}" style="margin-top:4px;flex-shrink:0;"></div>
+    <div style="flex:1;font-size:13px;">${a.txt}</div>
+    <div style="font-size:11px;color:var(--sub);flex-shrink:0;">${a.time}</div>
+  </div>`).join('');
+}
+
+function updateCIBadge() {
+  const n = CLIENTS.flatMap(c => c.checkins.filter(ci => !ci.replied)).length;
+  document.getElementById('ci-badge').textContent = n;
+}
+
+// ── CLIENT GRID ──
+const tColors = {elite:'var(--orange)',transformation:'var(--purple)',strongstart:'var(--green)'};
+const tLabels = {elite:'⭐ ELITE',transformation:'⚡ TRANSFORMATION',strongstart:'🟢 STRONG START'};
+
+function renderClientGrid(list) {
+  document.getElementById('client-grid').innerHTML = list.map(c => `
+    <div class="cc ${c.tier}" onclick="openClientDetail(${c.id})">
+      <div class="cc-top">
+        <div class="cc-av" style="background:${c.color}">${c.fn[0]}${c.ln[0]}</div>
+        <div>
+          <div class="cc-name">${c.fn} ${c.ln}</div>
+          <div class="cc-tier" style="color:${tColors[c.tier]}">${tLabels[c.tier]}</div>
+        </div>
+      </div>
+      <div class="cc-stats">
+        <div class="cc-s"><div class="cc-sv">${c.cw}kg</div><div class="cc-sl">Weight</div></div>
+        <div class="cc-s"><div class="cc-sv">${c.adherence}%</div><div class="cc-sl">Adherence</div></div>
+        <div class="cc-s"><div class="cc-sv">Wk${c.week}</div><div class="cc-sl">Program</div></div>
+      </div>
+      <div class="cc-foot">
+        <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--sub);">
+          <span class="dot ${c.ciDue?'dot-r':'dot-g'}"></span>
+          <span style="color:${c.ciDue?'var(--red)':''};">${c.ciDue?'Check-in pending':'Up to date'}</span>
+        </div>
+        <div style="font-size:12px;color:var(--orange)">🔥 ${c.streak}wk</div>
+      </div>
+    </div>`).join('');
+}
+
+function filterCC(tier, btn) {
+  document.querySelectorAll('[id^="cp-clients"] .btn-g').forEach(b => { b.style.borderColor=''; b.style.color=''; });
+  if (btn) { btn.style.borderColor='var(--orange)'; btn.style.color='var(--orange)'; }
+  renderClientGrid(tier === 'all' ? CLIENTS : CLIENTS.filter(c => c.tier === tier));
+}
+
+// ── CLIENT DETAIL ──
+function openClientDetail(id) {
+  currentDetailId = id;
+  const c = CLIENTS.find(x => x.id === id);
+  document.getElementById('cd-header').innerHTML = `
+    <div class="cd-header">
+      <div class="cd-av" style="background:${c.color}">${c.fn[0]}${c.ln[0]}</div>
+      <div>
+        <div class="cd-name">${c.fn.toUpperCase()} ${c.ln.toUpperCase()}</div>
+        <div class="cd-meta">
+          <span class="mtag" style="color:${tColors[c.tier]}">${c.tier.toUpperCase()}</span>
+          <span class="mtag">${c.goal}</span>
+          <span class="mtag">${c.email}</span>
+          <span class="mtag">${c.sess}×/wk</span>
+        </div>
+      </div>
+      <div class="cd-acts">
+        <button class="btn btn-g btn-sm" onclick="openEditPlan(${id})">EDIT PLAN</button>
+        <button class="btn btn-o btn-sm" onclick="goToMacros(${id})">SET MACROS</button>
+        <button class="btn btn-p btn-sm" onclick="goToWorkout(${id})">BUILD WORKOUT</button>
+      </div>
+    </div>`;
+
+  // Overview
+  const lost = (c.sw - c.cw).toFixed(1);
+  document.getElementById('ct-overview').innerHTML = `
+    <div class="stats-row">
+      <div class="stat-box sb-o"><div class="sv" style="color:var(--orange)">${c.cw}kg</div><div class="sl">Current Weight</div></div>
+      <div class="stat-box sb-g"><div class="sv" style="color:var(--green)">${parseFloat(lost)>0?'-'+lost:'+'+Math.abs(lost)}kg</div><div class="sl">Total Change</div></div>
+      <div class="stat-box sb-p"><div class="sv" style="color:var(--purple)">${Math.abs(c.tw-c.cw).toFixed(1)}kg</div><div class="sl">To Goal</div></div>
+      <div class="stat-box sb-o"><div class="sv" style="color:var(--orange)">${c.adherence}%</div><div class="sl">Adherence</div></div>
+    </div>
+    <div class="card"><div class="card-lbl">COACH NOTES</div>
+      <textarea style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:10px 12px;font-size:14px;outline:none;resize:vertical;min-height:70px;" id="ov-notes-${id}">${c.notes}</textarea>
+      <button class="btn btn-o btn-sm" style="margin-top:8px;" onclick="saveNote(${id})">SAVE NOTE</button>
+    </div>`;
+
+  // Plan
+  document.getElementById('ct-plan').innerHTML = `
+    <div class="card"><div class="card-lbl">CURRENT PLAN</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;">
+        <div><div style="font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Tier</div><div style="font-size:15px;font-weight:700;color:${tColors[c.tier]}">${c.tier.charAt(0).toUpperCase()+c.tier.slice(1)}</div></div>
+        <div><div style="font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Goal</div><div style="font-size:15px;font-weight:700;">${c.goal}</div></div>
+        <div><div style="font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Sessions</div><div style="font-size:15px;font-weight:700;color:var(--orange)">${c.sess}×/wk</div></div>
+      </div>
+      <button class="btn btn-g btn-sm" onclick="openEditPlan(${id})">EDIT PLAN</button>
+    </div>
+    <div class="card"><div class="card-lbl">MACROS <button class="btn btn-o btn-sm" style="float:right;" onclick="goToMacros(${id})">EDIT MACROS</button></div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:7px;text-align:center;margin-top:8px;">
+        <div style="background:var(--dark);border-radius:var(--r3);padding:10px;"><div style="font-family:var(--H);font-size:20px;color:var(--green)">${c.macros.cal}</div><div style="font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-top:2px;">cal</div></div>
+        <div style="background:var(--dark);border-radius:var(--r3);padding:10px;"><div style="font-family:var(--H);font-size:20px;color:var(--blue)">${c.macros.pro}g</div><div style="font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-top:2px;">pro</div></div>
+        <div style="background:var(--dark);border-radius:var(--r3);padding:10px;"><div style="font-family:var(--H);font-size:20px;color:var(--orange)">${c.macros.car}g</div><div style="font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-top:2px;">carbs</div></div>
+        <div style="background:var(--dark);border-radius:var(--r3);padding:10px;"><div style="font-family:var(--H);font-size:20px;color:var(--red)">${c.macros.fat}g</div><div style="font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-top:2px;">fat</div></div>
+        <div style="background:var(--dark);border-radius:var(--r3);padding:10px;"><div style="font-family:var(--H);font-size:20px;color:var(--blue)">${c.macros.wat}L</div><div style="font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-top:2px;">water</div></div>
+      </div>
+    </div>`;
+
+  // This week's workout
+  document.getElementById('ct-workout').innerHTML = `
+    <div style="background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);border-radius:var(--r2);padding:11px 13px;margin-bottom:14px;font-size:13px;color:#ccc;display:flex;gap:8px;align-items:center;">
+      <span>📋</span><span>Clients <strong>only see this week's program</strong>. Updates after you build and push a new one post-Sunday check-in.</span>
+    </div>
+    <div class="card"><div class="card-lbl">THIS WEEK — ${c.fn.toUpperCase()}</div>
+      ${LIVE_PROGRAM.filter(d => d.exercises.length).map(d => `
+        <div style="padding:9px 0;border-bottom:1px solid var(--border);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+            <strong style="font-family:var(--H);font-size:17px;letter-spacing:1px;">${d.day} — ${d.focus}</strong>
+            <span style="font-size:11px;color:var(--sub)">${d.exercises.length} exercises</span>
+          </div>
+          ${d.exercises.map(ex => `<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:var(--sub);">
+            <span style="color:var(--text)">${ex.name}</span><span style="color:var(--orange)">${ex.sets}×${ex.reps}</span>
+          </div>`).join('')}
+        </div>`).join('')}
+      <button class="btn btn-p btn-sm" style="margin-top:12px;" onclick="goToWorkout(${id})">BUILD NEW PROGRAM FOR ${c.fn.toUpperCase()}</button>
+    </div>`;
+
+  // Check-ins
+  document.getElementById('ct-checkins').innerHTML = c.checkins.length ? c.checkins.map(ci => `
+    <div class="ci-card ${ci.replied?'replied':'pending'}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+        <div><div style="font-family:var(--H);font-size:17px;letter-spacing:1px;">${ci.date}</div>
+        <div style="font-size:11px;color:var(--orange);margin-top:2px;">Requested ${ci.nextWeek} workouts next week</div></div>
+        ${ci.replied ? '<span class="badge bg">REPLIED</span>' : `<button class="btn btn-o btn-sm" onclick="openCIReply(${id})">REPLY</button>`}
+      </div>
+      <div class="ci-metrics">
+        <div class="ci-m"><div class="ci-mv">${ci.weight}kg</div><div class="ci-ml">Weight</div></div>
+        <div class="ci-m"><div class="ci-mv">${ci.workouts}</div><div class="ci-ml">Sessions</div></div>
+        <div class="ci-m"><div class="ci-mv">${ci.energy}/10</div><div class="ci-ml">Energy</div></div>
+        <div class="ci-m"><div class="ci-mv">${ci.nutrition}/10</div><div class="ci-ml">Nutrition</div></div>
+        <div class="ci-m"><div class="ci-mv">${ci.sleep}hrs</div><div class="ci-ml">Sleep</div></div>
+        <div class="ci-m"><div class="ci-mv">${ci.stress}/10</div><div class="ci-ml">Stress</div></div>
+      </div>
+      <div class="ci-notes">🏆 <strong style="color:var(--orange)">Win:</strong> ${ci.win}<br/><br/>${ci.notes}</div>
+    </div>`).join('') : '<p style="color:var(--sub);">No check-ins yet.</p>';
+
+  // Logs
+  document.getElementById('ct-logs').innerHTML = `<div class="card"><div class="card-lbl">RECENT WORKOUT LOGS</div>
+    <table class="data-table">
+      <thead><tr><th>Date</th><th>Exercise</th><th>Best Set</th><th>Volume</th></tr></thead>
+      <tbody>
+        <tr><td>Mar 26</td><td>Barbell Bench Press</td><td style="color:var(--orange)">82.5kg × 7</td><td>1,286kg</td></tr>
+        <tr><td>Mar 24</td><td>Barbell Squat</td><td style="color:var(--orange)">102.5kg × 7</td><td>3,280kg</td></tr>
+        <tr><td>Mar 22</td><td>Barbell Deadlift</td><td style="color:var(--orange)">140kg × 5</td><td>2,100kg</td></tr>
+      </tbody>
+    </table></div>`;
+
+  // Message
+  document.getElementById('ct-msg').innerHTML = `<div class="card"><div class="card-lbl">SEND MESSAGE TO ${c.fn.toUpperCase()}</div>
+    <textarea style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:10px 12px;font-size:14px;outline:none;resize:vertical;min-height:90px;" placeholder="Message to ${c.fn}..." id="qm-${id}"></textarea>
+    <button class="btn btn-o" style="margin-top:8px;" onclick="showToast('Message sent to ${c.fn}! 💬')">SEND MESSAGE</button>
+  </div>`;
+
+  // Reset tabs
+  document.querySelectorAll('.tb').forEach((b,i) => b.classList.toggle('on', i===0));
+  document.querySelectorAll('.tc').forEach((t,i) => t.classList.toggle('on', i===0));
+  showCP('client-detail', null);
+}
+
+function showCT(id, btn) {
+  document.querySelectorAll('.tb').forEach(b => b.classList.remove('on'));
+  document.querySelectorAll('.tc').forEach(t => t.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('ct-' + id).classList.add('on');
+}
+
+function saveNote(id) {
+  const c = CLIENTS.find(x => x.id === id);
+  c.notes = document.getElementById('ov-notes-' + id).value;
+  showToast('Note saved!');
+}
+
+// ── CHECK-INS ──
+function renderAllCI(filter) {
+  const all = CLIENTS.flatMap(c => c.checkins.map(ci => ({...ci, client:c})));
+  const list = filter === 'all' ? all : filter === 'pending' ? all.filter(ci => !ci.replied) : all.filter(ci => ci.replied);
+  document.getElementById('all-ci').innerHTML = list.map(ci => `
+    <div class="ci-card ${ci.replied?'replied':'pending'}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+        <div><div style="font-family:var(--H);font-size:18px;letter-spacing:1px;">${ci.client.fn} ${ci.client.ln} — ${ci.date}</div>
+        <div style="font-size:11px;color:var(--orange);margin-top:2px;">Requested <strong>${ci.nextWeek} workouts</strong> next week</div></div>
+        ${ci.replied ? '<span class="badge bg">REPLIED</span>' : `<button class="btn btn-o btn-sm" onclick="openCIReply(${ci.client.id})">REVIEW & REPLY</button>`}
+      </div>
+      <div class="ci-metrics">
+        <div class="ci-m"><div class="ci-mv">${ci.weight}kg</div><div class="ci-ml">Weight</div></div>
+        <div class="ci-m"><div class="ci-mv">${ci.workouts}/${ci.client.sess}</div><div class="ci-ml">Sessions</div></div>
+        <div class="ci-m"><div class="ci-mv">${ci.energy}/10</div><div class="ci-ml">Energy</div></div>
+        <div class="ci-m"><div class="ci-mv">${ci.nutrition}/10</div><div class="ci-ml">Nutrition</div></div>
+        <div class="ci-m"><div class="ci-mv">${ci.sleep}hrs</div><div class="ci-ml">Sleep</div></div>
+        <div class="ci-m"><div class="ci-mv">${ci.stress}/10</div><div class="ci-ml">Stress</div></div>
+      </div>
+      <div class="ci-notes">🏆 <strong style="color:var(--orange)">Win:</strong> ${ci.win}<br/><br/>${ci.notes}</div>
+    </div>`).join('') || '<p style="color:var(--sub);padding:20px;">No check-ins found.</p>';
+}
+
+function filterCI(f, btn) {
+  document.querySelectorAll('#cp-checkins .btn-g').forEach(b => { b.style.borderColor=''; b.style.color=''; });
+  if (btn) { btn.style.borderColor='var(--orange)'; btn.style.color='var(--orange)'; }
+  renderAllCI(f);
+}
+
+function openCIReply(cid) {
+  currentCIReplyId = cid;
+  const c = CLIENTS.find(x => x.id === cid);
+  const ci = c.checkins.find(x => !x.replied) || c.checkins[0];
+  document.getElementById('modal-ci-title').textContent = `REPLY: ${c.fn} ${c.ln}`;
+  document.getElementById('modal-ci-summary').innerHTML = `Weight: <b>${ci.weight}kg</b> · Sessions: <b>${ci.workouts}/${c.sess}</b> · Nutrition: <b>${ci.nutrition}/10</b> · Energy: <b>${ci.energy}/10</b><br/><br/>"${ci.notes.substring(0,140)}..."`;
+  document.getElementById('ci-reply-txt').value = `Hey ${c.fn}! Great check-in — here's my feedback for this week...`;
+  document.getElementById('modal-ci-reply').classList.add('open');
+}
+
+function sendCIReply() {
+  const c = CLIENTS.find(x => x.id === currentCIReplyId);
+  c.checkins.forEach(ci => { if (!ci.replied) ci.replied = true; });
+  updateCIBadge();
+  renderAllCI('all');
+  renderDashboard();
+  closeModal('modal-ci-reply');
+  showToast('Reply sent! Client notified ✅');
+}
+
+// ── EDIT PLAN MODAL ──
+function openEditPlan(id) {
+  editingPlanId = id;
+  const c = CLIENTS.find(x => x.id === id);
+  document.getElementById('modal-ep-title').textContent = `EDIT PLAN — ${c.fn.toUpperCase()} ${c.ln.toUpperCase()}`;
+  document.getElementById('ep-tier').value = c.tier;
+  document.getElementById('ep-goal').value = c.goal;
+  document.getElementById('ep-sess').value = c.sess;
+  document.getElementById('ep-cw').value = c.cw;
+  document.getElementById('ep-tw').value = c.tw;
+  document.getElementById('ep-notes').value = c.notes;
+  document.getElementById('modal-edit-plan').classList.add('open');
+}
+
+function savePlan() {
+  const c = CLIENTS.find(x => x.id === editingPlanId);
+  c.tier = document.getElementById('ep-tier').value;
+  c.goal = document.getElementById('ep-goal').value;
+  c.sess = parseInt(document.getElementById('ep-sess').value) || c.sess;
+  c.cw   = parseFloat(document.getElementById('ep-cw').value) || c.cw;
+  c.tw   = parseFloat(document.getElementById('ep-tw').value) || c.tw;
+  c.notes = document.getElementById('ep-notes').value;
+  closeModal('modal-edit-plan');
+  showToast('Plan updated and pushed to client app! ✅');
+  if (currentDetailId === editingPlanId) openClientDetail(editingPlanId);
+}
+
+// ── WORKOUT BUILDER ──
+function populateClientSelects() {
+  ['prog-client','mb-client'].forEach(sid => {
+    const s = document.getElementById(sid);
+    CLIENTS.forEach(c => {
+      const o = document.createElement('option'); o.value = c.id; o.textContent = c.fn + ' ' + c.ln; s.appendChild(o);
+    });
+  });
+  // Ex datalist
+  const dl = document.getElementById('ex-dl');
+  EX_LIB.forEach(e => { const o = document.createElement('option'); o.value = e; dl.appendChild(o); });
+}
+
+function wb_setDays(n) {
+  const focuses = ['PUSH','PULL','LEGS','UPPER','LOWER','FULL BODY'];
+  const days = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+  wb_days = Array.from({length:n}, (_,i) => {
+    const tmpl = LIVE_PROGRAM[i];
+    return {
+      day: days[i] || `D${i+1}`,
+      focus: tmpl?.focus || focuses[i] || 'SESSION',
+      exercises: tmpl?.exercises ? tmpl.exercises.map(ex => ({n:ex.name,s:String(ex.sets),r:ex.reps,t:ex.tempo.join('-')})) : []
+    };
+  });
+  wb_render();
+}
+
+function wb_render() {
+  document.getElementById('wb-days').innerHTML = wb_days.map((day, di) => `
+    <div class="db-card">
+      <div class="db-head">
+        <div>
+          <input class="din-day" value="${day.day}" onchange="wb_days[${di}].day=this.value"/>
+          <input class="din-focus" value="${day.focus}" placeholder="Focus" onchange="wb_days[${di}].focus=this.value"/>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-g btn-sm" onclick="wb_addEx(${di})">+ ADD</button>
+          <button class="btn btn-g btn-sm" onclick="wb_rmDay(${di})">✕ DAY</button>
+        </div>
+      </div>
+      ${day.exercises.length ? `<div class="ex-cols ex-cols-hdr" style="margin-bottom:5px;padding:0 2px;"><span>EXERCISE</span><span>SETS</span><span>REPS</span><span>TEMPO</span><span></span></div>` : ''}
+      <div id="wb-exs-${di}">
+        ${day.exercises.map((ex, ei) => `
+          <div class="ex-cols">
+            <input class="ei" list="ex-dl" value="${ex.n}" placeholder="Exercise name" onchange="wb_days[${di}].exercises[${ei}].n=this.value"/>
+            <input class="ei" value="${ex.s}" placeholder="4" onchange="wb_days[${di}].exercises[${ei}].s=this.value"/>
+            <input class="ei" value="${ex.r}" placeholder="8-10" onchange="wb_days[${di}].exercises[${ei}].r=this.value"/>
+            <input class="ei" value="${ex.t||'2-0-1'}" placeholder="2-0-1" onchange="wb_days[${di}].exercises[${ei}].t=this.value"/>
+            <button class="btn-rm" onclick="wb_rmEx(${di},${ei})">×</button>
+          </div>`).join('')}
+      </div>
+      ${!day.exercises.length ? '<div style="text-align:center;padding:9px;font-size:12px;color:var(--sub);">Rest day — tap + ADD to add exercises</div>' : ''}
+      <button class="btn-add-ex" onclick="wb_addEx(${di})">+ ADD EXERCISE</button>
+    </div>`).join('');
+}
+
+function wb_addEx(di) { wb_days[di].exercises.push({n:'',s:'3',r:'10',t:'2-0-1'}); wb_render(); }
+function wb_rmEx(di, ei) { wb_days[di].exercises.splice(ei, 1); wb_render(); }
+function wb_rmDay(di) { if (!confirm('Remove this day?')) return; wb_days.splice(di, 1); wb_render(); }
+function wb_clear() { document.getElementById('prog-name').value = ''; wb_setDays(4); }
+function wb_saveAssign() {
+  const name = document.getElementById('prog-name').value.trim();
+  const cid  = document.getElementById('prog-client').value;
+  if (!name) { showToast('Enter a program name'); return; }
+  if (!cid)  { showToast('Select a client'); return; }
+  // Push to live program
+  wb_days.forEach((day, di) => {
+    if (LIVE_PROGRAM[di]) {
+      LIVE_PROGRAM[di].day = day.day;
+      LIVE_PROGRAM[di].focus = day.focus;
+      LIVE_PROGRAM[di].exercises = day.exercises.map(ex => ({
+        name:ex.n, sets:parseInt(ex.s)||3, reps:ex.r,
+        tempo:ex.t.split('-').map(Number)||[2,0,1,0], note:ex.t,
+        icon:'🏋️', primary:['Primary Muscle'], secondary:[], stab:['Core'],
+        cues:['Focus on form and full range of motion','Control the weight — don\'t let it control you','Breathe out on the effort'],
+        mistakes:['Rushing the reps','Using too much momentum'],
+        tip:'Every rep with full intent and control. Quality beats quantity.'
+      }));
+    }
+  });
+  const c = CLIENTS.find(x => x.id == cid);
+  showToast(`"${name}" pushed to ${c.fn}'s app! 💪`);
+  renderExercises(currentDay); // refresh if client watching
+}
+
+function renderExLib(q) {
+  document.getElementById('ex-lib-list').innerHTML = EX_LIB
+    .filter(e => e.toLowerCase().includes(q.toLowerCase()))
+    .map(e => `<div class="ex-lib-item" onclick="wb_addToDay0('${e}')"><span>${e}</span><span style="color:var(--sub);font-size:10px;">+ Day 1</span></div>`).join('');
+}
+function filterLib(q) { renderExLib(q); }
+function wb_addToDay0(name) {
+  if (!wb_days.length) return;
+  wb_days[0].exercises.push({n:name, s:'3', r:'10', t:'2-0-1'});
+  wb_render();
+  showToast(name + ' added to Day 1');
+}
+
+// ── MACRO BUILDER ──
+function mb_loadClient(id) {
+  if (!id) return;
+  const c = CLIENTS.find(x => x.id == id);
+  document.getElementById('mb-bw').value = c.cw;
+  document.getElementById('mb-cal').value = c.macros.cal;
+  document.getElementById('mb-pro').value = c.macros.pro;
+  document.getElementById('mb-car').value = c.macros.car;
+  document.getElementById('mb-fat').value = c.macros.fat;
+  document.getElementById('mb-wat').value = c.macros.wat;
+  document.getElementById('mb-meals').value = c.macros.meals;
+  mb_updateBar();
+}
+function mb_calc() {
+  const bw  = parseFloat(document.getElementById('mb-bw').value) || 80;
+  const act = parseFloat(document.getElementById('mb-activity').value) || 1.55;
+  const goal = document.getElementById('mb-goal').value;
+  const tdee = Math.round(bw * 22 * act);
+  let cal, pro, car, fat;
+  if (goal==='fat-loss')   { cal=tdee-400; pro=Math.round(bw*2.2); fat=Math.round(bw*0.8); }
+  else if (goal==='muscle'){ cal=tdee+200; pro=Math.round(bw*2.0); fat=Math.round(bw*1.0); }
+  else if (goal==='bulk')  { cal=tdee+400; pro=Math.round(bw*2.0); fat=Math.round(bw*1.1); }
+  else if (goal==='cut')   { cal=tdee-600; pro=Math.round(bw*2.4); fat=Math.round(bw*0.7); }
+  else                     { cal=tdee;     pro=Math.round(bw*2.0); fat=Math.round(bw*0.9); }
+  car = Math.max(Math.round((cal - pro*4 - fat*9) / 4), 50);
+  document.getElementById('mb-cal').value = Math.max(cal, 1200);
+  document.getElementById('mb-pro').value = pro;
+  document.getElementById('mb-car').value = car;
+  document.getElementById('mb-fat').value = fat;
+  mb_updateBar();
+}
+function mb_preset(p) { document.getElementById('mb-goal').value = p; mb_calc(); }
+function mb_updateBar() {
+  const p = parseInt(document.getElementById('mb-pro').value) || 0;
+  const c = parseInt(document.getElementById('mb-car').value) || 0;
+  const f = parseInt(document.getElementById('mb-fat').value) || 0;
+  const total = p*4 + c*4 + f*9 || 1;
+  document.getElementById('mbp').style.width = (p*4/total*100) + '%';
+  document.getElementById('mbc').style.width = (c*4/total*100) + '%';
+  document.getElementById('mbf').style.width = (f*9/total*100) + '%';
+  const cal = parseInt(document.getElementById('mb-cal').value) || 0;
+  document.getElementById('mb-summary').innerHTML = `<strong>${cal} kcal</strong> — <strong style="color:var(--blue)">${p}g P</strong> (${Math.round(p*4/cal*100)}%) · <strong style="color:var(--orange)">${c}g C</strong> (${Math.round(c*4/cal*100)}%) · <strong style="color:var(--red)">${f}g F</strong> (${Math.round(f*9/cal*100)}%)`;
+}
+function mb_assign() {
+  const id = document.getElementById('mb-client').value;
+  if (!id) { showToast('Select a client first'); return; }
+  const c = CLIENTS.find(x => x.id == id);
+  c.macros = {
+    cal:parseInt(document.getElementById('mb-cal').value)||c.macros.cal,
+    pro:parseInt(document.getElementById('mb-pro').value)||c.macros.pro,
+    car:parseInt(document.getElementById('mb-car').value)||c.macros.car,
+    fat:parseInt(document.getElementById('mb-fat').value)||c.macros.fat,
+    wat:parseFloat(document.getElementById('mb-wat').value)||c.macros.wat,
+    meals:parseInt(document.getElementById('mb-meals').value)||c.macros.meals,
+  };
+  showToast(`Macros pushed to ${c.fn}'s app! ✅`);
+  if (currentRole === 'client' && currentUser?.id == id) updateClientMacroDisplay();
+}
+
+function goToMacros(id) {
+  document.getElementById('mb-client').value = id;
+  mb_loadClient(id);
+  showCP('macro-builder', null);
+}
+function goToWorkout(id) {
+  const c = CLIENTS.find(x => x.id === id);
+  document.getElementById('prog-client').value = id;
+  document.getElementById('prog-days').value = c.sess;
+  wb_setDays(c.sess);
+  showCP('workout-builder', null);
+}
+
+// ── COACH MESSAGES ──
+function renderCoachMsgSidebar() {
+  document.getElementById('coach-msg-sb').innerHTML = CLIENTS.map(c => `
+    <div class="msg-client ${c.id===currentCoachMsgClient?'on':''}" onclick="currentCoachMsgClient=${c.id};renderCoachMsg(CLIENTS.find(x=>x.id===${c.id}));renderCoachMsgSidebar()">
+      <div style="display:flex;justify-content:space-between;">
+        <div class="msg-client-name">${c.fn} ${c.ln}</div>
+        ${c.ciDue ? '<div style="width:6px;height:6px;background:var(--orange);border-radius:50%;"></div>' : ''}
+      </div>
+      <div class="msg-client-preview">${c.goal}</div>
+    </div>`).join('');
+}
+
+function renderCoachMsg(c) {
+  document.getElementById('coach-msg-av').textContent = c.fn[0]+c.ln[0];
+  document.getElementById('coach-msg-av').style.background = c.color;
+  document.getElementById('coach-msg-name').textContent = c.fn.toUpperCase()+' '+c.ln.toUpperCase();
+  document.getElementById('coach-msg-tier').textContent = c.tier.toUpperCase() + ' · ' + c.goal;
+  const hist = MSGS[c.id] || [];
+  const list = document.getElementById('coach-msg-list');
+  list.innerHTML = hist.map(m => `<div class="mw ${m.out?'out':'in'}"><div class="mb2"><p>${m.text}</p></div><div class="mt">${m.time}</div></div>`).join('');
+  list.scrollTop = 99999;
+}
+
+function coach_sendMsg() {
+  const inp = document.getElementById('coach-msg-inp');
+  const txt = inp.value.trim(); if (!txt) return;
+  if (!MSGS[currentCoachMsgClient]) MSGS[currentCoachMsgClient] = [];
+  MSGS[currentCoachMsgClient].push({out:false, text:txt, time:'Just now'});
+  const c = CLIENTS.find(x => x.id === currentCoachMsgClient);
+  renderCoachMsg(c);
+  inp.value = '';
+}
+
+// ── ADD CLIENT ──
+function addClient() {
+  const fn = document.getElementById('nc-fn').value.trim();
+  const ln = document.getElementById('nc-ln').value.trim();
+  const em = document.getElementById('nc-em').value.trim();
+  if (!fn || !ln || !em) { showToast('Fill in name and email'); return; }
+  const colors = {elite:'#f97316', transformation:'#a855f7', strongstart:'#22c55e'};
+  const tier = document.getElementById('nc-tier').value;
+  const sw = parseFloat(document.getElementById('nc-sw').value) || 80;
+  const newC = {
+    id: CLIENTS.length + 1, fn, ln, email:em,
+    pass: document.getElementById('nc-pass').value || CLIENT_PASS,
+    tier, goal: document.getElementById('nc-goal').value,
+    sess: parseInt(document.getElementById('nc-sess').value) || 4,
+    sw, cw:sw, tw: parseFloat(document.getElementById('nc-tw').value) || sw-7,
+    week:1, adherence:0, ciDue:false, color:colors[tier],
+    notes: document.getElementById('nc-notes').value || 'New client.',
+    streak:0, macros:{cal:2200,pro:165,car:220,fat:65,wat:3,meals:4},
+    coachMsg:'Welcome to Strong Culture Coaching! Let\'s build something great. 💪',
+    checkins:[]
+  };
+  CLIENTS.push(newC);
+  MSGS[newC.id] = [{out:false, text:`Welcome to the app ${fn}! Your program is ready. Tap Workout to get started 💪`, time:'Just now'}];
+  renderClientGrid(CLIENTS);
+  renderCoachMsgSidebar();
+  populateClientSelects();
+  renderDashboard();
+  document.getElementById('d-clients').textContent = CLIENTS.length;
+  showToast(`${fn} ${ln} added! ✅`);
+  ['nc-fn','nc-ln','nc-em','nc-pass','nc-sw','nc-tw','nc-notes'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+}
+
+// ══════════════════════════════════════════════════════
+//  CLIENT APP — INIT & NAV
+// ══════════════════════════════════════════════════════
+function initClient() {
+  currentUser = CLIENTS.find(c => c.id === currentClientId) || CLIENTS[0];
+  const h = new Date().getHours();
+  document.getElementById('h-greeting').textContent = h<12?'GOOD MORNING':h<17?'GOOD AFTERNOON':'GOOD EVENING';
+  document.getElementById('h-name').textContent = currentUser.fn.toUpperCase() + ' ' + currentUser.ln.toUpperCase();
+  document.getElementById('p-av').textContent = currentUser.fn[0] + currentUser.ln[0];
+  document.getElementById('p-name').textContent = currentUser.fn.toUpperCase() + ' ' + currentUser.ln.toUpperCase();
+  document.getElementById('p-tier').textContent = '⚡ ' + currentUser.tier.toUpperCase();
+  document.getElementById('h-coach-msg').textContent = currentUser.coachMsg;
+  renderTodayCard();
+  renderDayTabs();
+  renderExercises(0);
+  renderMeals();
+  renderClientMsgs();
+  renderPBs('all', '');
+  renderBWChart('month');
+  renderSessHist();
+  checkSundayUnlock();
+  updateClientMacroDisplay();
+  startTimer();
+  // Service Worker registration
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  });
+}
+
+// PWA install banner
+  if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+    const b = document.getElementById('install-banner'); if (b) b.style.display = 'none';
+  }
+}
+
+function goTab(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  document.getElementById('pg-' + name)?.classList.add('on');
+  document.getElementById('tab-' + name)?.classList.add('on');
+  if (name === 'workout') startTimer();
+}
+
+// ── TIMER ──
+function startTimer() {
+  if (timerRunning) return;
+  timerRunning = true;
+  timerInt = setInterval(() => {
+    timerSecs++;
+    const m = String(Math.floor(timerSecs/60)).padStart(2,'0');
+    const s = String(timerSecs%60).padStart(2,'0');
+    const v = `${m}:${s}`;
+    const el = document.getElementById('timer-val');
+    const el2 = document.getElementById('timer-topbar');
+    if (el) el.textContent = v;
+    if (el2) { el2.textContent = v; el2.style.display = 'block'; }
+  }, 1000);
+}
+
+// ── HOME ──
+function renderTodayCard() {
+  const day = LIVE_PROGRAM[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1] || LIVE_PROGRAM[0];
+  document.getElementById('today-title').textContent = day.title.toUpperCase();
+  document.getElementById('today-ex-list').innerHTML = day.exercises.slice(0,3).map(ex => `
+    <div class="today-ex"><span>${ex.name}</span><span>${ex.sets}×${ex.reps}</span></div>`).join('') +
+    (day.exercises.length > 3 ? `<div class="today-ex"><span style="color:var(--sub)">+${day.exercises.length-3} more</span><span style="color:var(--sub)">Tap to view</span></div>` : '');
+}
+
+function updateClientMacroDisplay() {
+  if (!currentUser) return;
+  const m = currentUser.macros;
+  const consumed = {cal:1840, pro:165, car:180, fat:58};
+  const el = document.getElementById('h-cal-disp');
+  if (el) el.textContent = `${consumed.cal.toLocaleString()} / ${m.cal.toLocaleString()} kcal`;
+  const elp = document.getElementById('h-pro-disp'); if(elp) elp.textContent = `${consumed.pro}g`;
+  const elc = document.getElementById('h-car-disp'); if(elc) elc.textContent = `${consumed.car}g`;
+  const elf = document.getElementById('h-fat-disp'); if(elf) elf.textContent = `${consumed.fat}g`;
+  const nc = document.getElementById('n-cal-disp'); if(nc) nc.innerHTML = `${consumed.cal.toLocaleString()} <span style="font-size:13px;color:var(--sub);">/ ${m.cal.toLocaleString()}</span>`;
+  // Macro rings
+  const rp = document.getElementById('ring-pro'); if(rp) rp.setAttribute('stroke-dashoffset', Math.round(188.5*(1-consumed.pro/m.pro)));
+  const rc = document.getElementById('ring-car'); if(rc) rc.setAttribute('stroke-dashoffset', Math.round(188.5*(1-consumed.car/m.car)));
+  const rf = document.getElementById('ring-fat'); if(rf) rf.setAttribute('stroke-dashoffset', Math.round(188.5*(1-consumed.fat/m.fat)));
+  const rpv = document.getElementById('rp-val'); if(rpv) rpv.textContent = consumed.pro;
+  const rpt = document.getElementById('rp-tgt'); if(rpt) rpt.textContent = `/ ${m.pro}g`;
+  const rcv = document.getElementById('rc-val'); if(rcv) rcv.textContent = consumed.car;
+  const rct = document.getElementById('rc-tgt'); if(rct) rct.textContent = `/ ${m.car}g`;
+  const rfv = document.getElementById('rf-val'); if(rfv) rfv.textContent = consumed.fat;
+  const rft = document.getElementById('rf-tgt'); if(rft) rft.textContent = `/ ${m.fat}g`;
+  const rpp = document.getElementById('rp-pct'); if(rpp) rpp.textContent = Math.round(consumed.pro/m.pro*100) + '%';
+  const rcp = document.getElementById('rc-pct'); if(rcp) rcp.textContent = Math.round(consumed.car/m.car*100) + '%';
+  const rfp = document.getElementById('rf-pct'); if(rfp) rfp.textContent = Math.round(consumed.fat/m.fat*100) + '%';
+  // Profile macros
+  const prcal = document.getElementById('pr-cal'); if(prcal) prcal.textContent = `${m.cal.toLocaleString()} kcal`;
+  const prpro = document.getElementById('pr-pro'); if(prpro) prpro.textContent = `${m.pro}g`;
+  const prcar = document.getElementById('pr-car'); if(prcar) prcar.textContent = `${m.car}g`;
+  const prfat = document.getElementById('pr-fat'); if(prfat) prfat.textContent = `${m.fat}g`;
+  const prwat = document.getElementById('pr-wat'); if(prwat) prwat.textContent = `${m.wat}L`;
+}
+
+// ── DAY TABS & EXERCISES ──
+function renderDayTabs() {
+  document.getElementById('day-tabs').innerHTML = LIVE_PROGRAM.map((d,i) => `
+    <div class="dt ${i===currentDay?'on':''} ${logData[i]?.completed?'done':''}" onclick="selectDay(${i})">
+      <div class="dt-name">${d.day}</div>
+      <div class="dt-f">${d.focus}</div>
+    </div>`).join('');
+}
+
+function selectDay(i) {
+  currentDay = i;
+  renderDayTabs();
+  renderExercises(i);
+  const d = LIVE_PROGRAM[i];
+  document.getElementById('wk-title').textContent = d.title.toUpperCase();
+  document.getElementById('wk-meta').textContent = d.focus + (d.exercises.length ? ` · ${d.exercises.length} exercises` : '');
+}
+
+function renderExercises(di) {
+  const day = LIVE_PROGRAM[di];
+  const list = document.getElementById('exercise-list');
+  if (!day.exercises.length) {
+    list.innerHTML = `<div class="card" style="text-align:center;padding:28px;"><div style="font-size:40px;margin-bottom:11px;">😴</div><div style="font-family:var(--H);font-size:24px;letter-spacing:2px;margin-bottom:6px;">REST DAY</div><div style="font-size:13px;color:var(--sub);">Walk, stretch, hydrate. Recovery is training.</div></div>`;
+    return;
+  }
+  list.innerHTML = day.exercises.map((ex, ei) => buildExCard(ex, di, ei)).join('');
+}
+
+function buildExCard(ex, di, ei) {
+  const key = `${di}-${ei}`;
+  if (!logData[key]) logData[key] = { sets: Array(ex.sets).fill(null).map(() => ({w:'',r:'',done:false})), note:'' };
+  const sets = logData[key].sets;
+  const driveId = DV[ex.name];
+  const allDone = sets.every(s => s.done);
+  const tempoDesc = ['Lower','Pause','Lift','Top'];
+
+  return `<div class="ex-card" id="exc-${key}">
+    <div class="ex-hdr" onclick="toggleEx('${key}')">
+      <div class="ex-ico">${ex.icon||'🏋️'}</div>
+      <div class="ex-inf">
+        <div class="ex-nm">${ex.name}</div>
+        <div class="ex-sm">${ex.sets} sets · ${ex.reps} reps · ${ex.note||''}</div>
+      </div>
+      <div class="ex-acts">
+        <span class="ex-badge">${ex.sets}×${ex.reps}</span>
+        ${driveId ? `<button class="btn-demo" onclick="event.stopPropagation();openVideo('${key}','${driveId}')">▶ DEMO</button>` : ''}
+        <span class="ex-chev">▼</span>
+      </div>
+    </div>
+    <div class="ex-panel" id="exp-${key}">
+
+      <!-- Lift history -->
+      <div class="lift-hist" onclick="showToast('Lift history: previous best sets for this exercise')">
+        <div class="lh-lbl">📊 Lift History ›</div>
+        <div class="lh-val">${ex.name.includes('Bench')?'Best: 82.5kg × 8':ex.name.includes('Squat')?'Best: 102.5kg × 7':ex.name.includes('Deadlift')?'Best: 140kg × 5':'No history yet'}</div>
+      </div>
+
+      <!-- Tempo -->
+      <div class="tempo-row">
+        <div class="tempo-lbl">TEMPO</div>
+        ${(ex.tempo||[3,0,1,0]).map((t,i) => `<div class="tw"><div class="tseg t${i+1}">${t}</div><div class="tsl">${tempoDesc[i]}</div></div>`).join('')}
+        <div style="margin-left:4px;font-size:10px;color:var(--sub);">secs</div>
+      </div>
+
+      <!-- Set chips -->
+      <div class="sets-lbl">SETS TRACKING</div>
+      <div class="sets-chips">
+        ${sets.map((s,si) => `<div class="set-chip ${s.done?'logged':''} ${si===0&&!s.done?'act':''}" id="chip-${key}-${si}" onclick="activateSet('${key}',${si})">
+          <div class="sc-kg" id="ckg-${key}-${si}">${s.w||'—'}kg</div>
+          <div class="sc-rp" id="crp-${key}-${si}">${s.r||'—'} reps</div>
+          <div class="sc-n">S${si+1}</div>
+        </div>`).join('')}
+      </div>
+
+      <!-- Log inputs -->
+      <div class="log-inp-wrap">
+        <div class="log-inp-title">
+          <span id="lbl-${key}">LOG SET 1</span>
+          <span style="font-size:10px;color:var(--sub);">Target: ${ex.reps} reps</span>
+        </div>
+        <div class="log-row">
+          <div class="log-field"><label>WEIGHT (kg)</label><input type="number" step="0.5" id="lw-${key}" placeholder="${ex.name.includes('Lateral')?'10':ex.name.includes('Squat')?'100':'80'}" oninput="updateChip('${key}')"/></div>
+          <div class="log-field"><label>REPS</label><input type="number" id="lr-${key}" placeholder="${(ex.reps||'8').split('-')[0]}" oninput="updateChip('${key}')"/></div>
+        </div>
+        <button class="btn-log ${allDone?'done':''}" id="logbtn-${key}" onclick="logSet('${key}')">${allDone?'ALL SETS DONE ✓':'LOG SET'}</button>
+      </div>
+
+      <!-- Volume bar -->
+      <div class="vol-row">
+        <div class="vol-lbl">YOUR VOLUME</div>
+        <div class="vol-bar">
+          <div class="bar-track" style="height:5px;"><div class="bar-fill" id="vol-${key}" style="width:0%;height:100%;"></div></div>
+          <div class="vol-sub" id="vol-txt-${key}">Log sets to track volume</div>
+        </div>
+      </div>
+
+      <!-- Rest timer -->
+      <div class="rest-row">
+        <div class="rest-lbl">REST</div>
+        <div class="rest-chips">
+          <div class="rc" onclick="startRest(60,'${key}')">60s</div>
+          <div class="rc" onclick="startRest(90,'${key}')">90s</div>
+          <div class="rc" onclick="startRest(120,'${key}')">2min</div>
+        </div>
+        <div class="rest-cd" id="rest-${key}"></div>
+      </div>
+
+      <!-- Video -->
+      ${driveId ? `
+      <div class="vid-thumb" id="vthumb-${key}" onclick="loadVideo('${key}','${driveId}')">
+        <div class="play-btn"><div class="play-tri"></div></div>
+        <div class="vid-lbl">WATCH ANTZ'S DEMO</div>
+        <div class="vid-src">🔥 Strong Culture Coaching</div>
+      </div>
+      <div class="vid-frame" id="vframe-${key}"><iframe id="vifr-${key}" src="" allowfullscreen allow="autoplay;encrypted-media"></iframe></div>` : ''}
+
+      <!-- Detail tabs -->
+      <div class="dtabs">
+        <div class="dtab on" id="dtt-${key}" onclick="switchDTab('${key}','t')">TECHNIQUE</div>
+        <div class="dtab" id="dtm-${key}" onclick="switchDTab('${key}','m')">MUSCLES</div>
+        <div class="dtab" id="dtn-${key}" onclick="switchDTab('${key}','n')">NOTES</div>
+      </div>
+      <div class="dc on" id="dc-t-${key}">
+        <div style="margin-bottom:10px;"><div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--orange);margin-bottom:7px;">🎯 KEY FORM CUES</div>
+          ${(ex.cues||[]).map((c,i) => `<div class="cue-item"><div class="cue-n">${i+1}</div><div>${c}</div></div>`).join('')}</div>
+        <div style="margin-bottom:8px;"><div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);margin-bottom:7px;">❌ COMMON MISTAKES</div>
+          ${(ex.mistakes||[]).map(m => `<div class="mistake"><span>⚠️</span><span>${m}</span></div>`).join('')}</div>
+        ${ex.tip ? `<div class="pro-tip"><b>💡 COACH TIP:</b> ${ex.tip}</div>` : ''}
+      </div>
+      <div class="dc" id="dc-m-${key}">
+        ${ex.primary?.length ? `<div class="m-grp" style="color:var(--orange)">🎯 PRIMARY</div><div class="m-tags">${ex.primary.map(m => `<span class="mtag-p">${m}</span>`).join('')}</div>` : ''}
+        ${ex.secondary?.length ? `<div class="m-grp" style="color:var(--blue)">⚡ SECONDARY</div><div class="m-tags">${ex.secondary.map(m => `<span class="mtag-s">${m}</span>`).join('')}</div>` : ''}
+        ${ex.stab?.length ? `<div class="m-grp" style="color:var(--sub)">🔒 STABILISERS</div><div class="m-tags">${ex.stab.map(m => `<span class="mtag-st">${m}</span>`).join('')}</div>` : ''}
+      </div>
+      <div class="dc" id="dc-n-${key}">
+        <textarea style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:10px;font-size:13px;outline:none;resize:none;min-height:70px;margin-top:4px;" placeholder="Notes for this exercise..." oninput="logData['${key}'].note=this.value" id="exnote-${key}">${logData[key]?.note||''}</textarea>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleEx(key) {
+  const card = document.getElementById('exc-' + key);
+  const wasOpen = card.classList.contains('open');
+  document.querySelectorAll('.ex-card.open').forEach(c => c.classList.remove('open'));
+  if (!wasOpen) card.classList.add('open');
+}
+
+function openVideo(key, driveId) {
+  const card = document.getElementById('exc-' + key);
+  if (!card.classList.contains('open')) { document.querySelectorAll('.ex-card.open').forEach(c => c.classList.remove('open')); card.classList.add('open'); }
+  loadVideo(key, driveId);
+}
+
+function loadVideo(key, driveId) {
+  const t = document.getElementById('vthumb-' + key);
+  const f = document.getElementById('vframe-' + key);
+  if (t) t.style.display = 'none';
+  if (f) { f.style.display = 'block'; document.getElementById('vifr-' + key).src = `https://drive.google.com/file/d/${driveId}/preview?rm=minimal&mute=1`; }
+}
+
+function switchDTab(key, tab) {
+  ['t','m','n'].forEach(t => {
+    document.getElementById('dtt-' + key)?.classList.toggle('on', t === 't' && tab === 't');
+    document.getElementById('dtm-' + key)?.classList.toggle('on', t === 'm' && tab === 'm');
+    document.getElementById('dtn-' + key)?.classList.toggle('on', t === 'n' && tab === 'n');
+    document.getElementById('dc-t-' + key)?.classList.toggle('on', tab === 't');
+    document.getElementById('dc-m-' + key)?.classList.toggle('on', tab === 'm');
+    document.getElementById('dc-n-' + key)?.classList.toggle('on', tab === 'n');
+  });
+}
+
+// ── LOGGING ──
+function activateSet(key, si) {
+  const sets = logData[key]?.sets;
+  if (!sets || sets[si]?.done) return;
+  document.querySelectorAll(`[id^="chip-${key}-"]`).forEach(c => c.classList.remove('act'));
+  document.getElementById(`chip-${key}-${si}`)?.classList.add('act');
+  document.getElementById(`lbl-${key}`).textContent = `LOG SET ${si+1}`;
+  if (si > 0 && sets[si-1]?.done) {
+    document.getElementById(`lw-${key}`).value = sets[si-1].w;
+    document.getElementById(`lr-${key}`).value = '';
+  }
+  logData[key]._active = si;
+}
+
+function updateChip(key) {
+  const si = logData[key]?._active ?? 0;
+  const w = document.getElementById(`lw-${key}`)?.value;
+  const r = document.getElementById(`lr-${key}`)?.value;
+  const ke = document.getElementById(`ckg-${key}-${si}`);
+  const re = document.getElementById(`crp-${key}-${si}`);
+  if (ke && w) ke.textContent = w + 'kg';
+  if (re && r) re.textContent = r + ' reps';
+}
+
+function logSet(key) {
+  const si = logData[key]?._active ?? 0;
+  const w = document.getElementById(`lw-${key}`)?.value;
+  const r = document.getElementById(`lr-${key}`)?.value;
+  if (!w && !r) { showToast('Enter weight or reps first'); return; }
+  logData[key].sets[si] = {w:w||'0', r:r||'0', done:true};
+  const chip = document.getElementById(`chip-${key}-${si}`);
+  if (chip) { chip.classList.add('logged'); chip.classList.remove('act'); }
+  document.getElementById(`ckg-${key}-${si}`).textContent = (w||'0') + 'kg';
+  document.getElementById(`crp-${key}-${si}`).textContent = (r||'0') + ' reps';
+  const sets = logData[key].sets;
+  const next = sets.findIndex(s => !s.done);
+  if (next !== -1) {
+    activateSet(key, next);
+    document.getElementById(`lw-${key}`).value = w;
+    document.getElementById(`lr-${key}`).value = '';
+    showToast(`Set ${si+1} logged! 💪`);
+  } else {
+    const btn = document.getElementById(`logbtn-${key}`);
+    if (btn) { btn.classList.add('done'); btn.textContent = 'ALL SETS DONE ✓'; }
+    logData[key].completed = true;
+    const total = sets.reduce((s,x) => s + (parseFloat(x.w)||0)*(parseInt(x.r)||0), 0);
+    const vb = document.getElementById('vol-' + key);
+    const vt = document.getElementById('vol-txt-' + key);
+    if (vb) vb.style.width = Math.min(total/6, 100) + '%';
+    if (vt) vt.textContent = `Volume: ${total}kg`;
+    renderDayTabs();
+    showToast('Exercise complete! 🔥');
+  }
+}
+
+function logNextSet() {
+  const day = LIVE_PROGRAM[currentDay];
+  if (!day.exercises.length) { showToast('Rest day — enjoy the recovery!'); return; }
+  for (let ei = 0; ei < day.exercises.length; ei++) {
+    const key = `${currentDay}-${ei}`;
+    const si = (logData[key]?.sets||[]).findIndex(s => !s.done);
+    if (si !== -1) {
+      const card = document.getElementById('exc-' + key);
+      if (!card.classList.contains('open')) {
+        document.querySelectorAll('.ex-card.open').forEach(c => c.classList.remove('open'));
+        card.classList.add('open');
+      }
+      activateSet(key, si);
+      card.scrollIntoView({behavior:'smooth', block:'center'});
+      setTimeout(() => document.getElementById(`lw-${key}`)?.focus(), 300);
+      return;
+    }
+  }
+  showToast('All sets logged! Great session 🔥🔥');
+}
+
+// ── REST TIMER ──
+function startRest(secs, key) {
+  if (restInt) clearInterval(restInt);
+  restSecs = secs;
+  const el = document.getElementById('rest-' + key);
+  document.querySelectorAll(`#exc-${key} .rc`).forEach(c => c.classList.remove('act'));
+  const chips = document.querySelectorAll(`#exc-${key} .rc`);
+  if (secs===60) chips[0]?.classList.add('act');
+  else if (secs===90) chips[1]?.classList.add('act');
+  else chips[2]?.classList.add('act');
+  restInt = setInterval(() => {
+    restSecs--;
+    if (el) el.textContent = restSecs > 0 ? restSecs + 's' : '✓';
+    if (restSecs <= 0) {
+      clearInterval(restInt);
+      showToast('Rest over — next set! 💪');
+      setTimeout(() => {
+        if (el) el.textContent = '';
+        document.querySelectorAll(`#exc-${key} .rc`).forEach(c => c.classList.remove('act'));
+      }, 2000);
+    }
+  }, 1000);
+  showToast(`Rest: ${secs}s`);
+}
+
+// ── NUTRITION ──
+function renderMeals() {
+  const sec = document.getElementById('meals-list');
+  if (!sec) return;
+  sec.innerHTML = Object.entries(MEALS).map(([meal, foods]) => `
+    <div style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);margin-bottom:5px;">
+        <div style="font-size:13px;font-weight:700;">${meal}</div>
+        <div style="font-size:12px;color:var(--orange);font-weight:700;">${foods.reduce((a,f)=>a+f.c,0)} kcal</div>
+      </div>
+      ${foods.map(f => `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(34,34,34,.4);font-size:13px;">
+        <span>${f.n}</span>
+        <div style="display:flex;gap:8px;"><span style="font-size:11px;color:var(--blue)">${f.p}g P</span><span style="font-size:11px;color:var(--orange)">${f.ca}g C</span><span style="font-size:11px;color:var(--red)">${f.f}g F</span></div>
+      </div>`).join('')}
+    </div>`).join('<div class="divider"></div>');
+}
+
+// ── PROGRESS ──
+function switchPTab(name) {
+  document.getElementById('ptab-progress').style.display = name==='progress' ? 'block' : 'none';
+  document.getElementById('ptab-bodyweight').style.display = name==='bodyweight' ? 'block' : 'none';
+  document.getElementById('ptt-p').classList.toggle('on', name==='progress');
+  document.getElementById('ptt-b').classList.toggle('on', name==='bodyweight');
+}
+
+function renderPBs(cat, q) {
+  const filtered = PBs.filter(p => (cat==='all'||p.cat===cat) && p.name.toLowerCase().includes(q.toLowerCase()));
+  document.getElementById('pb-list').innerHTML = filtered.map(p => `
+    <div class="pb-row">
+      <div><div class="pb-ex">${p.name}</div><div class="pb-dt">${p.date}</div></div>
+      <div style="text-align:right;"><div class="pb-val">${p.val}</div><div style="font-size:10px;color:var(--sub);margin-top:1px;">${p.vol}</div></div>
+    </div>`).join('');
+}
+function filterPBs(cat, btn) {
+  document.querySelectorAll('.filt-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderPBs(cat, '');
+}
+function searchPBs(q) { renderPBs('all', q); }
+
+function renderBWChart(range) {
+  const data = {week:[82.0,82.3,82.1,82.0,81.8,81.9,82.0],month:[87.2,86.5,85.8,85.1,84.4,83.8,83.1,82.0]};
+  const lbls = {week:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],month:['Jan 6','Jan 13','Jan 20','Jan 27','Feb 3','Feb 10','Feb 17','Mar 24']};
+  const vals = data[range]||data.month;
+  const min = Math.min(...vals)-0.5; const max = Math.max(...vals)+0.5;
+  document.getElementById('bw-chart').innerHTML = vals.map((v,i) => `<div class="c-bar ${v===Math.min(...vals)?'hi':''}" style="height:${Math.round((v-min)/(max-min)*100)}%;"></div>`).join('');
+  document.getElementById('bw-labels').innerHTML = (lbls[range]||lbls.month).map(l => `<div class="c-xl">${l}</div>`).join('');
+}
+function switchBWR(r, btn) {
+  document.querySelectorAll('[id^="bw-"]').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderBWChart(r);
+}
+function renderSessHist() {
+  const el = document.getElementById('sess-hist');
+  if (!el) return;
+  el.innerHTML = SESS_HIST.map(s => `
+    <div class="sess-row">
+      <div style="font-size:13px;font-weight:700;margin-bottom:3px;">${s.date} · ${s.title}</div>
+      <div style="font-size:11px;color:var(--sub);margin-bottom:5px;">${s.ex}</div>
+      <div class="sess-chips">${s.sets.map((x,i) => `<div class="sess-chip">S${i+1}: <b>${x.w}kg×${x.r}</b></div>`).join('')}</div>
+    </div>`).join('');
+}
+
+// ── CHECK-IN ──
+function checkSundayUnlock() {
+  const now = new Date();
+  const nzt = new Date(now.getTime() + 12*60*60*1000);
+  const day = nzt.getUTCDay(); // 0 = Sunday
+  if (day === 0) {
+    document.getElementById('ci-locked-view').style.display = 'none';
+    document.getElementById('ci-form-view').style.display = 'block';
+    document.getElementById('sunday-reminder').style.display = 'block';
+  } else {
+    updateCICountdown();
+    setInterval(updateCICountdown, 60000);
+  }
+}
+function updateCICountdown() {
+  const now = new Date();
+  const nzt = new Date(now.getTime() + 12*60*60*1000);
+  const daysLeft = (7 - nzt.getUTCDay()) % 7 || 7;
+  const next = new Date(nzt);
+  next.setUTCDate(nzt.getUTCDate() + daysLeft);
+  next.setUTCHours(0,0,0,0);
+  const diff = next - nzt;
+  const d = Math.floor(diff/(1000*60*60*24));
+  const h = Math.floor((diff%(1000*60*60*24))/(1000*60*60));
+  const m = Math.floor((diff%(1000*60*60))/(1000*60));
+  const ed = document.getElementById('ci-d'); if(ed) ed.textContent = d;
+  const eh = document.getElementById('ci-h'); if(eh) eh.textContent = String(h).padStart(2,'0');
+  const em = document.getElementById('ci-m'); if(em) em.textContent = String(m).padStart(2,'0');
+}
+function pickR(gid, btn) {
+  btn.closest('.rating-wrap').querySelectorAll('.rb').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+}
+function submitCI() {
+  if (!document.getElementById('ci-weight')?.value) { showToast('Please enter your weight'); return; }
+  document.getElementById('ci-form-view').style.display = 'none';
+  document.getElementById('ci-success-view').style.display = 'block';
+  showToast('Check-in submitted! ✅');
+}
+function resetCI() {
+  document.getElementById('ci-success-view').style.display = 'none';
+  document.getElementById('ci-form-view').style.display = 'block';
+}
+
+// ── MESSAGES (client) ──
+function renderClientMsgs() {
+  const hist = MSGS[currentClientId] || [];
+  const list = document.getElementById('client-msg-list');
+  if (!list) return;
+  list.innerHTML = hist.map(m => `<div class="mw ${m.out?'out':'in'}"><div class="mb2"><p>${m.text}</p></div><div class="mt">${m.time}</div></div>`).join('');
+  list.scrollTop = 99999;
+}
+function client_sendMsg() {
+  const inp = document.getElementById('client-msg-inp');
+  const txt = inp.value.trim(); if (!txt) return;
+  if (!MSGS[currentClientId]) MSGS[currentClientId] = [];
+  MSGS[currentClientId].push({out:true, text:txt, time:'Just now'});
+  renderClientMsgs(); inp.value = '';
+  setTimeout(() => {
+    MSGS[currentClientId].push({out:false, text:'Got it! Keep showing up 💪', time:'Just now'});
+    renderClientMsgs();
+  }, 1200);
+}
+
+// ── LOGO TAP — secret coach access from client app ──
+function clientLogoTap() {
+  logoTaps++;
+  if (logoTapTimer) clearTimeout(logoTapTimer);
+  logoTapTimer = setTimeout(() => { logoTaps = 0; }, 1500);
+  if (logoTaps === 5) {
+    logoTaps = 0;
+    const p = prompt('🔧 Coach access\nEnter coach password:');
+    if (p === COACH_PASS) {
+      document.getElementById('client-app').style.display = 'none';
+      document.getElementById('coach-app').style.display = 'block';
+      currentRole = 'coach';
+      initCoach();
+    } else if (p !== null) {
+      showToast('Wrong password');
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  SHARED UTILS
+// ══════════════════════════════════════════════════════
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// Service Worker registration
+// PWA install
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredPrompt = e;
+  const b = document.getElementById('install-banner');
+  if (b) b.onclick = () => { deferredPrompt.prompt(); deferredPrompt.userChoice.then(() => { b.style.display='none'; deferredPrompt=null; }); };
+});
+window.addEventListener('appinstalled', () => { const b=document.getElementById('install-banner'); if(b)b.style.display='none'; });
+</script>
+</body>
+</html>

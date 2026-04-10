@@ -1,0 +1,17 @@
+{
+  "name": "Strong Culture Coaching",
+  "short_name": "Strong Culture",
+  "description": "Your personal coaching app by Antz Brown",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#080808",
+  "theme_color": "#f97316",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/icon192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
