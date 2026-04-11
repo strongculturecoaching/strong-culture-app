@@ -1913,26 +1913,35 @@ const tColors = {elite:'var(--orange)',transformation:'var(--purple)',strongstar
 const tLabels = {elite:'⭐ ELITE',transformation:'⚡ TRANSFORMATION',strongstart:'🟢 STRONG START'};
 
 function renderClientGrid(list) {
+  if (!list || !list.length) {
+    document.getElementById('client-grid').innerHTML = `<div class="card" style="grid-column:1/-1;text-align:center;padding:32px;">
+      <div style="font-size:40px;margin-bottom:12px;">👥</div>
+      <div style="font-family:var(--H);font-size:22px;letter-spacing:2px;margin-bottom:8px;">NO CLIENTS YET</div>
+      <div style="font-size:13px;color:var(--sub);margin-bottom:16px;">Add your first client in Firebase Authentication, then use Add Client to set up their profile.</div>
+      <button class="btn btn-o" onclick="showCP('add-client',null)">+ ADD CLIENT</button>
+    </div>`;
+    return;
+  }
   document.getElementById('client-grid').innerHTML = list.map(c => `
-    <div class="cc ${c.tier}" onclick="openClientDetail(${c.id})">
+    <div class="cc ${c.tier}" onclick="openClientDetail('${c.uid||c.id}')">
       <div class="cc-top">
-        <div class="cc-av" style="background:${c.color}">${c.fn[0]}${c.ln[0]}</div>
+        <div class="cc-av" style="background:${c.color||'#22c55e'}">${(c.fn||'?')[0]}${(c.ln||'?')[0]}</div>
         <div>
           <div class="cc-name">${c.fn} ${c.ln}</div>
-          <div class="cc-tier" style="color:${tColors[c.tier]}">${tLabels[c.tier]}</div>
+          <div class="cc-tier" style="color:${tColors[c.tier]||'var(--green)'}">${tLabels[c.tier]||c.tier}</div>
         </div>
       </div>
       <div class="cc-stats">
-        <div class="cc-s"><div class="cc-sv">${c.cw}kg</div><div class="cc-sl">Weight</div></div>
-        <div class="cc-s"><div class="cc-sv">${c.adherence}%</div><div class="cc-sl">Adherence</div></div>
-        <div class="cc-s"><div class="cc-sv">Wk${c.week}</div><div class="cc-sl">Program</div></div>
+        <div class="cc-s"><div class="cc-sv">${c.cw||'—'}kg</div><div class="cc-sl">Weight</div></div>
+        <div class="cc-s"><div class="cc-sv">${c.adherence||0}%</div><div class="cc-sl">Adherence</div></div>
+        <div class="cc-s"><div class="cc-sv">Wk${c.week||1}</div><div class="cc-sl">Program</div></div>
       </div>
       <div class="cc-foot">
         <div style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--sub);">
           <span class="dot ${c.ciDue?'dot-r':'dot-g'}"></span>
           <span style="color:${c.ciDue?'var(--red)':''};">${c.ciDue?'Check-in pending':'Up to date'}</span>
         </div>
-        <div style="font-size:12px;color:var(--orange)">🔥 ${c.streak}wk</div>
+        <div style="font-size:12px;color:var(--orange)">🔥 ${c.streak||0}wk</div>
       </div>
     </div>`).join('');
 }
@@ -1944,78 +1953,106 @@ function filterCC(tier, btn) {
 }
 
 // ── CLIENT DETAIL ──
-function openClientDetail(id) {
-  currentDetailId = id;
-  const c = CLIENTS.find(x => x.id === id);
+function openClientDetail(uid) {
+  // Support both string UIDs and numeric legacy IDs
+  const c = CLIENTS.find(x => String(x.uid||x.id) === String(uid));
+  if (!c) { showToast('Client not found — try refreshing'); return; }
+  currentDetailId = uid;
+  const cid = String(c.uid || c.id);
+
+  // ── HEADER with editable name ──
   document.getElementById('cd-header').innerHTML = `
     <div class="cd-header">
-      <div class="cd-av" style="background:${c.color}">${c.fn[0]}${c.ln[0]}</div>
-      <div>
-        <div class="cd-name">${c.fn.toUpperCase()} ${c.ln.toUpperCase()}</div>
-        <div class="cd-meta">
-          <span class="mtag" style="color:${tColors[c.tier]}">${c.tier.toUpperCase()}</span>
-          <span class="mtag">${c.goal}</span>
-          <span class="mtag">${c.email}</span>
-          <span class="mtag">${c.sess}×/wk</span>
+      <div class="cd-av" style="background:${c.color||'#22c55e'};font-size:20px;">${(c.fn||'?')[0]}${(c.ln||'?')[0]}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;gap:7px;align-items:center;margin-bottom:6px;flex-wrap:wrap;">
+          <input id="hdr-fn" value="${c.fn}" style="background:transparent;border:none;border-bottom:1.5px solid var(--border);color:var(--text);font-family:var(--H);font-size:22px;letter-spacing:2px;width:120px;outline:none;padding:2px 0;" placeholder="First"/>
+          <input id="hdr-ln" value="${c.ln}" style="background:transparent;border:none;border-bottom:1.5px solid var(--border);color:var(--text);font-family:var(--H);font-size:22px;letter-spacing:2px;width:140px;outline:none;padding:2px 0;" placeholder="Last"/>
+          <button class="btn btn-o btn-sm" onclick="cd_saveName('${cid}')">SAVE NAME</button>
+        </div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;">
+          <span class="mtag" style="color:${tColors[c.tier]||'var(--green)'}">${(c.tier||'').toUpperCase()}</span>
+          <span class="mtag">${c.goal||'—'}</span>
+          <span class="mtag">${c.email||'no email'}</span>
+          <span class="mtag">${c.sess||3}×/wk</span>
         </div>
       </div>
       <div class="cd-acts">
-        <button class="btn btn-g btn-sm" onclick="openEditPlan(${id})">EDIT PLAN</button>
-        <button class="btn btn-o btn-sm" onclick="goToMacros(${id})">SET MACROS</button>
-        <button class="btn btn-p btn-sm" onclick="goToWorkout(${id})">BUILD WORKOUT</button>
+        <button class="btn btn-p btn-sm" onclick="goToWorkout('${cid}')">BUILD WORKOUT</button>
       </div>
     </div>`;
 
-  // Overview
-  const lost = (c.sw - c.cw).toFixed(1);
+  // ── OVERVIEW ──
+  const lost = ((c.sw||0) - (c.cw||0)).toFixed(1);
+  const toGoal = Math.abs((c.tw||0) - (c.cw||0)).toFixed(1);
   document.getElementById('ct-overview').innerHTML = `
     <div class="stats-row">
-      <div class="stat-box sb-o"><div class="sv" style="color:var(--orange)">${c.cw}kg</div><div class="sl">Current Weight</div></div>
-      <div class="stat-box sb-g"><div class="sv" style="color:var(--green)">${parseFloat(lost)>0?'-'+lost:'+'+Math.abs(lost)}kg</div><div class="sl">Total Change</div></div>
-      <div class="stat-box sb-p"><div class="sv" style="color:var(--purple)">${Math.abs(c.tw-c.cw).toFixed(1)}kg</div><div class="sl">To Goal</div></div>
-      <div class="stat-box sb-o"><div class="sv" style="color:var(--orange)">${c.adherence}%</div><div class="sl">Adherence</div></div>
+      <div class="stat-box sb-o"><div class="sv" style="color:var(--orange)">${c.cw||'—'}kg</div><div class="sl">Current Weight</div></div>
+      <div class="stat-box sb-g"><div class="sv" style="color:${parseFloat(lost)>=0?'var(--green)':'var(--red)'}">${parseFloat(lost)>=0?'-'+lost:'+'+Math.abs(lost)}kg</div><div class="sl">Total Change</div></div>
+      <div class="stat-box sb-p"><div class="sv" style="color:var(--purple)">${toGoal}kg</div><div class="sl">To Goal</div></div>
+      <div class="stat-box sb-o"><div class="sv" style="color:var(--orange)">${c.adherence||0}%</div><div class="sl">Adherence</div></div>
+    </div>
+    <div class="card">
+      <div class="card-lbl">CONTACT & ACCOUNT</div>
+      <div class="form-row" style="margin-bottom:10px;">
+        <div class="field" style="margin:0"><label>Email</label><input type="email" id="hdr-email" value="${c.email||''}" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:10px 12px;font-size:14px;outline:none;"/></div>
+        <div class="field" style="margin:0"><label>Color Tag</label>
+          <select id="hdr-color" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:10px 12px;font-size:14px;outline:none;">
+            <option value="#a855f7" ${c.color==='#a855f7'?'selected':''}>Purple (Transformation)</option>
+            <option value="#f97316" ${c.color==='#f97316'?'selected':''}>Orange (Elite)</option>
+            <option value="#22c55e" ${c.color==='#22c55e'?'selected':''}>Green (Strong Start)</option>
+            <option value="#3b82f6" ${c.color==='#3b82f6'?'selected':''}>Blue</option>
+            <option value="#ef4444" ${c.color==='#ef4444'?'selected':''}>Red</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-o btn-sm" onclick="cd_saveContact('${cid}')">SAVE CONTACT INFO ✓</button>
     </div>
     <div class="card"><div class="card-lbl">COACH NOTES</div>
-      <textarea style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:10px 12px;font-size:14px;outline:none;resize:vertical;min-height:70px;" id="ov-notes-${id}">${c.notes}</textarea>
-      <button class="btn btn-o btn-sm" style="margin-top:8px;" onclick="saveNote(${id})">SAVE NOTE</button>
+      <textarea style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:10px 12px;font-size:14px;outline:none;resize:vertical;min-height:80px;font-family:var(--B);" id="ov-notes-${cid}" placeholder="Training history, injuries, lifestyle notes...">${c.notes||''}</textarea>
+      <button class="btn btn-o btn-sm" style="margin-top:8px;" onclick="saveNote('${cid}')">SAVE NOTES ✓</button>
     </div>`;
 
-  // Plan
+  // ── PLAN & MACROS ──
   document.getElementById('ct-plan').innerHTML = `
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
         <div class="card-lbl" style="margin:0;">PLAN DETAILS</div>
-        <button class="btn btn-o btn-sm" onclick="cd_savePlan('${c.uid||c.id}')">SAVE CHANGES ✓</button>
+        <button class="btn btn-o btn-sm" onclick="cd_savePlan('${cid}')">SAVE CHANGES ✓</button>
       </div>
       <div class="form-row">
         <div class="field" style="margin:0"><label>Tier</label>
-          <select id="cd-tier-${id}">
+          <select id="cd-tier-${cid}" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:10px 12px;font-size:14px;outline:none;">
             <option value="elite" ${c.tier==='elite'?'selected':''}>Elite ($149/wk)</option>
             <option value="transformation" ${c.tier==='transformation'?'selected':''}>Transformation ($89/wk)</option>
             <option value="strongstart" ${c.tier==='strongstart'?'selected':''}>Strong Start ($50/wk)</option>
           </select>
         </div>
         <div class="field" style="margin:0"><label>Goal</label>
-          <select id="cd-goal-${id}">
+          <select id="cd-goal-${cid}" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:10px 12px;font-size:14px;outline:none;">
             <option ${c.goal==='Fat Loss'?'selected':''}>Fat Loss</option>
             <option ${c.goal==='Muscle Building'?'selected':''}>Muscle Building</option>
             <option ${c.goal==='Strength'?'selected':''}>Strength</option>
             <option ${c.goal==='General Fitness'?'selected':''}>General Fitness</option>
+            <option ${c.goal==='Lean Bulk'?'selected':''}>Lean Bulk</option>
           </select>
         </div>
         <div class="field" style="margin:0"><label>Sessions/Week</label>
-          <input type="number" id="cd-sess-${id}" value="${c.sess}" min="1" max="7" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:10px 12px;font-size:14px;outline:none;"/>
+          <input type="number" id="cd-sess-${cid}" value="${c.sess||3}" min="1" max="7" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:10px 12px;font-size:14px;outline:none;"/>
         </div>
       </div>
       <div class="form-row">
+        <div class="field" style="margin:0"><label>Starting Weight (kg)</label>
+          <input type="number" id="cd-sw-${cid}" value="${c.sw||80}" step=".1" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:10px 12px;font-size:14px;outline:none;"/>
+        </div>
         <div class="field" style="margin:0"><label>Current Weight (kg)</label>
-          <input type="number" id="cd-cw-${id}" value="${c.cw}" step=".1" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:10px 12px;font-size:14px;outline:none;"/>
+          <input type="number" id="cd-cw-${cid}" value="${c.cw||80}" step=".1" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:10px 12px;font-size:14px;outline:none;"/>
         </div>
         <div class="field" style="margin:0"><label>Target Weight (kg)</label>
-          <input type="number" id="cd-tw-${id}" value="${c.tw}" step=".1" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:10px 12px;font-size:14px;outline:none;"/>
+          <input type="number" id="cd-tw-${cid}" value="${c.tw||75}" step=".1" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:10px 12px;font-size:14px;outline:none;"/>
         </div>
         <div class="field" style="margin:0"><label>Program Week</label>
-          <input type="number" id="cd-wk-${id}" value="${c.week}" min="1" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:10px 12px;font-size:14px;outline:none;"/>
+          <input type="number" id="cd-wk-${cid}" value="${c.week||1}" min="1" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:10px 12px;font-size:14px;outline:none;"/>
         </div>
       </div>
     </div>
@@ -2023,93 +2060,162 @@ function openClientDetail(id) {
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
         <div class="card-lbl" style="margin:0;">MACRO TARGETS</div>
-        <button class="btn btn-o btn-sm" onclick="cd_saveMacros('${c.uid||c.id}')">PUSH TO CLIENT ✓</button>
+        <button class="btn btn-o btn-sm" onclick="cd_saveMacros('${cid}')">PUSH TO CLIENT ✓</button>
       </div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px;">
         <div><label style="font-size:10px;color:var(--sub);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;">Calories</label>
-          <input type="number" id="cd-cal-${id}" value="${c.macros.cal}" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--green);padding:9px;font-size:18px;font-family:var(--H);text-align:center;outline:none;" oninput="cd_onCalChange('${id}')"/></div>
+          <input type="number" id="cd-cal-${cid}" value="${c.macros.cal}" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--green);padding:9px;font-size:18px;font-family:var(--H);text-align:center;outline:none;" oninput="cd_onCalChange('${cid}')"/></div>
         <div><label style="font-size:10px;color:var(--sub);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;">Protein (g)</label>
-          <input type="number" id="cd-pro-${id}" value="${c.macros.pro}" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--blue);padding:9px;font-size:18px;font-family:var(--H);text-align:center;outline:none;" oninput="cd_onMacroChange('${id}')"/></div>
+          <input type="number" id="cd-pro-${cid}" value="${c.macros.pro}" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--blue);padding:9px;font-size:18px;font-family:var(--H);text-align:center;outline:none;" oninput="cd_onMacroChange('${cid}')"/></div>
         <div><label style="font-size:10px;color:var(--sub);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;">Carbs (g)</label>
-          <input type="number" id="cd-car-${id}" value="${c.macros.car}" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--orange);padding:9px;font-size:18px;font-family:var(--H);text-align:center;outline:none;" oninput="cd_onMacroChange('${id}')"/></div>
+          <input type="number" id="cd-car-${cid}" value="${c.macros.car}" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--orange);padding:9px;font-size:18px;font-family:var(--H);text-align:center;outline:none;" oninput="cd_onMacroChange('${cid}')"/></div>
         <div><label style="font-size:10px;color:var(--sub);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;">Fat (g)</label>
-          <input type="number" id="cd-fat-${id}" value="${c.macros.fat}" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--red);padding:9px;font-size:18px;font-family:var(--H);text-align:center;outline:none;" oninput="cd_onMacroChange('${id}')"/></div>
+          <input type="number" id="cd-fat-${cid}" value="${c.macros.fat}" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--red);padding:9px;font-size:18px;font-family:var(--H);text-align:center;outline:none;" oninput="cd_onMacroChange('${cid}')"/></div>
         <div><label style="font-size:10px;color:var(--sub);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;">Water (L)</label>
-          <input type="number" id="cd-wat-${id}" value="${c.macros.wat}" step=".5" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--blue);padding:9px;font-size:18px;font-family:var(--H);text-align:center;outline:none;"/></div>
+          <input type="number" id="cd-wat-${cid}" value="${c.macros.wat}" step=".5" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--blue);padding:9px;font-size:18px;font-family:var(--H);text-align:center;outline:none;"/></div>
         <div><label style="font-size:10px;color:var(--sub);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;">Meals/Day</label>
-          <input type="number" id="cd-meals-${id}" value="${c.macros.meals}" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--sub);padding:9px;font-size:18px;font-family:var(--H);text-align:center;outline:none;"/></div>
+          <input type="number" id="cd-meals-${cid}" value="${c.macros.meals}" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--sub);padding:9px;font-size:18px;font-family:var(--H);text-align:center;outline:none;"/></div>
       </div>
-      <div id="cd-macro-summary-${id}" style="background:var(--dark);border-radius:var(--r3);padding:9px;font-size:13px;color:var(--sub);text-align:center;"></div>
+      <div id="cd-macro-summary-${cid}" style="background:var(--dark);border-radius:var(--r3);padding:9px;font-size:13px;color:var(--sub);text-align:center;"></div>
     </div>
 
     <div class="card">
       <div class="card-lbl">COACH MESSAGE (shows on their home screen)</div>
-      <textarea id="cd-msg-${id}" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:11px 12px;font-size:14px;outline:none;resize:none;min-height:70px;font-family:var(--B);">${c.coachMsg||''}</textarea>
-      <button class="btn btn-o btn-sm" style="margin-top:8px;" onclick="cd_saveMsg('${c.uid||c.id}','${id}')">PUSH MESSAGE ✓</button>
+      <textarea id="cd-msg-${cid}" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:11px 12px;font-size:14px;outline:none;resize:none;min-height:70px;font-family:var(--B);">${c.coachMsg||''}</textarea>
+      <button class="btn btn-o btn-sm" style="margin-top:8px;" onclick="cd_saveMsg('${cid}','${cid}')">PUSH MESSAGE ✓</button>
     </div>`;
 
-  // Init macro summary display
-  cd_updateMacroSummary(id);
+  cd_updateMacroSummary(cid);
 
-  // This week's workout
+  // ── THIS WEEK'S WORKOUT ──
   document.getElementById('ct-workout').innerHTML = `
-    <div style="background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);border-radius:var(--r2);padding:11px 13px;margin-bottom:14px;font-size:13px;color:#ccc;display:flex;gap:8px;align-items:center;">
-      <span>📋</span><span>Clients <strong>only see this week's program</strong>. Updates after you build and push a new one post-Sunday check-in.</span>
+    <div style="background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);border-radius:var(--r2);padding:11px 13px;margin-bottom:14px;font-size:13px;color:#ccc;">
+      📋 Clients only see <strong>this week's program</strong>. Build and push to update.
     </div>
-    <div class="card"><div class="card-lbl">THIS WEEK — ${c.fn.toUpperCase()}</div>
-      ${LIVE_PROGRAM.filter(d => d.exercises.length).map(d => `
+    <div class="card"><div class="card-lbl">THIS WEEK — ${(c.fn||'').toUpperCase()}</div>
+      ${LIVE_PROGRAM.filter(d=>d.exercises&&d.exercises.length).map(d=>`
         <div style="padding:9px 0;border-bottom:1px solid var(--border);">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
-            <strong style="font-family:var(--H);font-size:17px;letter-spacing:1px;">${d.day} — ${d.focus}</strong>
+            <strong style="font-family:var(--H);font-size:16px;letter-spacing:1px;">${d.day} — ${d.focus}</strong>
             <span style="font-size:11px;color:var(--sub)">${d.exercises.length} exercises</span>
           </div>
-          ${d.exercises.map(ex => `<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:var(--sub);">
+          ${d.exercises.map(ex=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:var(--sub);">
             <span style="color:var(--text)">${ex.name}</span><span style="color:var(--orange)">${ex.sets}×${ex.reps}</span>
           </div>`).join('')}
-        </div>`).join('')}
-      <button class="btn btn-p btn-sm" style="margin-top:12px;" onclick="goToWorkout(${id})">BUILD NEW PROGRAM FOR ${c.fn.toUpperCase()}</button>
+        </div>`).join('')||'<div style="color:var(--sub);font-size:13px;padding:8px 0;">No program built yet for this client.</div>'}
+      <button class="btn btn-p btn-sm" style="margin-top:12px;" onclick="goToWorkout('${cid}')">BUILD NEW PROGRAM ✓</button>
     </div>`;
 
-  // Check-ins
-  document.getElementById('ct-checkins').innerHTML = c.checkins.length ? c.checkins.map(ci => `
+  // ── CHECK-INS ──
+  const ciHTML = c.checkins && c.checkins.length ? c.checkins.map(ci => `
     <div class="ci-card ${ci.replied?'replied':'pending'}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
-        <div><div style="font-family:var(--H);font-size:17px;letter-spacing:1px;">${ci.date}</div>
-        <div style="font-size:11px;color:var(--orange);margin-top:2px;">Requested ${ci.nextWeek} workouts next week</div></div>
-        ${ci.replied ? '<span class="badge bg">REPLIED</span>' : `<button class="btn btn-o btn-sm" onclick="openCIReply(${id})">REPLY</button>`}
+        <div><div style="font-family:var(--H);font-size:17px;letter-spacing:1px;">${ci.date||ci.checkInDate||'—'}</div></div>
+        ${ci.replied ? '<span class="badge bg">REPLIED ✓</span>' : `<button class="btn btn-o btn-sm" onclick="openCIReply('${cid}')">REPLY</button>`}
       </div>
       <div class="ci-metrics">
-        <div class="ci-m"><div class="ci-mv">${ci.weight}kg</div><div class="ci-ml">Weight</div></div>
-        <div class="ci-m"><div class="ci-mv">${ci.workouts}</div><div class="ci-ml">Sessions</div></div>
-        <div class="ci-m"><div class="ci-mv">${ci.energy}/10</div><div class="ci-ml">Energy</div></div>
-        <div class="ci-m"><div class="ci-mv">${ci.nutrition}/10</div><div class="ci-ml">Nutrition</div></div>
-        <div class="ci-m"><div class="ci-mv">${ci.sleep}hrs</div><div class="ci-ml">Sleep</div></div>
-        <div class="ci-m"><div class="ci-mv">${ci.stress}/10</div><div class="ci-ml">Stress</div></div>
+        <div class="ci-m"><div class="ci-mv">${ci.weight||'—'}kg</div><div class="ci-ml">Weight</div></div>
+        <div class="ci-m"><div class="ci-mv">${ci.workouts||'—'}</div><div class="ci-ml">Sessions</div></div>
+        <div class="ci-m"><div class="ci-mv">${ci.energy||'—'}</div><div class="ci-ml">Energy</div></div>
+        <div class="ci-m"><div class="ci-mv">${ci.nutrition||'—'}</div><div class="ci-ml">Nutrition</div></div>
       </div>
-      <div class="ci-notes">🏆 <strong style="color:var(--orange)">Win:</strong> ${ci.win}<br/><br/>${ci.notes}</div>
-    </div>`).join('') : '<p style="color:var(--sub);">No check-ins yet.</p>';
+      ${ci.win?`<div class="ci-notes">🏆 <strong style="color:var(--orange)">Win:</strong> ${ci.win}<br/>${ci.notes||''}</div>`:''}
+      ${ci.hasPhotos?`<div style="margin-top:10px;font-size:11px;color:var(--orange);">📷 Progress photos submitted</div>`:''}
+    </div>`).join('') : '<p style="color:var(--sub);padding:8px 0;">No check-ins yet.</p>';
+  document.getElementById('ct-checkins').innerHTML = ciHTML;
 
-  // Logs
-  document.getElementById('ct-logs').innerHTML = `<div class="card"><div class="card-lbl">RECENT WORKOUT LOGS</div>
-    <table class="data-table">
-      <thead><tr><th>Date</th><th>Exercise</th><th>Best Set</th><th>Volume</th></tr></thead>
-      <tbody>
-        <tr><td>Mar 26</td><td>Barbell Bench Press</td><td style="color:var(--orange)">82.5kg × 7</td><td>1,286kg</td></tr>
-        <tr><td>Mar 24</td><td>Barbell Squat</td><td style="color:var(--orange)">102.5kg × 7</td><td>3,280kg</td></tr>
-        <tr><td>Mar 22</td><td>Barbell Deadlift</td><td style="color:var(--orange)">140kg × 5</td><td>2,100kg</td></tr>
-      </tbody>
-    </table></div>`;
+  // ── WORKOUT LOGS ──
+  document.getElementById('ct-logs').innerHTML = `<div class="card"><div class="card-lbl">WORKOUT HISTORY</div>
+    <div id="client-logs-${cid}"><div style="color:var(--sub);font-size:13px;">Loading...</div></div></div>`;
+  // Load from Firebase
+  if (window.FB) {
+    const { DB, collection, query, where, orderBy, getDocs, limit } = window.FB;
+    getDocs(query(collection(DB,'workoutSessions'), where('uid','==',cid), orderBy('completedAt','desc'), limit(10)))
+      .then(snap => {
+        const el = document.getElementById(`client-logs-${cid}`);
+        if (!el) return;
+        if (!snap.docs.length) { el.innerHTML = '<div style="color:var(--sub);font-size:13px;">No sessions logged yet.</div>'; return; }
+        el.innerHTML = snap.docs.map(d => {
+          const s = d.data();
+          const dt = s.completedAt?.toDate ? s.completedAt.toDate() : new Date();
+          return `<div class="sess-row">
+            <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+              <div style="font-size:13px;font-weight:700;">${dt.toLocaleDateString('en-NZ',{weekday:'short',day:'numeric',month:'short'})} · ${s.title||'Workout'}</div>
+              <div style="font-size:11px;color:var(--orange)">${s.durationMins||0}min</div>
+            </div>
+            <div style="font-size:11px;color:var(--sub);">${s.totalSets||0} sets · ${s.totalVolume||0}kg volume</div>
+          </div>`;
+        }).join('');
+      }).catch(() => {
+        const el = document.getElementById(`client-logs-${cid}`);
+        if (el) el.innerHTML = '<div style="color:var(--sub);font-size:13px;">Could not load logs.</div>';
+      });
+  }
 
-  // Message
-  document.getElementById('ct-msg').innerHTML = `<div class="card"><div class="card-lbl">SEND MESSAGE TO ${c.fn.toUpperCase()}</div>
-    <textarea style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:10px 12px;font-size:14px;outline:none;resize:vertical;min-height:90px;" placeholder="Message to ${c.fn}..." id="qm-${id}"></textarea>
-    <button class="btn btn-o" style="margin-top:8px;" onclick="showToast('Message sent to ${c.fn}! 💬')">SEND MESSAGE</button>
-  </div>`;
+  // ── DIRECT MESSAGE ──
+  document.getElementById('ct-msg').innerHTML = `
+    <div class="card"><div class="card-lbl">SEND MESSAGE TO ${(c.fn||'').toUpperCase()}</div>
+      <textarea style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:10px 12px;font-size:14px;outline:none;resize:vertical;min-height:90px;font-family:var(--B);" placeholder="Message to ${c.fn}..." id="qm-${cid}"></textarea>
+      <button class="btn btn-o" style="margin-top:8px;" onclick="cd_quickMsg('${cid}')">SEND MESSAGE 💬</button>
+    </div>
+    <div class="card" id="msg-thread-${cid}"><div class="card-lbl">MESSAGE HISTORY</div>
+      <div style="color:var(--sub);font-size:13px;">Loading messages...</div>
+    </div>`;
+  // Load message thread
+  if (window.fb_listenMessages && window._fbUser) {
+    const coachUid = window._fbUser.uid;
+    window.fb_listenMessages(coachUid, cid, msgs => {
+      const el = document.getElementById(`msg-thread-${cid}`);
+      if (!el) return;
+      el.innerHTML = `<div class="card-lbl">MESSAGE HISTORY</div>` + (msgs.length ? msgs.slice(-20).map(m => `
+        <div style="margin-bottom:8px;display:flex;flex-direction:column;align-items:${m.fromUid===coachUid?'flex-end':'flex-start'};">
+          <div style="background:${m.fromUid===coachUid?'var(--purple)':'var(--card2)'};padding:8px 12px;border-radius:var(--r2);max-width:80%;font-size:13px;line-height:1.5;">${m.text}</div>
+          <div style="font-size:10px;color:var(--sub);margin-top:2px;">${m.fromUid===coachUid?'You':'Client'} · ${m.sentAt?.toDate?m.sentAt.toDate().toLocaleTimeString('en-NZ',{hour:'2-digit',minute:'2-digit'}):'Just now'}</div>
+        </div>`).join('') : '<div style="color:var(--sub);font-size:13px;">No messages yet.</div>');
+    });
+  }
 
   // Reset tabs
   document.querySelectorAll('.tb').forEach((b,i) => b.classList.toggle('on', i===0));
   document.querySelectorAll('.tc').forEach((t,i) => t.classList.toggle('on', i===0));
   showCP('client-detail', null);
+}
+
+async function cd_saveName(uid) {
+  const fn = document.getElementById('hdr-fn')?.value.trim();
+  const ln = document.getElementById('hdr-ln')?.value.trim();
+  if (!fn) { showToast('Enter a first name'); return; }
+  const c = CLIENTS.find(x => String(x.uid||x.id)===String(uid));
+  if (c) { c.fn = fn; c.ln = ln||''; }
+  if (window.FB) {
+    try { const {DB,doc,updateDoc}=window.FB; await updateDoc(doc(DB,'users',uid),{fn,ln:ln||''}); } catch(e){}
+  }
+  renderClientGrid(CLIENTS);
+  showToast('Name updated! ✅');
+}
+
+async function cd_saveContact(uid) {
+  const email = document.getElementById('hdr-email')?.value.trim();
+  const color = document.getElementById('hdr-color')?.value;
+  const c = CLIENTS.find(x => String(x.uid||x.id)===String(uid));
+  if (c) { c.email = email; c.color = color; }
+  if (window.FB) {
+    try { const {DB,doc,updateDoc}=window.FB; await updateDoc(doc(DB,'users',uid),{email,color}); } catch(e){}
+  }
+  renderClientGrid(CLIENTS);
+  showToast('Contact info saved! ✅');
+}
+
+async function cd_quickMsg(uid) {
+  const txt = document.getElementById(`qm-${uid}`)?.value.trim();
+  if (!txt) return;
+  const coachUid = window._fbUser?.uid;
+  if (!coachUid) return;
+  try {
+    await window.fb_sendMessage(uid, coachUid, txt, 'Antz Brown');
+    document.getElementById(`qm-${uid}`).value = '';
+    showToast('Message sent! 💬');
+  } catch(e) { showToast('Send error: ' + e.message); }
 }
 
 function showCT(id, btn) {
@@ -2119,10 +2225,15 @@ function showCT(id, btn) {
   document.getElementById('ct-' + id).classList.add('on');
 }
 
-function saveNote(id) {
-  const c = CLIENTS.find(x => x.id === id);
-  c.notes = document.getElementById('ov-notes-' + id).value;
-  showToast('Note saved!');
+async function saveNote(id) {
+  const c = CLIENTS.find(x => String(x.uid||x.id) === String(id));
+  if (!c) return;
+  const note = document.getElementById('ov-notes-' + id)?.value || '';
+  c.notes = note;
+  if (window.FB) {
+    try { const {DB,doc,updateDoc}=window.FB; await updateDoc(doc(DB,'users',String(c.uid||c.id)),{notes:note}); } catch(e){}
+  }
+  showToast('Notes saved! ✅');
 }
 
 // ── CHECK-INS ──
@@ -2209,16 +2320,16 @@ function cd_updateMacroSummary(id) {
 }
 
 async function cd_savePlan(uid) {
-  const c = CLIENTS.find(x => (x.uid||x.id) === uid);
-  if (!c) return;
-  const id = c.id;
+  const c = CLIENTS.find(x => String(x.uid||x.id) === String(uid));
+  if (!c) { showToast('Client not found'); return; }
   const updates = {
-    tier:  document.getElementById(`cd-tier-${id}`)?.value || c.tier,
-    goal:  document.getElementById(`cd-goal-${id}`)?.value || c.goal,
-    sess:  parseInt(document.getElementById(`cd-sess-${id}`)?.value) || c.sess,
-    cw:    parseFloat(document.getElementById(`cd-cw-${id}`)?.value) || c.cw,
-    tw:    parseFloat(document.getElementById(`cd-tw-${id}`)?.value) || c.tw,
-    week:  parseInt(document.getElementById(`cd-wk-${id}`)?.value) || c.week,
+    tier:  document.getElementById(`cd-tier-${uid}`)?.value  || c.tier,
+    goal:  document.getElementById(`cd-goal-${uid}`)?.value  || c.goal,
+    sess:  parseInt(document.getElementById(`cd-sess-${uid}`)?.value)    || c.sess,
+    sw:    parseFloat(document.getElementById(`cd-sw-${uid}`)?.value)    || c.sw,
+    cw:    parseFloat(document.getElementById(`cd-cw-${uid}`)?.value)    || c.cw,
+    tw:    parseFloat(document.getElementById(`cd-tw-${uid}`)?.value)    || c.tw,
+    week:  parseInt(document.getElementById(`cd-wk-${uid}`)?.value)      || c.week,
   };
   Object.assign(c, updates);
   if (window.FB) {
@@ -2232,16 +2343,15 @@ async function cd_savePlan(uid) {
 }
 
 async function cd_saveMacros(uid) {
-  const c = CLIENTS.find(x => (x.uid||x.id) === uid);
-  if (!c) return;
-  const id = c.id;
+  const c = CLIENTS.find(x => String(x.uid||x.id) === String(uid));
+  if (!c) { showToast('Client not found'); return; }
   const macros = {
-    cal:   parseInt(document.getElementById(`cd-cal-${id}`)?.value)   || c.macros.cal,
-    pro:   parseInt(document.getElementById(`cd-pro-${id}`)?.value)   || c.macros.pro,
-    car:   parseInt(document.getElementById(`cd-car-${id}`)?.value)   || c.macros.car,
-    fat:   parseInt(document.getElementById(`cd-fat-${id}`)?.value)   || c.macros.fat,
-    wat:   parseFloat(document.getElementById(`cd-wat-${id}`)?.value) || c.macros.wat,
-    meals: parseInt(document.getElementById(`cd-meals-${id}`)?.value) || c.macros.meals,
+    cal:   parseInt(document.getElementById(`cd-cal-${uid}`)?.value)   || c.macros.cal,
+    pro:   parseInt(document.getElementById(`cd-pro-${uid}`)?.value)   || c.macros.pro,
+    car:   parseInt(document.getElementById(`cd-car-${uid}`)?.value)   || c.macros.car,
+    fat:   parseInt(document.getElementById(`cd-fat-${uid}`)?.value)   || c.macros.fat,
+    wat:   parseFloat(document.getElementById(`cd-wat-${uid}`)?.value) || c.macros.wat,
+    meals: parseInt(document.getElementById(`cd-meals-${uid}`)?.value) || c.macros.meals,
   };
   c.macros = macros;
   if (window.FB) {
@@ -2254,9 +2364,9 @@ async function cd_saveMacros(uid) {
 }
 
 async function cd_saveMsg(uid, id) {
-  const msg = document.getElementById(`cd-msg-${id}`)?.value.trim();
+  const msg = document.getElementById(`cd-msg-${uid}`)?.value.trim();
   if (!msg) return;
-  const c = CLIENTS.find(x => (x.uid||x.id) === uid);
+  const c = CLIENTS.find(x => String(x.uid||x.id) === String(uid));
   if (c) c.coachMsg = msg;
   if (window.FB) {
     try {
