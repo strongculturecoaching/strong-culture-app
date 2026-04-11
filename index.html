@@ -2215,8 +2215,11 @@ async function cd_saveMsg(uid, id) {
     } catch(e) { showToast('Save error: ' + e.message); }
   }
 }
+
+function openEditPlan(id) {
   editingPlanId = id;
   const c = CLIENTS.find(x => x.id === id);
+  if (!c) return;
   document.getElementById('modal-ep-title').textContent = `EDIT PLAN — ${c.fn.toUpperCase()} ${c.ln.toUpperCase()}`;
   document.getElementById('ep-tier').value = c.tier;
   document.getElementById('ep-goal').value = c.goal;
