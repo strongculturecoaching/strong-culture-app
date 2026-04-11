@@ -1495,16 +1495,7 @@ button{cursor:pointer;}
 // ══════════════════════════════════════════════════════
 
 // ACCOUNTS — coach edits these to control who can log in
-const ACCOUNTS = {
-  'antz@strongculture.com':  { pass:'coach123',    role:'coach' },
-  'coach':                   { pass:'coach123',    role:'coach' },
-  'client@strongculture.com':{ pass:'strongculture', role:'client', clientId:1 },
-  'alex@strongculture.com':  { pass:'strongculture', role:'client', clientId:1 },
-  'sarah@strongculture.com': { pass:'strongculture', role:'client', clientId:2 },
-  'james@strongculture.com': { pass:'strongculture', role:'client', clientId:3 },
-};
-const COACH_PASS = 'coach123';
-const CLIENT_PASS = 'strongculture';
+// Login handled entirely by Firebase Auth — no hardcoded accounts
 
 // Drive video IDs
 const DV = {
@@ -1544,27 +1535,8 @@ const EX_LIB = [
 ];
 
 // Client data store
-let CLIENTS = [
-  {id:1,fn:'Alex',ln:'Johnson',email:'alex@strongculture.com',pass:'strongculture',tier:'transformation',goal:'Fat Loss',sess:4,sw:87.2,cw:82.0,tw:78,week:4,adherence:88,ciDue:true,color:'#a855f7',notes:'Consistent. Watch weekend nutrition.',streak:3,
-    macros:{cal:2200,pro:180,car:230,fat:70,wat:3,meals:4},
-    coachMsg:'Push day today. Shoulder blade retraction on bench — watch the demo. Let\'s go! 💪',
-    checkins:[{date:'Mar 24',weight:82.0,waist:88,workouts:4,energy:7,nutrition:8,sleep:7,stress:4,win:'New bench PB!',notes:'Good week. Nutrition solid Mon-Thu, slipped on weekend.',nextWeek:4,replied:false}]},
-  {id:2,fn:'Sarah',ln:'Mitchell',email:'sarah@strongculture.com',pass:'strongculture',tier:'elite',goal:'Muscle Building',sess:5,sw:62,cw:63.5,tw:66,week:8,adherence:94,ciDue:false,color:'#f97316',notes:'Elite client. Progress excellent.',streak:6,
-    macros:{cal:2600,pro:195,car:290,fat:75,wat:3.5,meals:5},
-    coachMsg:'5 sessions this week Sarah — you\'re built different. 🔥',
-    checkins:[{date:'Mar 17',weight:63.5,waist:70,workouts:5,energy:9,nutrition:9,sleep:8,stress:3,win:'5 sessions + OHP PB!',notes:'Best week yet.',nextWeek:5,replied:true}]},
-  {id:3,fn:'James',ln:'Torres',email:'james@strongculture.com',pass:'strongculture',tier:'strongstart',goal:'General Fitness',sess:3,sw:95,cw:91.2,tw:85,week:3,adherence:72,ciDue:true,color:'#22c55e',notes:'Struggling with consistency.',streak:1,
-    macros:{cal:2200,pro:165,car:230,fat:65,wat:2.5,meals:4},
-    coachMsg:'Keep it simple James. 3 solid sessions, hit the macros. You\'ve got this.',
-    checkins:[{date:'Mar 24',weight:91.2,waist:96,workouts:2,energy:5,nutrition:5,sleep:6,stress:7,win:'Made it to gym twice',notes:'Work was really stressful. Only 2 sessions.',nextWeek:3,replied:false}]},
-  {id:4,fn:'Neil',ln:'Watson',email:'neil@strongculture.com',pass:'strongculture',tier:'elite',goal:'Strength',sess:5,sw:88,cw:89.5,tw:92,week:12,adherence:96,ciDue:false,color:'#f97316',notes:'Powerlifting focus.',streak:8,
-    macros:{cal:3200,pro:210,car:380,fat:90,wat:4,meals:5},coachMsg:'Heavy week Neil. PRs incoming.',checkins:[]},
-  {id:5,fn:'Lisa',ln:'Park',email:'lisa@strongculture.com',pass:'strongculture',tier:'transformation',goal:'Fat Loss',sess:4,sw:74,cw:70.3,tw:65,week:6,adherence:80,ciDue:true,color:'#a855f7',notes:'Good progress. More cardio adherence.',streak:2,
-    macros:{cal:1750,pro:145,car:165,fat:50,wat:2.5,meals:4},coachMsg:'Great progress Lisa! Dial the weekend nutrition and we\'ll smash that goal.',
-    checkins:[{date:'Mar 23',weight:70.3,waist:78,workouts:3,energy:6,nutrition:7,sleep:7,stress:5,win:'Down 0.5kg!',notes:'Hit 3 sessions. Feeling leaner!',nextWeek:4,replied:false}]},
-  {id:6,fn:'Marcus',ln:'Lee',email:'marcus@strongculture.com',pass:'strongculture',tier:'strongstart',goal:'General Fitness',sess:3,sw:78,cw:76.1,tw:72,week:2,adherence:75,ciDue:false,color:'#22c55e',notes:'New client. Settling in well.',streak:2,
-    macros:{cal:2000,pro:155,car:200,fat:58,wat:2.5,meals:4},coachMsg:'Welcome to Week 3 Marcus! Keep the momentum going.',checkins:[]},
-];
+// CLIENTS — loaded from Firebase on login. Empty by default.
+let CLIENTS = [];
 
 // Live editable program (shared between coach and client views)
 let LIVE_PROGRAM = [
@@ -1625,11 +1597,8 @@ const SESS_HIST = [
   {date:'Mar 22',title:'Back & Biceps',ex:'Barbell Deadlift',sets:[{w:130,r:5},{w:135,r:5},{w:140,r:4}]},
 ];
 
-const MSGS = {
-  1:[{out:false,text:'Welcome to the app! Every exercise has a demo video and full technique guide — tap any exercise to open it.',time:'Mon 9am'},{out:false,text:'Push session today. Focus on shoulder blade retraction on bench.',time:'Today 8am'},{out:true,text:'That shoulder blade cue is a game changer!',time:'Today 8:32am'},{out:false,text:'Exactly — it\'ll protect your shoulders AND add kg long-term. Go smash it 🔥',time:'Today 8:35am'}],
-  2:[{out:false,text:'Sarah — 5/5 sessions and a new OHP PB. Best week of the program. 🏆',time:'Mon'},{out:true,text:'Thank you! Feeling amazing.',time:'Mon'}],
-  3:[{out:true,text:'Hey Antz, really struggling with work. Only made it twice.',time:'6h ago'},{out:false,text:'I hear you James. Life happens. Reset this week — 3 sessions, no stress.',time:'5h ago'}],
-};
+// MSGS — real-time messages handled by Firebase listeners
+const MSGS = {};
 
 // ══════════════════════════════════════════════════════
 //  SHARED STATE
