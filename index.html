@@ -259,30 +259,30 @@ window.fb_listenProfile = function(uid, callback) {
 };
 
 // ── SEND MESSAGE ──
-window.fb_sendMessage = async function(toUid, fromUid, text, fromName) {
+window.fb_sendMessage = async function(toUid, fromUid, text, fromName, photoBase64) {
   const { DB, collection, addDoc, serverTimestamp } = window.FB;
-  await addDoc(collection(DB, 'messages'), {
-    toUid,
-    fromUid,
-    fromName,
-    text,
-    sentAt: serverTimestamp(),
-    read: false
-  });
+  const msg = { toUid, fromUid, fromName, text: text||'', sentAt: serverTimestamp(), read: false };
+  if (photoBase64) msg.photo = photoBase64;
+  await addDoc(collection(DB, 'messages'), msg);
 };
 
-// ── LISTEN FOR MESSAGES ──
+// ── LISTEN FOR MESSAGES — no orderBy to avoid index requirement ──
 window.fb_listenMessages = function(uid1, uid2, callback) {
-  const { DB, collection, query, where, orderBy, onSnapshot } = window.FB;
-  const q = query(
-    collection(DB, 'messages'),
-    where('toUid', 'in', [uid1, uid2]),
-    orderBy('sentAt', 'asc')
-  );
-  return onSnapshot(q, snap => {
+  const { DB, collection, onSnapshot } = window.FB;
+  // Listen to ALL messages in the collection, filter client-side
+  // This avoids needing composite indexes
+  return onSnapshot(collection(DB, 'messages'), snap => {
     const msgs = snap.docs
       .map(d => ({id:d.id,...d.data()}))
-      .filter(m => (m.fromUid===uid1&&m.toUid===uid2)||(m.fromUid===uid2&&m.toUid===uid1));
+      .filter(m =>
+        (m.fromUid===uid1 && m.toUid===uid2) ||
+        (m.fromUid===uid2 && m.toUid===uid1)
+      )
+      .sort((a,b) => {
+        const ta = a.sentAt?.toMillis ? a.sentAt.toMillis() : 0;
+        const tb = b.sentAt?.toMillis ? b.sentAt.toMillis() : 0;
+        return ta - tb;
+      });
     callback(msgs);
   });
 };
@@ -1096,6 +1096,8 @@ button{cursor:pointer;}
       </div>
       <div class="msg-list" id="coach-msg-list"></div>
       <div class="msg-inp-row">
+        <label for="coach-photo-inp" style="width:34px;height:34px;background:var(--card2);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;flex-shrink:0;">📷</label>
+        <input type="file" id="coach-photo-inp" accept="image/*" style="display:none;" onchange="coach_sendPhoto(this)"/>
         <input class="msg-inp" id="coach-msg-inp" placeholder="Message your client..." onkeydown="if(event.key==='Enter')coach_sendMsg()"/>
         <button class="msg-send" onclick="coach_sendMsg()">↑</button>
       </div>
@@ -1475,6 +1477,8 @@ button{cursor:pointer;}
         </div>
         <div class="cmsg-list" id="client-msg-list"></div>
         <div class="cmsg-inp-row">
+          <label for="client-photo-inp" style="width:36px;height:36px;background:var(--card2);border:1.5px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;flex-shrink:0;">📷</label>
+          <input type="file" id="client-photo-inp" accept="image/*" style="display:none;" onchange="client_sendPhoto(this)"/>
           <input class="cmsg-inp" id="client-msg-inp" placeholder="Message Antz..." onkeydown="if(event.key==='Enter')client_sendMsg()"/>
           <button class="cmsg-send" onclick="client_sendMsg()">↑</button>
         </div>
@@ -1739,125 +1743,83 @@ async function initCoach() {
   const greetEl = document.getElementById('dash-greet');
   if (greetEl) greetEl.textContent = (h<12?'Good morning':h<17?'Good afternoon':'Good evening') + ', Antz. Loading your clients...';
 
-  // Load real clients from Firebase
-  if (window.FB) {
-    try {
-      const { DB, collection, query, where, getDocs } = window.FB;
-      const q = query(collection(DB, 'users'), where('role', '==', 'client'));
-      const snap = await getDocs(q);
+  function mapClient(d) {
+    const c = d.data ? d.data() : d;
+    const uid = d.id || d.uid || c.uid;
+    return {
+      id: uid, uid,
+      fn:        String(c.fn    || 'Client'),
+      ln:        String(c.ln    || ''),
+      email:     String(c.email || ''),
+      tier:      String(c.tier  || 'strongstart'),
+      goal:      String(c.goal  || 'General Fitness'),
+      sess:      Number(c.sess) || 3,
+      sw:        Number(c.sw)   || 80,
+      cw:        Number(c.cw)   || 80,
+      tw:        Number(c.tw)   || 75,
+      week:      Number(c.week) || 1,
+      adherence: Number(c.adherence) || 0,
+      ciDue:     c.ciDue === true || c.ciDue === 'true',
+      color:     String(c.color || '#22c55e'),
+      notes:     String(c.notes || '').replace(/`/g,''),
+      streak:    Number(c.streak) || 0,
+      macros: {
+        cal:   Number((c.macros||{}).cal)   || 2200,
+        pro:   Number((c.macros||{}).pro)   || 165,
+        car:   Number((c.macros||{}).car)   || 220,
+        fat:   Number((c.macros||{}).fat)   || 65,
+        wat:   Number((c.macros||{}).wat)   || 3,
+        meals: Number((c.macros||{}).meals) || 4,
+      },
+      coachMsg: String(c.coachMsg || 'Keep showing up. 💪'),
+      checkins: []
+    };
+  }
 
-      if (snap.docs.length > 0) {
-        // Replace CLIENTS array with real Firebase data
-        window.CLIENTS = snap.docs.map(d => {
-          const c = d.data();
-          return {
-            id: d.id, uid: d.id,
-            fn: String(c.fn || 'Client'),
-            ln: String(c.ln || ''),
-            email: String(c.email || ''),
-            tier: String(c.tier || 'strongstart'),
-            goal: String(c.goal || 'General Fitness'),
-            sess: Number(c.sess) || 3,
-            sw: Number(c.sw) || 80,
-            cw: Number(c.cw) || 80,
-            tw: Number(c.tw) || 75,
-            week: Number(c.week) || 1,
-            adherence: Number(c.adherence) || 0,
-            ciDue: c.ciDue === true || c.ciDue === 'true',
-            color: String(c.color || '#22c55e'),
-            notes: String(c.notes || '').replace(/`/g,''),
-            streak: Number(c.streak) || 0,
-            macros: {
-              cal:   Number((c.macros||{}).cal)   || 2200,
-              pro:   Number((c.macros||{}).pro)   || 165,
-              car:   Number((c.macros||{}).car)   || 220,
-              fat:   Number((c.macros||{}).fat)   || 65,
-              wat:   Number((c.macros||{}).wat)   || 3,
-              meals: Number((c.macros||{}).meals) || 4,
-            },
-            coachMsg: String(c.coachMsg || 'Keep showing up. 💪'),
-            checkins: []
-          };
-        });
-
-        // Load check-ins from Firebase and attach to clients
-        try {
-          const ciSnap = await getDocs(query(collection(DB, 'checkIns'), where('replied', '==', false)));
-          ciSnap.docs.forEach(d => {
-            const ci = { id: d.id, ...d.data() };
-            const client = window.CLIENTS.find(c => c.uid === ci.uid);
-            if (client) {
-              client.checkins.push(ci);
-              client.ciDue = true;
-            }
-          });
-        } catch(e) { console.log('Check-in load error:', e); }
-      }
-
-      if (greetEl) greetEl.textContent = (h<12?'Good morning':h<17?'Good afternoon':'Good evening') + ', Antz. Here\'s your overview.';
-      document.getElementById('d-clients').textContent = window.CLIENTS.length;
-
-    } catch(e) {
-      console.log('Firebase client load error:', e.message);
-      if (greetEl) greetEl.textContent = (h<12?'Good morning':h<17?'Good afternoon':'Good evening') + ', Antz. Here\'s your overview.';
+  function refreshCoachUI() {
+    renderDashboard();
+    renderClientGrid(window.CLIENTS);
+    renderAllCI('all');
+    renderCoachMsgSidebar();
+    updateCIBadge();
+    populateClientSelects();
+    const dEl = document.getElementById('d-clients');
+    if (dEl) dEl.textContent = window.CLIENTS.length;
+    if (greetEl) greetEl.textContent = (h<12?'Good morning':h<17?'Good afternoon':'Good evening') + ', Antz. Here\'s your overview.';
+    // Auto-select first client in messages if none selected
+    if (window.CLIENTS.length && !currentCoachMsgClient) {
+      currentCoachMsgClient = String(window.CLIENTS[0].uid || window.CLIENTS[0].id);
+      renderCoachMsg(window.CLIENTS[0]);
     }
   }
 
-  // Set up real-time listener so new clients appear instantly without refresh
   if (window.FB) {
-    const { DB, collection, query, where, onSnapshot } = window.FB;
-    const q = query(collection(DB, 'users'), where('role', '==', 'client'));
-    onSnapshot(q, snap => {
-      window.CLIENTS = snap.docs.map(d => {
-        const c = d.data();
-        return {
-          id: d.id, uid: d.id,
-          fn: String(c.fn || 'Client'),
-          ln: String(c.ln || ''),
-          email: String(c.email || ''),
-          tier: String(c.tier || 'strongstart'),
-          goal: String(c.goal || 'General Fitness'),
-          sess: Number(c.sess) || 3,
-          sw: Number(c.sw) || 80, cw: Number(c.cw) || 80, tw: Number(c.tw) || 75,
-          week: Number(c.week) || 1, adherence: Number(c.adherence) || 0,
-          ciDue: c.ciDue === true || c.ciDue === 'true',
-          color: String(c.color || '#22c55e'),
-          notes: String(c.notes || '').replace(/`/g,''),
-          streak: Number(c.streak) || 0,
-          macros: {
-            cal:   Number((c.macros||{}).cal)   || 2200,
-            pro:   Number((c.macros||{}).pro)   || 165,
-            car:   Number((c.macros||{}).car)   || 220,
-            fat:   Number((c.macros||{}).fat)   || 65,
-            wat:   Number((c.macros||{}).wat)   || 3,
-            meals: Number((c.macros||{}).meals) || 4,
-          },
-          coachMsg: String(c.coachMsg || 'Keep showing up. 💪'),
-          checkins: []
-        };
-      });
-      // Refresh dashboard and client grid live
-      renderClientGrid(window.CLIENTS);
-      renderDashboard();
-      updateCIBadge();
-      populateClientSelects();
-      document.getElementById('d-clients').textContent = window.CLIENTS.length;
+    const { DB, collection, onSnapshot } = window.FB;
+
+    // Real-time listener on ALL users — filter client-side (no index needed)
+    onSnapshot(collection(DB, 'users'), snap => {
+      window.CLIENTS = snap.docs
+        .filter(d => String(d.data().role) === 'client')
+        .map(d => mapClient(d));
+
+      console.log(`🔥 Firebase: ${snap.docs.length} users, ${window.CLIENTS.length} clients`);
+
+      // Load check-ins and attach
+      snap.docs.forEach(d => {}); // trigger re-render even if clients=0
+      refreshCoachUI();
+    }, err => {
+      console.error('Firestore listener error:', err.code, err.message);
+      if (greetEl) greetEl.textContent = 'Error loading clients. Check Firestore rules.';
     });
+  } else {
+    // No Firebase — show empty state
+    refreshCoachUI();
   }
 
-  renderDashboard();
-  renderClientGrid(CLIENTS);
-  renderAllCI('all');
-  renderCoachMsgSidebar();
-  if (CLIENTS.length) {
-    currentCoachMsgClient = String(CLIENTS[0].uid || CLIENTS[0].id);
-    renderCoachMsg(CLIENTS[0]);
-  }
-  populateClientSelects();
+  // Init the rest of the coach UI immediately (doesn't need clients)
   wb_setDays(4);
   renderExLib('');
   mb_updateBar();
-  updateCIBadge();
 }
 
 function showCP(name, el) {
@@ -2959,16 +2921,7 @@ function renderCoachMsg(c) {
       list.innerHTML = `<div style="color:var(--sub);font-size:13px;padding:12px;">No messages with ${c.fn} yet. Say hello! 👋</div>`;
       return;
     }
-    list.innerHTML = msgs.map(m => {
-      const isCoach = m.fromUid === coachUid;
-      const time = m.sentAt?.toDate
-        ? m.sentAt.toDate().toLocaleTimeString('en-NZ',{hour:'2-digit',minute:'2-digit'})
-        : 'Just now';
-      return `<div class="mw ${isCoach ? 'out' : 'in'}">
-        <div class="mb2"><p>${m.text}</p></div>
-        <div class="mt">${isCoach ? 'You' : c.fn} · ${time}</div>
-      </div>`;
-    }).join('');
+    list.innerHTML = msgs.map(m => renderMsgBubble(m, coachUid, 'You', c.fn)).join('');
     list.scrollTop = 99999;
   });
 }
@@ -2978,17 +2931,50 @@ async function coach_sendMsg() {
   const txt = inp.value.trim();
   if (!txt) return;
   inp.value = '';
-
-  const coachUid   = String(window._fbUser?.uid || '');
-  const clientUid  = String(currentCoachMsgClient || '');
-
+  const coachUid  = String(window._fbUser?.uid || '');
+  const clientUid = String(currentCoachMsgClient || '');
   if (!coachUid || !clientUid) { showToast('Select a client first'); return; }
-
   if (window.fb_sendMessage) {
-    try {
-      await window.fb_sendMessage(clientUid, coachUid, txt, 'Antz Brown');
-    } catch(e) { showToast('Send error: ' + e.message); }
+    try { await window.fb_sendMessage(clientUid, coachUid, txt, 'Antz Brown'); }
+    catch(e) { showToast('Send error: ' + e.message); }
   }
+}
+
+async function coach_sendPhoto(input) {
+  const file = input.files[0]; if (!file) return;
+  const coachUid  = String(window._fbUser?.uid || '');
+  const clientUid = String(currentCoachMsgClient || '');
+  if (!coachUid || !clientUid) { showToast('Select a client first'); return; }
+  showToast('Sending photo...');
+  try {
+    const b64 = await fileToBase64(file);
+    await window.fb_sendMessage(clientUid, coachUid, '📷 Photo', 'Antz Brown', b64);
+    input.value = '';
+  } catch(e) { showToast('Photo error: ' + e.message); }
+}
+
+async function client_sendPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+  await client_sendPhoto_inner(file);
+}
+
+// Helper to render a message bubble with optional photo
+function renderMsgBubble(m, myUid, myLabel, theirLabel) {
+  const isMe = m.fromUid === myUid;
+  const time = m.sentAt?.toDate
+    ? m.sentAt.toDate().toLocaleTimeString('en-NZ',{hour:'2-digit',minute:'2-digit'})
+    : 'Just now';
+  const photoHTML = m.photo
+    ? `<div style="margin-top:6px;"><img src="${m.photo}" style="max-width:200px;max-height:260px;border-radius:8px;display:block;cursor:pointer;" onclick="this.style.maxWidth=this.style.maxWidth==='100%'?'200px':'100%'"/></div>`
+    : '';
+  const textHTML = m.text && m.text !== '📷 Photo'
+    ? `<p>${m.text}</p>` : '';
+  return `<div class="mw ${isMe?'out':'in'}">
+    <div class="mb2">${textHTML}${photoHTML}</div>
+    <div class="mt">${isMe?myLabel:theirLabel} · ${time}</div>
+  </div>`;
 }
 
 // ── ADD CLIENT — writes to Firestore using UID from Firebase Auth ──
@@ -3852,9 +3838,29 @@ function resetCI() {
 // ── MESSAGES (client) — real-time via Firebase ──
 let _clientMsgUnsub = null;
 
+// Cache coach UID so we don't query every time
+let _cachedCoachUid = null;
+
+async function getCoachUid() {
+  if (_cachedCoachUid) return _cachedCoachUid;
+  if (!window.FB) return null;
+  const { DB, collection, getDocs } = window.FB;
+  try {
+    // Get all users and filter client-side — no index needed
+    const snap = await getDocs(collection(DB, 'users'));
+    const coach = snap.docs.find(d => String(d.data().role) === 'coach');
+    _cachedCoachUid = coach?.id || null;
+    console.log('Coach UID found:', _cachedCoachUid);
+    return _cachedCoachUid;
+  } catch(e) {
+    console.log('getCoachUid error:', e.message);
+    return null;
+  }
+}
+
 function renderClientMsgs() {
-  const uid      = String(window._fbUser?.uid || '');
-  const list     = document.getElementById('client-msg-list');
+  const uid  = String(window._fbUser?.uid || '');
+  const list = document.getElementById('client-msg-list');
   if (!list) return;
 
   if (!uid || !window.fb_listenMessages) {
@@ -3862,43 +3868,25 @@ function renderClientMsgs() {
     return;
   }
 
-  // Find coach UID from Firestore
-  if (window.FB) {
-    const { DB, collection, query, where, getDocs } = window.FB;
-    getDocs(query(collection(DB, 'users'), where('role', '==', 'coach')))
-      .then(snap => {
-        const coachId = snap.docs[0]?.id;
-        if (!coachId) {
-          list.innerHTML = '<div style="color:var(--sub);font-size:13px;padding:12px;">Send a message to Antz below.</div>';
-          return;
-        }
+  list.innerHTML = '<div style="color:var(--sub);font-size:13px;padding:12px;">Connecting...</div>';
 
-        // Cancel any existing listener
-        if (_clientMsgUnsub) { _clientMsgUnsub(); _clientMsgUnsub = null; }
-
-        _clientMsgUnsub = window.fb_listenMessages(uid, coachId, msgs => {
-          if (!list) return;
-          if (!msgs.length) {
-            list.innerHTML = '<div style="color:var(--sub);font-size:13px;padding:12px;">No messages yet — say hi to Antz! 👋</div>';
-            return;
-          }
-          list.innerHTML = msgs.map(m => {
-            const isMe = m.fromUid === uid;
-            const time = m.sentAt?.toDate
-              ? m.sentAt.toDate().toLocaleTimeString('en-NZ',{hour:'2-digit',minute:'2-digit'})
-              : 'Just now';
-            return `<div class="mw ${isMe ? 'out' : 'in'}">
-              <div class="mb2"><p>${m.text}</p></div>
-              <div class="mt">${isMe ? 'You' : 'Antz'} · ${time}</div>
-            </div>`;
-          }).join('');
-          list.scrollTop = 99999;
-        });
-      })
-      .catch(() => {
-        list.innerHTML = '<div style="color:var(--sub);font-size:13px;padding:12px;">Send a message to Antz below.</div>';
-      });
-  }
+  getCoachUid().then(coachId => {
+    if (!coachId) {
+      list.innerHTML = '<div style="color:var(--sub);font-size:13px;padding:12px;">Send a message to Antz below.</div>';
+      return;
+    }
+    if (_clientMsgUnsub) { _clientMsgUnsub(); _clientMsgUnsub = null; }
+    _clientMsgUnsub = window.fb_listenMessages(uid, coachId, msgs => {
+      const el = document.getElementById('client-msg-list');
+      if (!el) return;
+      if (!msgs.length) {
+        el.innerHTML = '<div style="color:var(--sub);font-size:13px;padding:12px;">No messages yet — say hi to Antz! 👋</div>';
+        return;
+      }
+      el.innerHTML = msgs.map(m => renderMsgBubble(m, uid, 'You', 'Antz')).join('');
+      el.scrollTop = 99999;
+    });
+  });
 }
 
 async function client_sendMsg() {
@@ -3906,17 +3894,25 @@ async function client_sendMsg() {
   const txt = inp.value.trim();
   if (!txt) return;
   inp.value = '';
-
   const uid = String(window._fbUser?.uid || '');
-  if (!uid || !window.FB) return;
-
-  const { DB, collection, query, where, getDocs } = window.FB;
+  if (!uid) return;
   try {
-    const snap = await getDocs(query(collection(DB, 'users'), where('role', '==', 'coach')));
-    const coachId = snap.docs[0]?.id;
-    if (!coachId) { showToast('Could not reach coach — try again'); return; }
+    const coachId = await getCoachUid();
+    if (!coachId) { showToast('Could not reach Antz — try again'); return; }
     await window.fb_sendMessage(coachId, uid, txt, window._fbUser?.fn || 'Client');
   } catch(e) { showToast('Send error: ' + e.message); }
+}
+
+async function client_sendPhoto_inner(file) {
+  const uid = String(window._fbUser?.uid || '');
+  if (!uid || !file) return;
+  showToast('Sending photo...');
+  try {
+    const b64 = await fileToBase64(file);
+    const coachId = await getCoachUid();
+    if (!coachId) { showToast('Could not reach Antz'); return; }
+    await window.fb_sendMessage(coachId, uid, '', window._fbUser?.fn || 'Client', b64);
+  } catch(e) { showToast('Photo error: ' + e.message); }
 }
 
 // ── LOGO TAP — secret coach access from client app ──
