@@ -1257,8 +1257,9 @@ button{cursor:pointer;}
         <div class="day-tabs" id="day-tabs"></div>
         <div id="exercise-list"></div>
       </div>
-      <div class="sticky-log">
-        <button class="btn-big" onclick="logNextSet()">LOG NEXT SET <span>→</span></button>
+      <div class="sticky-log" style="display:flex;gap:8px;padding:8px 16px 10px;">
+        <button class="btn-big" style="flex:1;" onclick="logNextSet()">LOG NEXT SET →</button>
+        <button class="btn-big" style="flex:0 0 auto;padding:13px 16px;background:#1e1e1e;border:1.5px solid var(--green);color:var(--green);font-size:15px;box-shadow:none;" onclick="finishWorkout()">FINISH ✓</button>
       </div>
     </div>
 
@@ -1300,9 +1301,18 @@ button{cursor:pointer;}
           </div>
         </div>
         <div id="ptab-bodyweight" style="display:none;">
+          <!-- Quick log bodyweight -->
+          <div class="card" style="margin-bottom:10px;">
+            <div class="card-lbl">LOG TODAY'S WEIGHT</div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="number" id="bw-input" step="0.1" placeholder="e.g. 82.5" style="flex:1;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--orange);padding:10px 14px;font-size:22px;font-family:var(--H);outline:none;text-align:center;"/>
+              <span style="font-size:14px;color:var(--sub);">kg</span>
+              <button class="btn btn-o" onclick="logBodyweight()" style="padding:10px 18px;font-size:14px;">LOG ✓</button>
+            </div>
+          </div>
           <div class="card">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-              <div><div style="font-family:var(--H);font-size:34px;color:var(--orange)">82.0<span style="font-size:17px">kg</span></div><div style="font-size:12px;color:var(--green)">↓ -5.2kg from start</div></div>
+              <div><div style="font-family:var(--H);font-size:34px;color:var(--orange)" id="bw-current">—<span style="font-size:17px">kg</span></div><div style="font-size:12px;color:var(--green)" id="bw-change">Log your weight to start tracking</div></div>
               <div class="filt-row" style="margin:0;gap:4px;">
                 <div class="filt-btn on" id="bw-w" onclick="switchBWR('week',this)">Wk</div>
                 <div class="filt-btn" id="bw-m" onclick="switchBWR('month',this)">Mo</div>
@@ -1316,8 +1326,8 @@ button{cursor:pointer;}
             </div>
           </div>
           <div class="card">
-            <div class="card-lbl">SESSION HISTORY</div>
-            <div id="sess-hist"></div>
+            <div class="card-lbl">WORKOUT HISTORY</div>
+            <div id="sess-hist"><div style="font-size:13px;color:var(--sub);padding:8px 0;">Complete workouts to see your history here.</div></div>
           </div>
         </div>
       </div>
@@ -1404,6 +1414,47 @@ button{cursor:pointer;}
             <div style="margin-bottom:11px;"><div style="font-size:12px;font-weight:600;margin-bottom:7px;">📋 Workouts you'd like next week</div><div class="rating-wrap">${[1,2,3,4,5,6,7].map(n=>`<button class="rb" onclick="pickR('nw',this)">${n}</button>`).join('')}</div></div>
             <div><div style="font-size:12px;font-weight:600;margin-bottom:7px;">💬 Anything for Antz?</div><textarea class="ci-ta" id="ci-notes" placeholder="Questions, struggles, life stuff..."></textarea></div>
           </div>
+
+          <!-- PROGRESS PHOTOS -->
+          <div class="ci-step">
+            <div class="ci-step-lbl">05 — PROGRESS PHOTOS</div>
+            <div class="ci-step-title">FRONT, BACK & SIDE</div>
+            <div style="font-size:12px;color:var(--sub);margin-bottom:14px;line-height:1.6;">Same time each week — morning, same lighting, same spot. This is where the real progress shows. Upload all three.</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+              <!-- FRONT -->
+              <div>
+                <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--orange);margin-bottom:6px;">FRONT</div>
+                <label for="photo-front" style="display:block;aspect-ratio:3/4;background:var(--dark);border:2px dashed var(--border);border-radius:var(--r2);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;position:relative;overflow:hidden;" id="label-front">
+                  <span style="font-size:24px;">📷</span>
+                  <span style="font-size:10px;color:var(--sub);text-align:center;">Tap to upload</span>
+                  <img id="preview-front" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:var(--r2);" alt="Front photo"/>
+                </label>
+                <input type="file" id="photo-front" accept="image/*" capture="environment" style="display:none;" onchange="previewPhoto('front',this)"/>
+              </div>
+              <!-- BACK -->
+              <div>
+                <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--orange);margin-bottom:6px;">BACK</div>
+                <label for="photo-back" style="display:block;aspect-ratio:3/4;background:var(--dark);border:2px dashed var(--border);border-radius:var(--r2);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;position:relative;overflow:hidden;" id="label-back">
+                  <span style="font-size:24px;">📷</span>
+                  <span style="font-size:10px;color:var(--sub);text-align:center;">Tap to upload</span>
+                  <img id="preview-back" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:var(--r2);" alt="Back photo"/>
+                </label>
+                <input type="file" id="photo-back" accept="image/*" capture="environment" style="display:none;" onchange="previewPhoto('back',this)"/>
+              </div>
+              <!-- SIDE -->
+              <div>
+                <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--orange);margin-bottom:6px;">SIDE</div>
+                <label for="photo-side" style="display:block;aspect-ratio:3/4;background:var(--dark);border:2px dashed var(--border);border-radius:var(--r2);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;position:relative;overflow:hidden;" id="label-side">
+                  <span style="font-size:24px;">📷</span>
+                  <span style="font-size:10px;color:var(--sub);text-align:center;">Tap to upload</span>
+                  <img id="preview-side" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:var(--r2);" alt="Side photo"/>
+                </label>
+                <input type="file" id="photo-side" accept="image/*" capture="environment" style="display:none;" onchange="previewPhoto('side',this)"/>
+              </div>
+            </div>
+            <div id="photo-upload-status" style="margin-top:10px;font-size:12px;color:var(--sub);text-align:center;"></div>
+          </div>
+
           <button class="btn-big" style="width:100%;margin-bottom:18px;" onclick="submitCI()">SUBMIT CHECK-IN 🔥</button>
         </div>
         <div id="ci-success-view" style="display:none;text-align:center;padding:40px 18px;">
@@ -2852,11 +2903,15 @@ function initClient() {
   renderMeals();
   renderClientMsgs();
   renderPBs('all', '');
-  renderBWChart('month');
+  renderBWChart('week');
   renderSessHist();
   checkSundayUnlock();
   updateClientMacroDisplay();
+  updateBWDisplay();
   startTimer();
+  // Load Firebase data
+  loadBWLog();
+  loadWorkoutHistory();
   // Service Worker registration
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
@@ -3247,28 +3302,257 @@ function filterPBs(cat, btn) {
 }
 function searchPBs(q) { renderPBs('all', q); }
 
-function renderBWChart(range) {
-  const data = {week:[82.0,82.3,82.1,82.0,81.8,81.9,82.0],month:[87.2,86.5,85.8,85.1,84.4,83.8,83.1,82.0]};
-  const lbls = {week:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],month:['Jan 6','Jan 13','Jan 20','Jan 27','Feb 3','Feb 10','Feb 17','Mar 24']};
-  const vals = data[range]||data.month;
-  const min = Math.min(...vals)-0.5; const max = Math.max(...vals)+0.5;
-  document.getElementById('bw-chart').innerHTML = vals.map((v,i) => `<div class="c-bar ${v===Math.min(...vals)?'hi':''}" style="height:${Math.round((v-min)/(max-min)*100)}%;"></div>`).join('');
-  document.getElementById('bw-labels').innerHTML = (lbls[range]||lbls.month).map(l => `<div class="c-xl">${l}</div>`).join('');
+function searchPBs(q) { renderPBs('all', q); }
+
+// ── BODYWEIGHT LOGGING ──
+let BW_LOG = []; // loaded from Firebase
+
+async function logBodyweight() {
+  const val = parseFloat(document.getElementById('bw-input')?.value);
+  if (!val || val < 20 || val > 300) { showToast('Enter a valid weight (kg)'); return; }
+  const uid = window._fbUser?.uid;
+  const entry = {
+    weight: val,
+    date: new Date().toISOString().split('T')[0],
+    loggedAt: new Date().toISOString()
+  };
+  BW_LOG.unshift(entry);
+  // Save to Firebase
+  if (window.FB && uid) {
+    try {
+      const { DB, collection, addDoc, doc, updateDoc, serverTimestamp } = window.FB;
+      await addDoc(collection(DB, 'bodyweightLogs'), { uid, ...entry, ts: serverTimestamp() });
+      await updateDoc(doc(DB, 'users', uid), { cw: val });
+      if (window.currentUser) window.currentUser.cw = val;
+    } catch(e) { console.log('BW log error:', e); }
+  }
+  document.getElementById('bw-input').value = '';
+  renderBWChart('week');
+  updateBWDisplay();
+  showToast(`${val}kg logged! 💪`);
 }
+
+function updateBWDisplay() {
+  const el = document.getElementById('bw-current');
+  const chEl = document.getElementById('bw-change');
+  if (!el) return;
+  const latest = BW_LOG[0]?.weight || window.currentUser?.cw;
+  const start = window.currentUser?.sw || latest;
+  if (latest) {
+    el.innerHTML = `${latest}<span style="font-size:17px">kg</span>`;
+    if (start && chEl) {
+      const diff = (latest - start).toFixed(1);
+      const col = diff <= 0 ? 'var(--green)' : 'var(--red)';
+      chEl.innerHTML = `<span style="color:${col}">${diff > 0 ? '+' : ''}${diff}kg from start</span>`;
+    }
+  }
+}
+
+async function loadBWLog() {
+  const uid = window._fbUser?.uid;
+  if (!uid || !window.FB) return;
+  try {
+    const { DB, collection, query, where, orderBy, getDocs } = window.FB;
+    const q = query(collection(DB, 'bodyweightLogs'), where('uid','==',uid), orderBy('ts','desc'));
+    const snap = await getDocs(q);
+    BW_LOG = snap.docs.map(d => d.data());
+    updateBWDisplay();
+    renderBWChart('week');
+  } catch(e) { console.log('BW load error:', e); }
+}
+
+function renderBWChart(range) {
+  const chartEl = document.getElementById('bw-chart');
+  const lblEl   = document.getElementById('bw-labels');
+  if (!chartEl) return;
+
+  let vals, lbls;
+  if (BW_LOG.length > 1) {
+    // Use real data
+    const sorted = [...BW_LOG].sort((a,b) => a.date.localeCompare(b.date));
+    const slice = range === 'week' ? sorted.slice(-7) : range === 'month' ? sorted.slice(-30) : sorted;
+    vals = slice.map(e => e.weight);
+    lbls = slice.map(e => {
+      const d = new Date(e.date);
+      return range === 'week' ? d.toLocaleDateString('en-NZ',{weekday:'short'}) : d.toLocaleDateString('en-NZ',{month:'short',day:'numeric'});
+    });
+  } else {
+    // Demo data
+    vals = [88, 87.6, 87.2, 86.8, 86.5, 86.1, 85.8];
+    lbls = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  }
+
+  if (vals.length < 2) { chartEl.innerHTML = '<div style="text-align:center;font-size:12px;color:var(--sub);padding:20px;">Log more weights to see your chart</div>'; return; }
+  const min = Math.min(...vals) - 0.5;
+  const max = Math.max(...vals) + 0.5;
+  chartEl.innerHTML = vals.map((v,i) => `<div class="c-bar ${i===vals.length-1?'hi':''}" style="height:${Math.max(Math.round((v-min)/(max-min)*100),4)}%;"></div>`).join('');
+  if (lblEl) lblEl.innerHTML = lbls.map(l => `<div class="c-xl">${l}</div>`).join('');
+}
+
 function switchBWR(r, btn) {
   document.querySelectorAll('[id^="bw-"]').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
   renderBWChart(r);
 }
+
+// ── WORKOUT HISTORY FROM FIREBASE ──
+let SESSION_HISTORY = [];
+
+async function loadWorkoutHistory() {
+  const uid = window._fbUser?.uid;
+  if (!uid || !window.FB) { renderSessHist(); return; }
+  try {
+    const { DB, collection, query, where, orderBy, getDocs } = window.FB;
+    const q = query(collection(DB, 'workoutSessions'), where('uid','==',uid), orderBy('completedAt','desc'));
+    const snap = await getDocs(q);
+    SESSION_HISTORY = snap.docs.map(d => ({id:d.id,...d.data()}));
+    renderSessHist();
+  } catch(e) { console.log('History load error:', e); renderSessHist(); }
+}
+
 function renderSessHist() {
   const el = document.getElementById('sess-hist');
   if (!el) return;
-  el.innerHTML = SESS_HIST.map(s => `
-    <div class="sess-row">
-      <div style="font-size:13px;font-weight:700;margin-bottom:3px;">${s.date} · ${s.title}</div>
-      <div style="font-size:11px;color:var(--sub);margin-bottom:5px;">${s.ex}</div>
-      <div class="sess-chips">${s.sets.map((x,i) => `<div class="sess-chip">S${i+1}: <b>${x.w}kg×${x.r}</b></div>`).join('')}</div>
-    </div>`).join('');
+  if (!SESSION_HISTORY.length) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--sub);padding:8px 0;">Complete workouts using the FINISH button to see history here.</div>';
+    return;
+  }
+  el.innerHTML = SESSION_HISTORY.slice(0,10).map(s => {
+    const d = s.completedAt?.toDate ? s.completedAt.toDate() : new Date(s.completedAt||Date.now());
+    const dateStr = d.toLocaleDateString('en-NZ',{weekday:'short',day:'numeric',month:'short'});
+    const dur = s.durationMins ? `${s.durationMins} min` : '';
+    return `<div class="sess-row">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+        <div><div style="font-size:13px;font-weight:700;">${dateStr} · ${s.title||'Workout'}</div>
+        <div style="font-size:11px;color:var(--sub);margin-top:1px;">${s.exercises||0} exercises · ${s.totalSets||0} sets · ${s.totalVolume||0}kg volume</div></div>
+        ${dur?`<div style="font-size:11px;color:var(--orange);font-weight:700;">⏱ ${dur}</div>`:''}
+      </div>
+      ${s.exercises_summary ? `<div class="sess-chips">${s.exercises_summary.map(ex=>`<div class="sess-chip">${ex.name}: <b>${ex.best}</b></div>`).join('')}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ── FINISH WORKOUT — saves full session to Firebase ──
+async function finishWorkout() {
+  const day = LIVE_PROGRAM[currentDay];
+  if (!day) return;
+
+  // Count completed sets and calculate volume
+  let totalSets = 0, totalVolume = 0;
+  const exercisesSummary = [];
+
+  day.exercises.forEach((ex, ei) => {
+    const key = `${currentDay}-${ei}`;
+    const sets = logData[key]?.sets || [];
+    const doneSets = sets.filter(s => s.done);
+    if (doneSets.length) {
+      totalSets += doneSets.length;
+      const vol = doneSets.reduce((a,s) => a + (parseFloat(s.w)||0)*(parseInt(s.r)||0), 0);
+      totalVolume += vol;
+      const best = doneSets.reduce((b,s) => {
+        const kg = parseFloat(s.w)||0; return kg > (parseFloat(b.w)||0) ? s : b;
+      }, doneSets[0]);
+      exercisesSummary.push({ name: ex.name, sets: doneSets.length, best: `${best.w||0}kg×${best.r||0}` });
+    }
+  });
+
+  if (totalSets === 0) { showToast('Log at least one set before finishing'); return; }
+
+  const durationMins = Math.round(timerSecs / 60);
+  const session = {
+    uid: window._fbUser?.uid,
+    title: day.title || day.focus,
+    day: day.day,
+    exercises: exercisesSummary.length,
+    totalSets,
+    totalVolume: Math.round(totalVolume),
+    durationMins,
+    exercises_summary: exercisesSummary,
+    completedAt: new Date().toISOString()
+  };
+
+  // Save to Firebase
+  if (window.FB && window._fbUser?.uid) {
+    try {
+      const { DB, collection, addDoc, serverTimestamp } = window.FB;
+      await addDoc(collection(DB, 'workoutSessions'), { ...session, completedAt: serverTimestamp() });
+      SESSION_HISTORY.unshift(session);
+    } catch(e) { console.log('Session save error:', e); }
+  }
+
+  // Reset timer
+  if (timerInt) clearInterval(timerInt);
+  timerRunning = false; timerSecs = 0;
+  const tv = document.getElementById('timer-val'); if(tv) tv.textContent = '00:00';
+  const tt = document.getElementById('timer-topbar'); if(tt) tt.style.display = 'none';
+
+  // Show completion modal
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:500;display:flex;align-items:center;justify-content:center;padding:24px;';
+  modal.innerHTML = `<div style="background:var(--card);border:1px solid var(--border);border-top:3px solid var(--green);border-radius:var(--r);padding:28px;text-align:center;max-width:360px;width:100%;">
+    <div style="font-size:52px;margin-bottom:12px;filter:drop-shadow(0 0 14px rgba(34,197,94,.7));">🎉</div>
+    <div style="font-family:var(--H);font-size:30px;letter-spacing:2px;color:var(--green);margin-bottom:6px;">WORKOUT DONE!</div>
+    <div style="font-size:14px;color:var(--sub);margin-bottom:20px;">${day.title}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px;">
+      <div style="background:var(--dark);border-radius:var(--r2);padding:12px;"><div style="font-family:var(--H);font-size:22px;color:var(--orange)">${durationMins}m</div><div style="font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-top:2px;">Duration</div></div>
+      <div style="background:var(--dark);border-radius:var(--r2);padding:12px;"><div style="font-family:var(--H);font-size:22px;color:var(--orange)">${totalSets}</div><div style="font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-top:2px;">Sets</div></div>
+      <div style="background:var(--dark);border-radius:var(--r2);padding:12px;"><div style="font-family:var(--H);font-size:22px;color:var(--orange)">${Math.round(totalVolume)}kg</div><div style="font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-top:2px;">Volume</div></div>
+    </div>
+    <button onclick="this.closest('div[style]').remove();goTab('progress');switchPTab('bodyweight');" style="width:100%;background:var(--green);border:none;border-radius:var(--r2);color:#000;padding:14px;font-family:var(--H);font-size:20px;letter-spacing:2px;cursor:pointer;">VIEW HISTORY →</button>
+    <button onclick="this.closest('div[style]').remove();" style="width:100%;background:transparent;border:none;color:var(--sub);padding:10px;font-size:13px;cursor:pointer;margin-top:6px;">CLOSE</button>
+  </div>`;
+  document.body.appendChild(modal);
+  showToast('Session saved! 🔥');
+}
+
+// ── PROGRESS PHOTOS ──
+const photoFiles = { front: null, back: null, side: null };
+
+function previewPhoto(side, input) {
+  const file = input.files[0];
+  if (!file) return;
+  photoFiles[side] = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('preview-' + side);
+    if (img) { img.src = e.target.result; img.style.display = 'block'; }
+  };
+  reader.readAsDataURL(file);
+  document.getElementById('photo-upload-status').textContent = `✓ ${side.charAt(0).toUpperCase()+side.slice(1)} photo selected`;
+}
+
+async function uploadPhotos(uid, checkInDate) {
+  // Convert photos to base64 and store in Firestore (small images only)
+  // For larger images, we store as base64 in Firestore documents
+  const photos = {};
+  for (const side of ['front','back','side']) {
+    const file = photoFiles[side];
+    if (!file) continue;
+    try {
+      const base64 = await fileToBase64(file);
+      photos[side] = base64;
+    } catch(e) { console.log('Photo convert error:', e); }
+  }
+  return photos;
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    // Compress image first
+    const canvas = document.createElement('canvas');
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 800;
+      let w = img.width, h = img.height;
+      if (w > h) { if (w > MAX) { h = h*MAX/w; w = MAX; } }
+      else { if (h > MAX) { w = w*MAX/h; h = MAX; } }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', 0.7));
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
 }
 
 // ── CHECK-IN ──
@@ -3304,10 +3588,64 @@ function pickR(gid, btn) {
   btn.closest('.rating-wrap').querySelectorAll('.rb').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
 }
-function submitCI() {
+async function submitCI() {
   if (!document.getElementById('ci-weight')?.value) { showToast('Please enter your weight'); return; }
+
+  const statusEl = document.getElementById('photo-upload-status');
+  if (statusEl) statusEl.textContent = 'Uploading photos...';
+
+  const uid = window._fbUser?.uid;
+  const checkInDate = new Date().toISOString().split('T')[0];
+
+  // Upload progress photos
+  let photos = {};
+  try {
+    photos = await uploadPhotos(uid, checkInDate);
+  } catch(e) { console.log('Photo upload error:', e); }
+
+  const data = {
+    weight:    parseFloat(document.getElementById('ci-weight')?.value) || 0,
+    waist:     parseFloat(document.getElementById('ci-waist')?.value) || 0,
+    workouts:  document.querySelector('#pg-checkin .rb.on')?.textContent || '0',
+    win:       document.getElementById('ci-win')?.value || '',
+    notes:     document.getElementById('ci-notes')?.value || '',
+    date:      new Date().toLocaleDateString('en-NZ',{day:'numeric',month:'short'}),
+    checkInDate,
+    photos,
+    hasPhotos: Object.keys(photos).length > 0
+  };
+
+  // Save to Firebase
+  if (window.FB && uid) {
+    try {
+      const { DB, collection, addDoc, doc, updateDoc, serverTimestamp } = window.FB;
+      await addDoc(collection(DB, 'checkIns'), {
+        uid, ...data,
+        replied: false,
+        submittedAt: serverTimestamp()
+      });
+      await updateDoc(doc(DB, 'users', uid), {
+        ciDue: true,
+        cw: data.weight || window.currentUser?.cw
+      });
+    } catch(e) { console.log('Check-in save error:', e); }
+  }
+
+  // Also log bodyweight
+  if (data.weight) {
+    BW_LOG.unshift({ weight: data.weight, date: checkInDate });
+    updateBWDisplay();
+    renderBWChart('week');
+  }
+
   document.getElementById('ci-form-view').style.display = 'none';
   document.getElementById('ci-success-view').style.display = 'block';
+  // Reset photos
+  ['front','back','side'].forEach(s => {
+    photoFiles[s] = null;
+    const img = document.getElementById('preview-' + s);
+    if (img) { img.style.display='none'; img.src=''; }
+  });
   showToast('Check-in submitted! ✅');
 }
 function resetCI() {
