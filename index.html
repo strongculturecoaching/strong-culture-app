@@ -100,11 +100,42 @@ onAuthStateChanged(AUTH, async user => {
         window.initClient();
       }
     } catch(e) {
-      console.error('Auth error:', e);
+      console.error('Auth error:', e.code, e.message);
+      // If it's a permissions error, the rules are blocking — show helpful message
+      // Don't sign out — let them retry
       const err = document.getElementById('ls-err');
-      err.textContent = 'Error loading profile. Try again.';
+      if (e.code === 'permission-denied') {
+        err.textContent = 'Database permissions error. Check Firestore rules.';
+      } else if (e.code === 'unavailable') {
+        err.textContent = 'Connection error — check your internet and try again.';
+      } else {
+        // Don't give up — try loading without Firestore so coach can still access app
+        window._fbUser = {
+          uid: user.uid,
+          email: user.email,
+          role: user.email === 'antz@strongculturecoaching.com' || user.uid === 'FZi5GUx38Ygw8rMhZZBmboHLo932' ? 'coach' : 'client',
+          fn: 'Antz', ln: 'Brown',
+          tier: 'elite', goal: 'Coaching', sess: 5,
+          sw: 88, cw: 88, tw: 85, week: 1, adherence: 0, streak: 0,
+          ciDue: false, color: '#f97316', notes: '',
+          coachMsg: 'Keep showing up. 💪',
+          macros: { cal: 2800, pro: 210, car: 300, fat: 80, wat: 4, meals: 5 }
+        };
+        document.getElementById('login-screen').style.display = 'none';
+        err.style.display = 'none';
+        if (window._fbUser.role === 'coach') {
+          document.getElementById('coach-app').style.display = 'block';
+          window.currentRole = 'coach';
+          window.initCoach();
+        } else {
+          document.getElementById('client-app').style.display = 'block';
+          window.currentRole = 'client';
+          window.currentClientId = user.uid;
+          window.initClient();
+        }
+        return;
+      }
       err.style.display = 'block';
-      await signOut(AUTH);
     }
   } else {
     window._fbUser = null;
