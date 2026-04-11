@@ -1076,13 +1076,21 @@ button{cursor:pointer;}
 <div class="cp" id="cp-add-client">
   <div class="pt">ADD CLIENT</div><div class="pl"></div>
   <div style="max-width:560px;">
+
+    <!-- Step 1 banner -->
+    <div style="background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.3);border-radius:var(--r);padding:14px 16px;margin-bottom:14px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--purple);margin-bottom:6px;">STEP 1 — CREATE THEIR LOGIN</div>
+      <div style="font-size:13px;color:#ccc;line-height:1.7;">Go to <strong style="color:var(--purple)">Firebase Console → Authentication → Add user</strong>, enter their email and password, then come back here and fill in their profile below.</div>
+      <a href="https://console.firebase.google.com" target="_blank" style="display:inline-block;margin-top:8px;background:var(--purple);color:#fff;text-decoration:none;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:700;letter-spacing:1px;">OPEN FIREBASE →</a>
+    </div>
+
     <div class="card">
-      <div class="card-lbl">CLIENT DETAILS</div>
+      <div class="card-lbl">STEP 2 — CLIENT PROFILE</div>
       <div class="form-row">
         <div class="field" style="margin:0"><label>First Name</label><input type="text" id="nc-fn" placeholder="Sarah"/></div>
         <div class="field" style="margin:0"><label>Last Name</label><input type="text" id="nc-ln" placeholder="Mitchell"/></div>
       </div>
-      <div class="field"><label>Email</label><input type="email" id="nc-em" placeholder="client@email.com"/></div>
+      <div class="field"><label>Email (must match Firebase)</label><input type="email" id="nc-em" placeholder="client@email.com"/></div>
       <div class="form-row">
         <div class="field" style="margin:0"><label>Plan / Tier</label>
           <select id="nc-tier">
@@ -1104,12 +1112,24 @@ button{cursor:pointer;}
       </div>
       <div class="field"><label>Notes / Background</label><textarea id="nc-notes" placeholder="Training history, injuries, lifestyle..."></textarea></div>
     </div>
+
     <div class="card">
-      <div class="card-lbl">APP PASSWORD</div>
-      <p style="font-size:13px;color:var(--sub);margin-bottom:10px;">This is what the client uses to log into the app. You control it — only you can change it.</p>
-      <div class="field"><label>Password</label><input type="text" id="nc-pass" placeholder="e.g. StrongCulture2026!"/></div>
+      <div class="card-lbl">THEIR FIREBASE UID</div>
+      <p style="font-size:13px;color:var(--sub);margin-bottom:8px;">After creating them in Firebase Auth, copy their User UID from the Authentication users list and paste it here. This links their login to their profile.</p>
+      <div class="field" style="margin:0"><label>Firebase UID</label><input type="text" id="nc-uid" placeholder="e.g. abc123XYZdef456..."/></div>
     </div>
-    <button class="btn btn-o" style="padding:13px 26px;font-size:15px;" onclick="addClient()">ADD CLIENT ✓</button>
+
+    <div class="card">
+      <div class="card-lbl">INITIAL MACROS</div>
+      <div class="form-row">
+        <div class="field" style="margin:0"><label>Calories</label><input type="number" id="nc-cal" placeholder="2200"/></div>
+        <div class="field" style="margin:0"><label>Protein (g)</label><input type="number" id="nc-pro" placeholder="165"/></div>
+        <div class="field" style="margin:0"><label>Carbs (g)</label><input type="number" id="nc-car" placeholder="220"/></div>
+        <div class="field" style="margin:0"><label>Fat (g)</label><input type="number" id="nc-fat" placeholder="65"/></div>
+      </div>
+    </div>
+
+    <button class="btn btn-o" style="padding:13px 26px;font-size:15px;width:100%;" onclick="addClient()">SAVE CLIENT PROFILE TO APP ✓</button>
   </div>
 </div>
 
@@ -1880,23 +1900,74 @@ function openClientDetail(id) {
 
   // Plan
   document.getElementById('ct-plan').innerHTML = `
-    <div class="card"><div class="card-lbl">CURRENT PLAN</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px;">
-        <div><div style="font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Tier</div><div style="font-size:15px;font-weight:700;color:${tColors[c.tier]}">${c.tier.charAt(0).toUpperCase()+c.tier.slice(1)}</div></div>
-        <div><div style="font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Goal</div><div style="font-size:15px;font-weight:700;">${c.goal}</div></div>
-        <div><div style="font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Sessions</div><div style="font-size:15px;font-weight:700;color:var(--orange)">${c.sess}×/wk</div></div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div class="card-lbl" style="margin:0;">PLAN DETAILS</div>
+        <button class="btn btn-o btn-sm" onclick="cd_savePlan('${c.uid||c.id}')">SAVE CHANGES ✓</button>
       </div>
-      <button class="btn btn-g btn-sm" onclick="openEditPlan(${id})">EDIT PLAN</button>
+      <div class="form-row">
+        <div class="field" style="margin:0"><label>Tier</label>
+          <select id="cd-tier-${id}">
+            <option value="elite" ${c.tier==='elite'?'selected':''}>Elite ($149/wk)</option>
+            <option value="transformation" ${c.tier==='transformation'?'selected':''}>Transformation ($89/wk)</option>
+            <option value="strongstart" ${c.tier==='strongstart'?'selected':''}>Strong Start ($50/wk)</option>
+          </select>
+        </div>
+        <div class="field" style="margin:0"><label>Goal</label>
+          <select id="cd-goal-${id}">
+            <option ${c.goal==='Fat Loss'?'selected':''}>Fat Loss</option>
+            <option ${c.goal==='Muscle Building'?'selected':''}>Muscle Building</option>
+            <option ${c.goal==='Strength'?'selected':''}>Strength</option>
+            <option ${c.goal==='General Fitness'?'selected':''}>General Fitness</option>
+          </select>
+        </div>
+        <div class="field" style="margin:0"><label>Sessions/Week</label>
+          <input type="number" id="cd-sess-${id}" value="${c.sess}" min="1" max="7" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:10px 12px;font-size:14px;outline:none;"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field" style="margin:0"><label>Current Weight (kg)</label>
+          <input type="number" id="cd-cw-${id}" value="${c.cw}" step=".1" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:10px 12px;font-size:14px;outline:none;"/>
+        </div>
+        <div class="field" style="margin:0"><label>Target Weight (kg)</label>
+          <input type="number" id="cd-tw-${id}" value="${c.tw}" step=".1" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:10px 12px;font-size:14px;outline:none;"/>
+        </div>
+        <div class="field" style="margin:0"><label>Program Week</label>
+          <input type="number" id="cd-wk-${id}" value="${c.week}" min="1" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:10px 12px;font-size:14px;outline:none;"/>
+        </div>
+      </div>
     </div>
-    <div class="card"><div class="card-lbl">MACROS <button class="btn btn-o btn-sm" style="float:right;" onclick="goToMacros(${id})">EDIT MACROS</button></div>
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:7px;text-align:center;margin-top:8px;">
-        <div style="background:var(--dark);border-radius:var(--r3);padding:10px;"><div style="font-family:var(--H);font-size:20px;color:var(--green)">${c.macros.cal}</div><div style="font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-top:2px;">cal</div></div>
-        <div style="background:var(--dark);border-radius:var(--r3);padding:10px;"><div style="font-family:var(--H);font-size:20px;color:var(--blue)">${c.macros.pro}g</div><div style="font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-top:2px;">pro</div></div>
-        <div style="background:var(--dark);border-radius:var(--r3);padding:10px;"><div style="font-family:var(--H);font-size:20px;color:var(--orange)">${c.macros.car}g</div><div style="font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-top:2px;">carbs</div></div>
-        <div style="background:var(--dark);border-radius:var(--r3);padding:10px;"><div style="font-family:var(--H);font-size:20px;color:var(--red)">${c.macros.fat}g</div><div style="font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-top:2px;">fat</div></div>
-        <div style="background:var(--dark);border-radius:var(--r3);padding:10px;"><div style="font-family:var(--H);font-size:20px;color:var(--blue)">${c.macros.wat}L</div><div style="font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-top:2px;">water</div></div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div class="card-lbl" style="margin:0;">MACRO TARGETS</div>
+        <button class="btn btn-o btn-sm" onclick="cd_saveMacros('${c.uid||c.id}')">PUSH TO CLIENT ✓</button>
       </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px;">
+        <div><label style="font-size:10px;color:var(--sub);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;">Calories</label>
+          <input type="number" id="cd-cal-${id}" value="${c.macros.cal}" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--green);padding:9px;font-size:18px;font-family:var(--H);text-align:center;outline:none;" oninput="cd_onCalChange('${id}')"/></div>
+        <div><label style="font-size:10px;color:var(--sub);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;">Protein (g)</label>
+          <input type="number" id="cd-pro-${id}" value="${c.macros.pro}" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--blue);padding:9px;font-size:18px;font-family:var(--H);text-align:center;outline:none;" oninput="cd_onMacroChange('${id}')"/></div>
+        <div><label style="font-size:10px;color:var(--sub);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;">Carbs (g)</label>
+          <input type="number" id="cd-car-${id}" value="${c.macros.car}" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--orange);padding:9px;font-size:18px;font-family:var(--H);text-align:center;outline:none;" oninput="cd_onMacroChange('${id}')"/></div>
+        <div><label style="font-size:10px;color:var(--sub);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;">Fat (g)</label>
+          <input type="number" id="cd-fat-${id}" value="${c.macros.fat}" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--red);padding:9px;font-size:18px;font-family:var(--H);text-align:center;outline:none;" oninput="cd_onMacroChange('${id}')"/></div>
+        <div><label style="font-size:10px;color:var(--sub);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;">Water (L)</label>
+          <input type="number" id="cd-wat-${id}" value="${c.macros.wat}" step=".5" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--blue);padding:9px;font-size:18px;font-family:var(--H);text-align:center;outline:none;"/></div>
+        <div><label style="font-size:10px;color:var(--sub);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:1px;">Meals/Day</label>
+          <input type="number" id="cd-meals-${id}" value="${c.macros.meals}" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--sub);padding:9px;font-size:18px;font-family:var(--H);text-align:center;outline:none;"/></div>
+      </div>
+      <div id="cd-macro-summary-${id}" style="background:var(--dark);border-radius:var(--r3);padding:9px;font-size:13px;color:var(--sub);text-align:center;"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-lbl">COACH MESSAGE (shows on their home screen)</div>
+      <textarea id="cd-msg-${id}" style="width:100%;background:var(--dark);border:1.5px solid var(--border);border-radius:var(--r3);color:var(--text);padding:11px 12px;font-size:14px;outline:none;resize:none;min-height:70px;font-family:var(--B);">${c.coachMsg||''}</textarea>
+      <button class="btn btn-o btn-sm" style="margin-top:8px;" onclick="cd_saveMsg('${c.uid||c.id}','${id}')">PUSH MESSAGE ✓</button>
     </div>`;
+
+  // Init macro summary display
+  cd_updateMacroSummary(id);
 
   // This week's workout
   document.getElementById('ct-workout').innerHTML = `
@@ -2022,7 +2093,97 @@ function sendCIReply() {
 }
 
 // ── EDIT PLAN MODAL ──
-function openEditPlan(id) {
+// ── CLIENT DETAIL — inline save functions ──
+
+function cd_onMacroChange(id) {
+  const pro = parseInt(document.getElementById(`cd-pro-${id}`)?.value) || 0;
+  const car = parseInt(document.getElementById(`cd-car-${id}`)?.value) || 0;
+  const fat = parseInt(document.getElementById(`cd-fat-${id}`)?.value) || 0;
+  const cal = (pro * 4) + (car * 4) + (fat * 9);
+  const calEl = document.getElementById(`cd-cal-${id}`);
+  if (calEl) calEl.value = cal;
+  cd_updateMacroSummary(id);
+}
+
+function cd_onCalChange(id) {
+  const cal = parseInt(document.getElementById(`cd-cal-${id}`)?.value) || 0;
+  const pro = parseInt(document.getElementById(`cd-pro-${id}`)?.value) || 0;
+  const fat = parseInt(document.getElementById(`cd-fat-${id}`)?.value) || 0;
+  const car = Math.max(Math.round((cal - pro * 4 - fat * 9) / 4), 0);
+  const carEl = document.getElementById(`cd-car-${id}`);
+  if (carEl) carEl.value = car;
+  cd_updateMacroSummary(id);
+}
+
+function cd_updateMacroSummary(id) {
+  const cal = parseInt(document.getElementById(`cd-cal-${id}`)?.value) || 0;
+  const pro = parseInt(document.getElementById(`cd-pro-${id}`)?.value) || 0;
+  const car = parseInt(document.getElementById(`cd-car-${id}`)?.value) || 0;
+  const fat = parseInt(document.getElementById(`cd-fat-${id}`)?.value) || 0;
+  const actual = (pro * 4) + (car * 4) + (fat * 9);
+  const match = actual === cal;
+  const el = document.getElementById(`cd-macro-summary-${id}`);
+  if (el) el.innerHTML = `<strong style="color:${match?'var(--green)':'var(--red)'}">${cal} kcal ${match?'✓ balanced':'⚠ '+actual+' kcal from macros'}</strong> &nbsp;·&nbsp; ${pro}g P &nbsp;·&nbsp; ${car}g C &nbsp;·&nbsp; ${fat}g F`;
+}
+
+async function cd_savePlan(uid) {
+  const c = CLIENTS.find(x => (x.uid||x.id) === uid);
+  if (!c) return;
+  const id = c.id;
+  const updates = {
+    tier:  document.getElementById(`cd-tier-${id}`)?.value || c.tier,
+    goal:  document.getElementById(`cd-goal-${id}`)?.value || c.goal,
+    sess:  parseInt(document.getElementById(`cd-sess-${id}`)?.value) || c.sess,
+    cw:    parseFloat(document.getElementById(`cd-cw-${id}`)?.value) || c.cw,
+    tw:    parseFloat(document.getElementById(`cd-tw-${id}`)?.value) || c.tw,
+    week:  parseInt(document.getElementById(`cd-wk-${id}`)?.value) || c.week,
+  };
+  Object.assign(c, updates);
+  if (window.FB) {
+    try {
+      const { DB, doc, updateDoc } = window.FB;
+      await updateDoc(doc(DB, 'users', uid), updates);
+      showToast('Plan saved and pushed to client! ✅');
+    } catch(e) { showToast('Save error: ' + e.message); }
+  }
+  renderClientGrid(CLIENTS);
+}
+
+async function cd_saveMacros(uid) {
+  const c = CLIENTS.find(x => (x.uid||x.id) === uid);
+  if (!c) return;
+  const id = c.id;
+  const macros = {
+    cal:   parseInt(document.getElementById(`cd-cal-${id}`)?.value)   || c.macros.cal,
+    pro:   parseInt(document.getElementById(`cd-pro-${id}`)?.value)   || c.macros.pro,
+    car:   parseInt(document.getElementById(`cd-car-${id}`)?.value)   || c.macros.car,
+    fat:   parseInt(document.getElementById(`cd-fat-${id}`)?.value)   || c.macros.fat,
+    wat:   parseFloat(document.getElementById(`cd-wat-${id}`)?.value) || c.macros.wat,
+    meals: parseInt(document.getElementById(`cd-meals-${id}`)?.value) || c.macros.meals,
+  };
+  c.macros = macros;
+  if (window.FB) {
+    try {
+      const { DB, doc, updateDoc } = window.FB;
+      await updateDoc(doc(DB, 'users', uid), { macros });
+      showToast('Macros pushed to client instantly! ✅');
+    } catch(e) { showToast('Save error: ' + e.message); }
+  }
+}
+
+async function cd_saveMsg(uid, id) {
+  const msg = document.getElementById(`cd-msg-${id}`)?.value.trim();
+  if (!msg) return;
+  const c = CLIENTS.find(x => (x.uid||x.id) === uid);
+  if (c) c.coachMsg = msg;
+  if (window.FB) {
+    try {
+      const { DB, doc, updateDoc } = window.FB;
+      await updateDoc(doc(DB, 'users', uid), { coachMsg: msg });
+      showToast('Message pushed — shows on their home screen! 💬');
+    } catch(e) { showToast('Save error: ' + e.message); }
+  }
+}
   editingPlanId = id;
   const c = CLIENTS.find(x => x.id === id);
   document.getElementById('modal-ep-title').textContent = `EDIT PLAN — ${c.fn.toUpperCase()} ${c.ln.toUpperCase()}`;
@@ -2570,36 +2731,73 @@ function coach_sendMsg() {
   inp.value = '';
 }
 
-// ── ADD CLIENT ──
-function addClient() {
-  const fn = document.getElementById('nc-fn').value.trim();
-  const ln = document.getElementById('nc-ln').value.trim();
-  const em = document.getElementById('nc-em').value.trim();
-  if (!fn || !ln || !em) { showToast('Fill in name and email'); return; }
-  const colors = {elite:'#f97316', transformation:'#a855f7', strongstart:'#22c55e'};
-  const tier = document.getElementById('nc-tier').value;
-  const sw = parseFloat(document.getElementById('nc-sw').value) || 80;
-  const newC = {
-    id: CLIENTS.length + 1, fn, ln, email:em,
-    pass: document.getElementById('nc-pass').value || CLIENT_PASS,
+// ── ADD CLIENT — writes to Firestore using UID from Firebase Auth ──
+async function addClient() {
+  const fn  = document.getElementById('nc-fn').value.trim();
+  const ln  = document.getElementById('nc-ln').value.trim();
+  const em  = document.getElementById('nc-em').value.trim();
+  const uid = document.getElementById('nc-uid').value.trim();
+  if (!fn || !ln || !em)  { showToast('Fill in name and email'); return; }
+  if (!uid)               { showToast('Paste the Firebase UID — see Step 2 above'); return; }
+
+  const colors = { elite:'#f97316', transformation:'#a855f7', strongstart:'#22c55e' };
+  const tier   = document.getElementById('nc-tier').value;
+  const sw     = parseFloat(document.getElementById('nc-sw').value) || 80;
+  const tw     = parseFloat(document.getElementById('nc-tw').value) || sw - 7;
+  const sess   = parseInt(document.getElementById('nc-sess').value) || 4;
+  const notes  = document.getElementById('nc-notes').value.trim();
+
+  const cal  = parseInt(document.getElementById('nc-cal').value) || 2200;
+  const pro  = parseInt(document.getElementById('nc-pro').value) || 165;
+  const car  = parseInt(document.getElementById('nc-car').value) || 220;
+  const fat  = parseInt(document.getElementById('nc-fat').value) || 65;
+
+  const profile = {
+    role: 'client',
+    fn, ln, email: em,
     tier, goal: document.getElementById('nc-goal').value,
-    sess: parseInt(document.getElementById('nc-sess').value) || 4,
-    sw, cw:sw, tw: parseFloat(document.getElementById('nc-tw').value) || sw-7,
-    week:1, adherence:0, ciDue:false, color:colors[tier],
-    notes: document.getElementById('nc-notes').value || 'New client.',
-    streak:0, macros:{cal:2200,pro:165,car:220,fat:65,wat:3,meals:4},
-    coachMsg:'Welcome to Strong Culture Coaching! Let\'s build something great. 💪',
-    checkins:[]
+    sess, sw, cw: sw, tw,
+    week: 1, adherence: 0, streak: 0, ciDue: false,
+    color: colors[tier] || '#22c55e',
+    notes,
+    coachMsg: `Welcome to Strong Culture Coaching, ${fn}! Your program is ready. Let's get to work. 💪`,
+    macros: { cal, pro, car, fat, wat: 3, meals: 4 },
   };
-  CLIENTS.push(newC);
-  MSGS[newC.id] = [{out:false, text:`Welcome to the app ${fn}! Your program is ready. Tap Workout to get started 💪`, time:'Just now'}];
+
+  showToast('Saving client profile...');
+
+  if (window.FB) {
+    try {
+      const { DB, doc, setDoc, serverTimestamp } = window.FB;
+      await setDoc(doc(DB, 'users', uid), { ...profile, createdAt: serverTimestamp() });
+      showToast(`${fn} ${ln} saved to Firebase! ✅`);
+    } catch(e) {
+      showToast('Firebase error: ' + e.message);
+      return;
+    }
+  }
+
+  // Also add to local CLIENTS array so dashboard updates instantly
+  CLIENTS.push({
+    id: uid, uid, fn, ln, email: em,
+    tier, goal: profile.goal, sess, sw, cw: sw, tw,
+    week: 1, adherence: 0, streak: 0, ciDue: false,
+    color: colors[tier] || '#22c55e', notes,
+    coachMsg: profile.coachMsg,
+    macros: { cal, pro, car, fat, wat: 3, meals: 4 },
+    checkins: []
+  });
+
   renderClientGrid(CLIENTS);
   renderCoachMsgSidebar();
   populateClientSelects();
   renderDashboard();
   document.getElementById('d-clients').textContent = CLIENTS.length;
-  showToast(`${fn} ${ln} added! ✅`);
-  ['nc-fn','nc-ln','nc-em','nc-pass','nc-sw','nc-tw','nc-notes'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+
+  // Clear form
+  ['nc-fn','nc-ln','nc-em','nc-uid','nc-sw','nc-tw','nc-notes','nc-cal','nc-pro','nc-car','nc-fat'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
 }
 
 // ══════════════════════════════════════════════════════
