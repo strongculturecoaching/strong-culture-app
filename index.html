@@ -1663,14 +1663,122 @@ let wb_days = [];
 // ══════════════════════════════════════════════════════
 //  COACH — INIT & NAV
 // ══════════════════════════════════════════════════════
-function initCoach() {
+async function initCoach() {
   const h = new Date().getHours();
-  document.getElementById('dash-greet').textContent = (h<12?'Good morning':h<17?'Good afternoon':'Good evening') + ', Antz. Here\'s your overview.';
+  const greetEl = document.getElementById('dash-greet');
+  if (greetEl) greetEl.textContent = (h<12?'Good morning':h<17?'Good afternoon':'Good evening') + ', Antz. Loading your clients...';
+
+  // Load real clients from Firebase
+  if (window.FB) {
+    try {
+      const { DB, collection, query, where, getDocs } = window.FB;
+      const q = query(collection(DB, 'users'), where('role', '==', 'client'));
+      const snap = await getDocs(q);
+
+      if (snap.docs.length > 0) {
+        // Replace CLIENTS array with real Firebase data
+        window.CLIENTS = snap.docs.map(d => {
+          const c = d.data();
+          return {
+            id: d.id, uid: d.id,
+            fn: String(c.fn || 'Client'),
+            ln: String(c.ln || ''),
+            email: String(c.email || ''),
+            tier: String(c.tier || 'strongstart'),
+            goal: String(c.goal || 'General Fitness'),
+            sess: Number(c.sess) || 3,
+            sw: Number(c.sw) || 80,
+            cw: Number(c.cw) || 80,
+            tw: Number(c.tw) || 75,
+            week: Number(c.week) || 1,
+            adherence: Number(c.adherence) || 0,
+            ciDue: c.ciDue === true || c.ciDue === 'true',
+            color: String(c.color || '#22c55e'),
+            notes: String(c.notes || '').replace(/`/g,''),
+            streak: Number(c.streak) || 0,
+            macros: {
+              cal:   Number((c.macros||{}).cal)   || 2200,
+              pro:   Number((c.macros||{}).pro)   || 165,
+              car:   Number((c.macros||{}).car)   || 220,
+              fat:   Number((c.macros||{}).fat)   || 65,
+              wat:   Number((c.macros||{}).wat)   || 3,
+              meals: Number((c.macros||{}).meals) || 4,
+            },
+            coachMsg: String(c.coachMsg || 'Keep showing up. 💪'),
+            checkins: []
+          };
+        });
+
+        // Load check-ins from Firebase and attach to clients
+        try {
+          const ciSnap = await getDocs(query(collection(DB, 'checkIns'), where('replied', '==', false)));
+          ciSnap.docs.forEach(d => {
+            const ci = { id: d.id, ...d.data() };
+            const client = window.CLIENTS.find(c => c.uid === ci.uid);
+            if (client) {
+              client.checkins.push(ci);
+              client.ciDue = true;
+            }
+          });
+        } catch(e) { console.log('Check-in load error:', e); }
+      }
+
+      if (greetEl) greetEl.textContent = (h<12?'Good morning':h<17?'Good afternoon':'Good evening') + ', Antz. Here\'s your overview.';
+      document.getElementById('d-clients').textContent = window.CLIENTS.length;
+
+    } catch(e) {
+      console.log('Firebase client load error:', e.message);
+      if (greetEl) greetEl.textContent = (h<12?'Good morning':h<17?'Good afternoon':'Good evening') + ', Antz. Here\'s your overview.';
+    }
+  }
+
+  // Set up real-time listener so new clients appear instantly without refresh
+  if (window.FB) {
+    const { DB, collection, query, where, onSnapshot } = window.FB;
+    const q = query(collection(DB, 'users'), where('role', '==', 'client'));
+    onSnapshot(q, snap => {
+      window.CLIENTS = snap.docs.map(d => {
+        const c = d.data();
+        return {
+          id: d.id, uid: d.id,
+          fn: String(c.fn || 'Client'),
+          ln: String(c.ln || ''),
+          email: String(c.email || ''),
+          tier: String(c.tier || 'strongstart'),
+          goal: String(c.goal || 'General Fitness'),
+          sess: Number(c.sess) || 3,
+          sw: Number(c.sw) || 80, cw: Number(c.cw) || 80, tw: Number(c.tw) || 75,
+          week: Number(c.week) || 1, adherence: Number(c.adherence) || 0,
+          ciDue: c.ciDue === true || c.ciDue === 'true',
+          color: String(c.color || '#22c55e'),
+          notes: String(c.notes || '').replace(/`/g,''),
+          streak: Number(c.streak) || 0,
+          macros: {
+            cal:   Number((c.macros||{}).cal)   || 2200,
+            pro:   Number((c.macros||{}).pro)   || 165,
+            car:   Number((c.macros||{}).car)   || 220,
+            fat:   Number((c.macros||{}).fat)   || 65,
+            wat:   Number((c.macros||{}).wat)   || 3,
+            meals: Number((c.macros||{}).meals) || 4,
+          },
+          coachMsg: String(c.coachMsg || 'Keep showing up. 💪'),
+          checkins: []
+        };
+      });
+      // Refresh dashboard and client grid live
+      renderClientGrid(window.CLIENTS);
+      renderDashboard();
+      updateCIBadge();
+      populateClientSelects();
+      document.getElementById('d-clients').textContent = window.CLIENTS.length;
+    });
+  }
+
   renderDashboard();
   renderClientGrid(CLIENTS);
   renderAllCI('all');
   renderCoachMsgSidebar();
-  renderCoachMsg(CLIENTS[0]);
+  if (CLIENTS.length) renderCoachMsg(CLIENTS[0]);
   populateClientSelects();
   wb_setDays(4);
   renderExLib('');
