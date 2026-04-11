@@ -749,8 +749,8 @@ button{cursor:pointer;}
 .mtag-st{font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;background:rgba(102,102,102,.1);color:var(--sub);border:1px solid rgba(102,102,102,.2);}
 
 /* Sticky LOG NEXT SET */
-.sticky-log{position:sticky;bottom:0;padding:8px 16px 10px;background:linear-gradient(to bottom,transparent,rgba(8,8,8,.95) 30%);pointer-events:none;}
-.btn-big{pointer-events:all;width:100%;background:var(--orange);border:none;border-radius:var(--r2);padding:13px;font-family:var(--H);font-size:21px;letter-spacing:2px;color:#fff;box-shadow:0 5px 22px rgba(249,115,22,.4);transition:transform .1s;display:flex;align-items:center;justify-content:center;gap:7px;}
+.sticky-log{position:sticky;bottom:0;padding:8px 16px 10px;background:rgba(8,8,8,.96);border-top:1px solid var(--border);pointer-events:all;display:flex;gap:8px;}
+.btn-big{pointer-events:all;flex:1;background:var(--orange);border:none;border-radius:var(--r2);padding:13px;font-family:var(--H);font-size:21px;letter-spacing:2px;color:#fff;box-shadow:0 5px 22px rgba(249,115,22,.4);transition:transform .1s;display:flex;align-items:center;justify-content:center;gap:7px;}
 .btn-big:active{transform:scale(0.98);}
 
 /* Progress */
@@ -1242,14 +1242,14 @@ button{cursor:pointer;}
     </div>
 
     <!-- WORKOUT -->
-    <div class="page" id="pg-workout">
-      <div class="scr">
+    <div class="page" id="pg-workout" style="padding-bottom:0;">
+      <div class="scr" style="padding-bottom:4px;">
         <div class="wk-header">
           <div class="wk-top">
             <div>
-              <div class="wk-wk">WEEK 3 · DAY 2</div>
-              <div class="wk-title" id="wk-title">UPPER BODY STRENGTH</div>
-              <div class="wk-meta" id="wk-meta">Push · Chest, Shoulders & Triceps</div>
+              <div class="wk-wk" id="wk-week">WEEK 1</div>
+              <div class="wk-title" id="wk-title">YOUR WORKOUT</div>
+              <div class="wk-meta" id="wk-meta">Tap a day to load exercises</div>
             </div>
             <div class="timer-badge"><div class="t-dot run"></div><span id="timer-val">00:00</span></div>
           </div>
@@ -1257,9 +1257,9 @@ button{cursor:pointer;}
         <div class="day-tabs" id="day-tabs"></div>
         <div id="exercise-list"></div>
       </div>
-      <div class="sticky-log" style="display:flex;gap:8px;padding:8px 16px 10px;">
-        <button class="btn-big" style="flex:1;" onclick="logNextSet()">LOG NEXT SET →</button>
-        <button class="btn-big" style="flex:0 0 auto;padding:13px 16px;background:#1e1e1e;border:1.5px solid var(--green);color:var(--green);font-size:15px;box-shadow:none;" onclick="finishWorkout()">FINISH ✓</button>
+      <div class="sticky-log">
+        <button class="btn-big" onclick="logNextSet()">LOG NEXT SET →</button>
+        <button style="flex:0 0 auto;padding:13px 16px;background:#1e1e1e;border:1.5px solid var(--green);color:var(--green);font-size:15px;font-family:var(--H);letter-spacing:1px;border-radius:var(--r2);cursor:pointer;" onclick="finishWorkout()">FINISH ✓</button>
       </div>
     </div>
 
@@ -1849,7 +1849,10 @@ async function initCoach() {
   renderClientGrid(CLIENTS);
   renderAllCI('all');
   renderCoachMsgSidebar();
-  if (CLIENTS.length) renderCoachMsg(CLIENTS[0]);
+  if (CLIENTS.length) {
+    currentCoachMsgClient = String(CLIENTS[0].uid || CLIENTS[0].id);
+    renderCoachMsg(CLIENTS[0]);
+  }
   populateClientSelects();
   wb_setDays(4);
   renderExLib('');
@@ -2895,35 +2898,97 @@ function goToWorkout(id) {
 
 // ── COACH MESSAGES ──
 function renderCoachMsgSidebar() {
-  document.getElementById('coach-msg-sb').innerHTML = CLIENTS.map(c => `
-    <div class="msg-client ${c.id===currentCoachMsgClient?'on':''}" onclick="currentCoachMsgClient=${c.id};renderCoachMsg(CLIENTS.find(x=>x.id===${c.id}));renderCoachMsgSidebar()">
-      <div style="display:flex;justify-content:space-between;">
+  const sb = document.getElementById('coach-msg-sb');
+  if (!sb) return;
+
+  if (!CLIENTS.length) {
+    sb.innerHTML = `<div style="padding:14px;font-size:12px;color:var(--sub);line-height:1.7;">No clients yet.<br/>Add a client to start messaging.</div>`;
+    return;
+  }
+
+  sb.innerHTML = CLIENTS.map(c => {
+    const cuid = String(c.uid || c.id);
+    const isActive = cuid === String(currentCoachMsgClient);
+    return `<div class="msg-client ${isActive ? 'on' : ''}"
+      onclick="selectCoachMsgClient('${cuid}')">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
         <div class="msg-client-name">${c.fn} ${c.ln}</div>
-        ${c.ciDue ? '<div style="width:6px;height:6px;background:var(--orange);border-radius:50%;"></div>' : ''}
+        ${c.ciDue ? '<div style="width:7px;height:7px;background:var(--orange);border-radius:50%;flex-shrink:0;"></div>' : ''}
       </div>
-      <div class="msg-client-preview">${c.goal}</div>
-    </div>`).join('');
+      <div class="msg-client-preview" style="color:var(--sub);font-size:11px;margin-top:2px;">${c.tier} · ${c.goal||''}</div>
+    </div>`;
+  }).join('');
+}
+
+function selectCoachMsgClient(uid) {
+  currentCoachMsgClient = uid;
+  const c = CLIENTS.find(x => String(x.uid||x.id) === String(uid));
+  if (!c) return;
+  renderCoachMsgSidebar();
+  renderCoachMsg(c);
 }
 
 function renderCoachMsg(c) {
-  document.getElementById('coach-msg-av').textContent = c.fn[0]+c.ln[0];
-  document.getElementById('coach-msg-av').style.background = c.color;
-  document.getElementById('coach-msg-name').textContent = c.fn.toUpperCase()+' '+c.ln.toUpperCase();
-  document.getElementById('coach-msg-tier').textContent = c.tier.toUpperCase() + ' · ' + c.goal;
-  const hist = MSGS[c.id] || [];
+  if (!c) return;
+  const av = document.getElementById('coach-msg-av');
+  const nm = document.getElementById('coach-msg-name');
+  const ti = document.getElementById('coach-msg-tier');
+  if (av) { av.textContent = (c.fn[0]||'?')+(c.ln[0]||'?'); av.style.background = c.color||'#f97316'; }
+  if (nm) nm.textContent = (c.fn+' '+c.ln).toUpperCase();
+  if (ti) ti.textContent = (c.tier||'').toUpperCase() + ' · ' + (c.goal||'');
+
   const list = document.getElementById('coach-msg-list');
-  list.innerHTML = hist.map(m => `<div class="mw ${m.out?'out':'in'}"><div class="mb2"><p>${m.text}</p></div><div class="mt">${m.time}</div></div>`).join('');
-  list.scrollTop = 99999;
+  if (!list) return;
+
+  const clientUid = String(c.uid || c.id);
+  const coachUid  = String(window._fbUser?.uid || '');
+
+  if (!clientUid || !coachUid || !window.fb_listenMessages) {
+    list.innerHTML = '<div style="color:var(--sub);font-size:13px;padding:12px;">No messages yet.</div>';
+    return;
+  }
+
+  // Cancel previous listener
+  if (window._coachMsgUnsub) { window._coachMsgUnsub(); window._coachMsgUnsub = null; }
+
+  list.innerHTML = '<div style="color:var(--sub);font-size:13px;padding:12px;">Loading messages...</div>';
+
+  window._coachMsgUnsub = window.fb_listenMessages(coachUid, clientUid, msgs => {
+    if (!list) return;
+    if (!msgs.length) {
+      list.innerHTML = `<div style="color:var(--sub);font-size:13px;padding:12px;">No messages with ${c.fn} yet. Say hello! 👋</div>`;
+      return;
+    }
+    list.innerHTML = msgs.map(m => {
+      const isCoach = m.fromUid === coachUid;
+      const time = m.sentAt?.toDate
+        ? m.sentAt.toDate().toLocaleTimeString('en-NZ',{hour:'2-digit',minute:'2-digit'})
+        : 'Just now';
+      return `<div class="mw ${isCoach ? 'out' : 'in'}">
+        <div class="mb2"><p>${m.text}</p></div>
+        <div class="mt">${isCoach ? 'You' : c.fn} · ${time}</div>
+      </div>`;
+    }).join('');
+    list.scrollTop = 99999;
+  });
 }
 
-function coach_sendMsg() {
+async function coach_sendMsg() {
   const inp = document.getElementById('coach-msg-inp');
-  const txt = inp.value.trim(); if (!txt) return;
-  if (!MSGS[currentCoachMsgClient]) MSGS[currentCoachMsgClient] = [];
-  MSGS[currentCoachMsgClient].push({out:false, text:txt, time:'Just now'});
-  const c = CLIENTS.find(x => x.id === currentCoachMsgClient);
-  renderCoachMsg(c);
+  const txt = inp.value.trim();
+  if (!txt) return;
   inp.value = '';
+
+  const coachUid   = String(window._fbUser?.uid || '');
+  const clientUid  = String(currentCoachMsgClient || '');
+
+  if (!coachUid || !clientUid) { showToast('Select a client first'); return; }
+
+  if (window.fb_sendMessage) {
+    try {
+      await window.fb_sendMessage(clientUid, coachUid, txt, 'Antz Brown');
+    } catch(e) { showToast('Send error: ' + e.message); }
+  }
 }
 
 // ── ADD CLIENT — writes to Firestore using UID from Firebase Auth ──
@@ -3008,8 +3073,16 @@ function initClient() {
   document.getElementById('p-tier').textContent = '⚡ ' + currentUser.tier.toUpperCase();
   document.getElementById('h-coach-msg').textContent = currentUser.coachMsg;
   renderTodayCard();
+  // Auto-select today's day in workout
+  const todayIdx = Math.min(new Date().getDay() === 0 ? 6 : new Date().getDay() - 1, LIVE_PROGRAM.length - 1);
+  currentDay = todayIdx;
   renderDayTabs();
-  renderExercises(0);
+  renderExercises(currentDay);
+  const d = LIVE_PROGRAM[currentDay];
+  if (d) {
+    const wt = document.getElementById('wk-title'); if(wt) wt.textContent = (d.title||d.focus||'Workout').toUpperCase();
+    const wm = document.getElementById('wk-meta');  if(wm) wm.textContent = d.focus + (d.exercises&&d.exercises.length ? ` · ${d.exercises.length} exercises` : ' · Rest day');
+  }
   renderMeals();
   renderClientMsgs();
   renderPBs('all', '');
@@ -3120,8 +3193,21 @@ function selectDay(i) {
 function renderExercises(di) {
   const day = LIVE_PROGRAM[di];
   const list = document.getElementById('exercise-list');
-  if (!day.exercises.length) {
-    list.innerHTML = `<div class="card" style="text-align:center;padding:28px;"><div style="font-size:40px;margin-bottom:11px;">😴</div><div style="font-family:var(--H);font-size:24px;letter-spacing:2px;margin-bottom:6px;">REST DAY</div><div style="font-size:13px;color:var(--sub);">Walk, stretch, hydrate. Recovery is training.</div></div>`;
+  if (!list) return;
+
+  if (!day || !day.exercises || !day.exercises.length) {
+    const isRest = day?.focus === 'REST' || day?.focus === 'CHECK-IN';
+    list.innerHTML = isRest
+      ? `<div class="card" style="text-align:center;padding:28px;">
+          <div style="font-size:40px;margin-bottom:11px;">😴</div>
+          <div style="font-family:var(--H);font-size:24px;letter-spacing:2px;margin-bottom:6px;">REST DAY</div>
+          <div style="font-size:13px;color:var(--sub);">Walk, stretch, hydrate. Recovery is training.</div>
+         </div>`
+      : `<div class="card" style="text-align:center;padding:28px;">
+          <div style="font-size:40px;margin-bottom:11px;">🏋️</div>
+          <div style="font-family:var(--H);font-size:22px;letter-spacing:2px;margin-bottom:8px;">NO PROGRAM YET</div>
+          <div style="font-size:13px;color:var(--sub);line-height:1.7;">Your coach hasn't pushed a program for this day yet. Check in with Antz!</div>
+         </div>`;
     return;
   }
   list.innerHTML = day.exercises.map((ex, ei) => buildExCard(ex, di, ei)).join('');
@@ -3763,24 +3849,74 @@ function resetCI() {
   document.getElementById('ci-form-view').style.display = 'block';
 }
 
-// ── MESSAGES (client) ──
+// ── MESSAGES (client) — real-time via Firebase ──
+let _clientMsgUnsub = null;
+
 function renderClientMsgs() {
-  const hist = MSGS[currentClientId] || [];
-  const list = document.getElementById('client-msg-list');
+  const uid      = String(window._fbUser?.uid || '');
+  const list     = document.getElementById('client-msg-list');
   if (!list) return;
-  list.innerHTML = hist.map(m => `<div class="mw ${m.out?'out':'in'}"><div class="mb2"><p>${m.text}</p></div><div class="mt">${m.time}</div></div>`).join('');
-  list.scrollTop = 99999;
+
+  if (!uid || !window.fb_listenMessages) {
+    list.innerHTML = '<div style="color:var(--sub);font-size:13px;padding:12px;">Send a message to Antz below.</div>';
+    return;
+  }
+
+  // Find coach UID from Firestore
+  if (window.FB) {
+    const { DB, collection, query, where, getDocs } = window.FB;
+    getDocs(query(collection(DB, 'users'), where('role', '==', 'coach')))
+      .then(snap => {
+        const coachId = snap.docs[0]?.id;
+        if (!coachId) {
+          list.innerHTML = '<div style="color:var(--sub);font-size:13px;padding:12px;">Send a message to Antz below.</div>';
+          return;
+        }
+
+        // Cancel any existing listener
+        if (_clientMsgUnsub) { _clientMsgUnsub(); _clientMsgUnsub = null; }
+
+        _clientMsgUnsub = window.fb_listenMessages(uid, coachId, msgs => {
+          if (!list) return;
+          if (!msgs.length) {
+            list.innerHTML = '<div style="color:var(--sub);font-size:13px;padding:12px;">No messages yet — say hi to Antz! 👋</div>';
+            return;
+          }
+          list.innerHTML = msgs.map(m => {
+            const isMe = m.fromUid === uid;
+            const time = m.sentAt?.toDate
+              ? m.sentAt.toDate().toLocaleTimeString('en-NZ',{hour:'2-digit',minute:'2-digit'})
+              : 'Just now';
+            return `<div class="mw ${isMe ? 'out' : 'in'}">
+              <div class="mb2"><p>${m.text}</p></div>
+              <div class="mt">${isMe ? 'You' : 'Antz'} · ${time}</div>
+            </div>`;
+          }).join('');
+          list.scrollTop = 99999;
+        });
+      })
+      .catch(() => {
+        list.innerHTML = '<div style="color:var(--sub);font-size:13px;padding:12px;">Send a message to Antz below.</div>';
+      });
+  }
 }
-function client_sendMsg() {
+
+async function client_sendMsg() {
   const inp = document.getElementById('client-msg-inp');
-  const txt = inp.value.trim(); if (!txt) return;
-  if (!MSGS[currentClientId]) MSGS[currentClientId] = [];
-  MSGS[currentClientId].push({out:true, text:txt, time:'Just now'});
-  renderClientMsgs(); inp.value = '';
-  setTimeout(() => {
-    MSGS[currentClientId].push({out:false, text:'Got it! Keep showing up 💪', time:'Just now'});
-    renderClientMsgs();
-  }, 1200);
+  const txt = inp.value.trim();
+  if (!txt) return;
+  inp.value = '';
+
+  const uid = String(window._fbUser?.uid || '');
+  if (!uid || !window.FB) return;
+
+  const { DB, collection, query, where, getDocs } = window.FB;
+  try {
+    const snap = await getDocs(query(collection(DB, 'users'), where('role', '==', 'coach')));
+    const coachId = snap.docs[0]?.id;
+    if (!coachId) { showToast('Could not reach coach — try again'); return; }
+    await window.fb_sendMessage(coachId, uid, txt, window._fbUser?.fn || 'Client');
+  } catch(e) { showToast('Send error: ' + e.message); }
 }
 
 // ── LOGO TAP — secret coach access from client app ──
