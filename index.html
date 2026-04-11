@@ -8,6 +8,303 @@
 <meta name="apple-mobile-web-app-title" content="Strong Culture"/>
 <meta name="theme-color" content="#f97316"/>
 <meta name="mobile-web-app-capable" content="yes"/>
+<!-- Firebase SDK -->
+<script type="module">
+// ═══════════════════════════════════════════
+// FIREBASE — REAL-TIME BACKEND
+// ═══════════════════════════════════════════
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, addDoc, updateDoc, deleteDoc,
+         collection, query, where, orderBy, onSnapshot, serverTimestamp, getDocs }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDFa3gFbqnYwHHtrnBjiQUjBBcs8KnaLpI",
+  authDomain: "strong-culture-coaching.firebaseapp.com",
+  projectId: "strong-culture-coaching",
+  storageBucket: "strong-culture-coaching.firebasestorage.app",
+  messagingSenderId: "41498989418",
+  appId: "1:41498989418:web:c61d8d186612f650064b13"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const AUTH = getAuth(firebaseApp);
+const DB   = getFirestore(firebaseApp);
+
+// ── Expose to global scope so non-module functions can access ──
+window.FB = { AUTH, DB, doc, setDoc, getDoc, addDoc, updateDoc, deleteDoc,
+              collection, query, where, orderBy, onSnapshot, serverTimestamp, getDocs,
+              signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut };
+
+// ── Auth state listener ──
+onAuthStateChanged(AUTH, async user => {
+  if (user) {
+    try {
+      const snap = await getDoc(doc(DB, 'users', user.uid));
+      let profile = {};
+      if (snap.exists()) {
+        profile = snap.data();
+      } else {
+        // No Firestore profile yet — create a basic one so login still works
+        profile = { role: 'client', fn: user.email.split('@')[0], ln: '', email: user.email };
+        await setDoc(doc(DB, 'users', user.uid), {
+          ...profile,
+          tier: 'strongstart', goal: 'General Fitness', sess: 3,
+          sw: 80, cw: 80, tw: 75, week: 1, adherence: 0, streak: 0,
+          ciDue: false, color: '#22c55e', notes: '', coachMsg: 'Welcome! 💪',
+          macros: { cal: 2200, pro: 165, car: 220, fat: 65, wat: 3, meals: 4 }
+        });
+      }
+      // Sanitise all fields so wrong types never crash the app
+      const safe = {
+        uid: user.uid,
+        email: user.email,
+        role: String(profile.role || 'client'),
+        fn: String(profile.fn || user.email.split('@')[0]),
+        ln: String(profile.ln || ''),
+        tier: String(profile.tier || 'strongstart'),
+        goal: String(profile.goal || 'General Fitness'),
+        sess: Number(profile.sess) || 3,
+        sw: Number(profile.sw) || 80,
+        cw: Number(profile.cw) || 80,
+        tw: Number(profile.tw) || 75,
+        week: Number(profile.week) || 1,
+        adherence: Number(profile.adherence) || 0,
+        streak: Number(profile.streak) || 0,
+        ciDue: profile.ciDue === true || profile.ciDue === 'true',
+        color: String(profile.color || '#22c55e'),
+        notes: String(profile.notes || '').replace(/`/g,''),
+        coachMsg: String(profile.coachMsg || 'Keep showing up. 💪'),
+        macros: {
+          cal:   Number((profile.macros||{}).cal)   || 2200,
+          pro:   Number((profile.macros||{}).pro)   || 165,
+          car:   Number((profile.macros||{}).car)   || 220,
+          fat:   Number((profile.macros||{}).fat)   || 65,
+          wat:   Number((profile.macros||{}).wat)   || 3,
+          meals: Number((profile.macros||{}).meals) || 4,
+        }
+      };
+      window._fbUser = safe;
+      document.getElementById('ls-err').style.display = 'none';
+      document.getElementById('login-screen').style.display = 'none';
+      if (safe.role === 'coach') {
+        document.getElementById('coach-app').style.display = 'block';
+        window.currentRole = 'coach';
+        window.initCoach();
+      } else {
+        document.getElementById('client-app').style.display = 'block';
+        window.currentRole = 'client';
+        window.currentClientId = user.uid;
+        window.initClient();
+      }
+    } catch(e) {
+      console.error('Auth error:', e);
+      const err = document.getElementById('ls-err');
+      err.textContent = 'Error loading profile. Try again.';
+      err.style.display = 'block';
+      await signOut(AUTH);
+    }
+  } else {
+    window._fbUser = null;
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('coach-app').style.display = 'none';
+    document.getElementById('client-app').style.display = 'none';
+  }
+});
+
+// ── LOGIN ──
+window.doLogin = async function() {
+  const email = document.getElementById('l-email').value.trim();
+  const pass  = document.getElementById('l-pass').value;
+  const err   = document.getElementById('ls-err');
+  err.style.display = 'none';
+  try {
+    await signInWithEmailAndPassword(AUTH, email, pass);
+    // onAuthStateChanged handles the rest
+  } catch(e) {
+    err.textContent = 'Incorrect email or password';
+    err.style.display = 'block';
+  }
+};
+
+// ── LOGOUT ──
+window.doLogout = async function() {
+  await signOut(AUTH);
+};
+
+// ── CREATE CLIENT ACCOUNT (called from coach Add Client) ──
+window.fb_createClient = async function(email, pass, profile) {
+  // Create auth user
+  const cred = await createUserWithEmailAndPassword(AUTH, email, pass);
+  // Write profile to Firestore
+  const { DB, doc, setDoc } = window.FB;
+  await setDoc(doc(DB, 'users', cred.user.uid), {
+    role: 'client',
+    email,
+    fn: profile.fn,
+    ln: profile.ln,
+    tier: profile.tier,
+    goal: profile.goal,
+    sess: profile.sess,
+    sw: profile.sw,
+    cw: profile.sw,
+    tw: profile.tw,
+    week: 1,
+    adherence: 0,
+    streak: 0,
+    ciDue: false,
+    notes: profile.notes || '',
+    color: profile.color,
+    coachMsg: 'Welcome to Strong Culture Coaching! Your program is ready. Let\'s go! 💪',
+    macros: { cal:2200, pro:165, car:220, fat:65, wat:3, meals:4 },
+    createdAt: serverTimestamp()
+  });
+  return cred.user.uid;
+};
+
+// ── SAVE WORKOUT LOG SET ──
+window.fb_logSet = async function(exName, day, setNum, weight, reps) {
+  if (!window._fbUser) return;
+  const { DB, collection, addDoc, serverTimestamp } = window.FB;
+  await addDoc(collection(DB, 'workoutLogs'), {
+    uid: window._fbUser.uid,
+    exercise: exName,
+    day,
+    setNum,
+    weight: parseFloat(weight) || 0,
+    reps: parseInt(reps) || 0,
+    loggedAt: serverTimestamp()
+  });
+};
+
+// ── SAVE CHECK-IN ──
+window.fb_saveCheckIn = async function(data) {
+  if (!window._fbUser) return;
+  const { DB, collection, addDoc, doc, updateDoc, serverTimestamp } = window.FB;
+  await addDoc(collection(DB, 'checkIns'), {
+    uid: window._fbUser.uid,
+    ...data,
+    submittedAt: serverTimestamp(),
+    replied: false
+  });
+  await updateDoc(doc(DB, 'users', window._fbUser.uid), { ciDue: true });
+};
+
+// ── PUSH PROGRAM TO CLIENT ──
+window.fb_pushProgram = async function(clientUid, programName, days) {
+  const { DB, doc, setDoc, serverTimestamp } = window.FB;
+  await setDoc(doc(DB, 'programs', clientUid), {
+    name: programName,
+    days,
+    updatedAt: serverTimestamp(),
+    updatedBy: window._fbUser?.uid || 'coach'
+  });
+  window.showToast('Program pushed to client instantly! 💪');
+};
+
+// ── PUSH MACROS TO CLIENT ──
+window.fb_pushMacros = async function(clientUid, macros) {
+  const { DB, doc, updateDoc } = window.FB;
+  await updateDoc(doc(DB, 'users', clientUid), { macros });
+  window.showToast('Macros updated instantly! ✅');
+};
+
+// ── LISTEN FOR PROGRAM CHANGES (client side) ──
+window.fb_listenProgram = function(uid, callback) {
+  const { DB, doc, onSnapshot } = window.FB;
+  return onSnapshot(doc(DB, 'programs', uid), snap => {
+    if (snap.exists()) callback(snap.data());
+  });
+};
+
+// ── LISTEN FOR PROFILE CHANGES (client side — macros, coachMsg etc) ──
+window.fb_listenProfile = function(uid, callback) {
+  const { DB, doc, onSnapshot } = window.FB;
+  return onSnapshot(doc(DB, 'users', uid), snap => {
+    if (snap.exists()) callback(snap.data());
+  });
+};
+
+// ── SEND MESSAGE ──
+window.fb_sendMessage = async function(toUid, fromUid, text, fromName) {
+  const { DB, collection, addDoc, serverTimestamp } = window.FB;
+  await addDoc(collection(DB, 'messages'), {
+    toUid,
+    fromUid,
+    fromName,
+    text,
+    sentAt: serverTimestamp(),
+    read: false
+  });
+};
+
+// ── LISTEN FOR MESSAGES ──
+window.fb_listenMessages = function(uid1, uid2, callback) {
+  const { DB, collection, query, where, orderBy, onSnapshot } = window.FB;
+  const q = query(
+    collection(DB, 'messages'),
+    where('toUid', 'in', [uid1, uid2]),
+    orderBy('sentAt', 'asc')
+  );
+  return onSnapshot(q, snap => {
+    const msgs = snap.docs
+      .map(d => ({id:d.id,...d.data()}))
+      .filter(m => (m.fromUid===uid1&&m.toUid===uid2)||(m.fromUid===uid2&&m.toUid===uid1));
+    callback(msgs);
+  });
+};
+
+// ── LOAD ALL CLIENTS (coach) ──
+window.fb_loadClients = async function() {
+  const { DB, collection, query, where, getDocs } = window.FB;
+  const q = query(collection(DB, 'users'), where('role','==','client'));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({uid:d.id,...d.data()}));
+};
+
+// ── UPDATE CLIENT PLAN ──
+window.fb_updateClientPlan = async function(uid, data) {
+  const { DB, doc, updateDoc } = window.FB;
+  await updateDoc(doc(DB, 'users', uid), data);
+};
+
+// ── LOAD CHECK-INS (coach) ──
+window.fb_loadCheckIns = async function() {
+  const { DB, collection, query, orderBy, getDocs } = window.FB;
+  const q = query(collection(DB, 'checkIns'), orderBy('submittedAt','desc'));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({id:d.id,...d.data()}));
+};
+
+// ── REPLY TO CHECK-IN ──
+window.fb_replyCheckIn = async function(checkInId, coachUid, reply) {
+  const { DB, doc, updateDoc } = window.FB;
+  await updateDoc(doc(DB, 'checkIns', checkInId), {
+    replied: true,
+    coachReply: reply,
+    repliedAt: serverTimestamp()
+  });
+};
+
+// ── SAVE COACH NOTE ──
+window.fb_saveNote = async function(clientUid, note) {
+  const { DB, doc, updateDoc } = window.FB;
+  await updateDoc(doc(DB, 'users', clientUid), { notes: note });
+};
+
+// ── LOAD WORKOUT LOGS FOR CLIENT ──
+window.fb_loadLogs = async function(uid) {
+  const { DB, collection, query, where, orderBy, getDocs } = window.FB;
+  const q = query(collection(DB, 'workoutLogs'), where('uid','==',uid), orderBy('loggedAt','desc'));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({id:d.id,...d.data()}));
+};
+
+console.log('🔥 Firebase connected — Strong Culture Coaching');
+</script>
+
 <link rel="manifest" id="pwa-manifest"/>
 <script>
 // Inject manifest inline so no external file needed
@@ -1361,53 +1658,7 @@ let wb_days = [];
 // ══════════════════════════════════════════════════════
 //  LOGIN / LOGOUT
 // ══════════════════════════════════════════════════════
-function doLogin() {
-  const email = document.getElementById('l-email').value.trim().toLowerCase();
-  const pass  = document.getElementById('l-pass').value;
-  const err   = document.getElementById('ls-err');
-
-  // Check if coach
-  if (pass === COACH_PASS) {
-    err.style.display = 'none';
-    currentRole = 'coach';
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('coach-app').style.display = 'block';
-    initCoach();
-    return;
-  }
-
-  // Check if client
-  if (pass === CLIENT_PASS) {
-    err.style.display = 'none';
-    currentRole = 'client';
-    // Try to find matching client
-    const acct = ACCOUNTS[email];
-    if (acct && acct.role === 'client') {
-      currentClientId = acct.clientId;
-    } else {
-      currentClientId = 1; // Default to Alex for demo
-    }
-    currentUser = CLIENTS.find(c => c.id === currentClientId) || CLIENTS[0];
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('client-app').style.display = 'block';
-    initClient();
-    return;
-  }
-
-  err.style.display = 'block';
-}
-
-document.getElementById('l-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-
-function doLogout() {
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('coach-app').style.display = 'none';
-  document.getElementById('client-app').style.display = 'none';
-  if (timerInt) clearInterval(timerInt);
-  timerRunning = false;
-  document.getElementById('l-email').value = '';
-  document.getElementById('l-pass').value = '';
-}
+// ── doLogin and doLogout are handled by Firebase module ──
 
 // ══════════════════════════════════════════════════════
 //  COACH — INIT & NAV
@@ -2804,13 +3055,34 @@ function showToast(msg) {
 }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-// Service Worker registration
+// ── LOGIN (overridden by Firebase module — this is a fallback) ──
+if (!window.doLogin) {
+  window.doLogin = function() {
+    const pass = document.getElementById('l-pass').value;
+    const err  = document.getElementById('ls-err');
+    if (pass === 'coach123') {
+      err.style.display='none';
+      document.getElementById('login-screen').style.display='none';
+      document.getElementById('coach-app').style.display='block';
+      currentRole='coach'; initCoach();
+    } else if (pass === 'strongculture') {
+      err.style.display='none';
+      document.getElementById('login-screen').style.display='none';
+      document.getElementById('client-app').style.display='block';
+      currentRole='client'; initClient();
+    } else {
+      err.textContent='Incorrect email or password'; err.style.display='block';
+    }
+  };
+}
+document.getElementById('l-pass').addEventListener('keydown', e => { if(e.key==='Enter') (window.doLogin||doLogin)(); });
+
 // PWA install
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault(); deferredPrompt = e;
   const b = document.getElementById('install-banner');
-  if (b) b.onclick = () => { deferredPrompt.prompt(); deferredPrompt.userChoice.then(() => { b.style.display='none'; deferredPrompt=null; }); };
+  if (b) { b.style.cursor='pointer'; b.onclick = () => { deferredPrompt.prompt(); deferredPrompt.userChoice.then(() => { b.style.display='none'; deferredPrompt=null; }); }; }
 });
 window.addEventListener('appinstalled', () => { const b=document.getElementById('install-banner'); if(b)b.style.display='none'; });
 </script>
