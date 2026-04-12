@@ -14,7 +14,8 @@
 // FIREBASE — REAL-TIME BACKEND
 // ═══════════════════════════════════════════
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged }
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged,
+         browserSessionPersistence, setPersistence }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, addDoc, updateDoc, deleteDoc,
          collection, query, where, orderBy, onSnapshot, serverTimestamp, getDocs }
@@ -32,6 +33,12 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 const AUTH = getAuth(firebaseApp);
 const DB   = getFirestore(firebaseApp);
+
+// ── Set session-only persistence — clears when tab/browser closes ──
+// Then sign out immediately on fresh load so login screen always shows
+setPersistence(AUTH, browserSessionPersistence)
+  .then(() => signOut(AUTH))
+  .catch(() => {});
 
 // ── Expose to global scope so non-module functions can access ──
 window.FB = { AUTH, DB, doc, setDoc, getDoc, addDoc, updateDoc, deleteDoc,
@@ -1805,23 +1812,30 @@ async function initCoach() {
   if (window.FB) {
     const { DB, collection, onSnapshot } = window.FB;
 
-    // Real-time listener on ALL users — filter client-side (no index needed)
-    onSnapshot(collection(DB, 'users'), snap => {
+    // Cancel any existing listener before creating a new one
+    if (window._clientsUnsub) { window._clientsUnsub(); window._clientsUnsub = null; }
+
+    // Real-time listener on ALL users — filter and deduplicate client-side
+    window._clientsUnsub = onSnapshot(collection(DB, 'users'), snap => {
+      const seen = new Set();
       window.CLIENTS = snap.docs
-        .filter(d => String(d.data().role) === 'client')
+        .filter(d => {
+          const role = String(d.data().role || '');
+          const uid  = d.id;
+          if (role !== 'client') return false;
+          if (seen.has(uid)) return false; // deduplicate
+          seen.add(uid);
+          return true;
+        })
         .map(d => mapClient(d));
 
       console.log(`🔥 Firebase: ${snap.docs.length} users, ${window.CLIENTS.length} clients`);
-
-      // Load check-ins and attach
-      snap.docs.forEach(d => {}); // trigger re-render even if clients=0
       refreshCoachUI();
     }, err => {
       console.error('Firestore listener error:', err.code, err.message);
       if (greetEl) greetEl.textContent = 'Error loading clients. Check Firestore rules.';
     });
   } else {
-    // No Firebase — show empty state
     refreshCoachUI();
   }
 
@@ -1966,8 +1980,10 @@ async function openClientDetail(uid) {
           coachMsg: String(d.coachMsg||'Keep showing up. 💪'),
           checkins: []
         };
-        // Add to local array for future clicks
-        CLIENTS.push(c);
+        // Only add if not already in array
+        if (!CLIENTS.find(x => String(x.uid||x.id) === String(uid))) {
+          CLIENTS.push(c);
+        }
       }
     } catch(e) { console.log('Fetch client error:', e); }
   }
