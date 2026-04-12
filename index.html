@@ -39,6 +39,11 @@ window.FB = { AUTH, DB, doc, setDoc, getDoc, addDoc, updateDoc, deleteDoc,
               signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut };
 
 // ── Auth state listener ──
+function hideSplash() {
+  const s = document.getElementById('splash');
+  if (s) s.style.display = 'none';
+}
+
 onAuthStateChanged(AUTH, async user => {
   if (user) {
     try {
@@ -47,7 +52,6 @@ onAuthStateChanged(AUTH, async user => {
       if (snap.exists()) {
         profile = snap.data();
       } else {
-        // No Firestore profile yet — create a basic one so login still works
         profile = { role: 'client', fn: user.email.split('@')[0], ln: '', email: user.email };
         await setDoc(doc(DB, 'users', user.uid), {
           ...profile,
@@ -57,21 +61,16 @@ onAuthStateChanged(AUTH, async user => {
           macros: { cal: 2200, pro: 165, car: 220, fat: 65, wat: 3, meals: 4 }
         });
       }
-      // Sanitise all fields so wrong types never crash the app
       const safe = {
-        uid: user.uid,
-        email: user.email,
+        uid: user.uid, email: user.email,
         role: String(profile.role || 'client'),
         fn: String(profile.fn || user.email.split('@')[0]),
         ln: String(profile.ln || ''),
         tier: String(profile.tier || 'strongstart'),
         goal: String(profile.goal || 'General Fitness'),
         sess: Number(profile.sess) || 3,
-        sw: Number(profile.sw) || 80,
-        cw: Number(profile.cw) || 80,
-        tw: Number(profile.tw) || 75,
-        week: Number(profile.week) || 1,
-        adherence: Number(profile.adherence) || 0,
+        sw: Number(profile.sw) || 80, cw: Number(profile.cw) || 80, tw: Number(profile.tw) || 75,
+        week: Number(profile.week) || 1, adherence: Number(profile.adherence) || 0,
         streak: Number(profile.streak) || 0,
         ciDue: profile.ciDue === true || profile.ciDue === 'true',
         color: String(profile.color || '#22c55e'),
@@ -87,8 +86,10 @@ onAuthStateChanged(AUTH, async user => {
         }
       };
       window._fbUser = safe;
-      document.getElementById('ls-err').style.display = 'none';
+      hideSplash();
       document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('coach-app').style.display = 'none';
+      document.getElementById('client-app').style.display = 'none';
       if (safe.role === 'coach') {
         document.getElementById('coach-app').style.display = 'block';
         window.currentRole = 'coach';
@@ -101,44 +102,26 @@ onAuthStateChanged(AUTH, async user => {
       }
     } catch(e) {
       console.error('Auth error:', e.code, e.message);
-      // If it's a permissions error, the rules are blocking — show helpful message
-      // Don't sign out — let them retry
+      hideSplash();
       const err = document.getElementById('ls-err');
+      document.getElementById('login-screen').style.display = 'flex';
       if (e.code === 'permission-denied') {
-        err.textContent = 'Database permissions error. Check Firestore rules.';
+        err.textContent = 'Database error — check Firestore rules.';
+        err.style.display = 'block';
       } else if (e.code === 'unavailable') {
         err.textContent = 'Connection error — check your internet and try again.';
+        err.style.display = 'block';
       } else {
-        // Don't give up — try loading without Firestore so coach can still access app
-        window._fbUser = {
-          uid: user.uid,
-          email: user.email,
-          role: user.email === 'antz@strongculturecoaching.com' || user.uid === 'FZi5GUx38Ygw8rMhZZBmboHLo932' ? 'coach' : 'client',
-          fn: 'Antz', ln: 'Brown',
-          tier: 'elite', goal: 'Coaching', sess: 5,
-          sw: 88, cw: 88, tw: 85, week: 1, adherence: 0, streak: 0,
-          ciDue: false, color: '#f97316', notes: '',
-          coachMsg: 'Keep showing up. 💪',
-          macros: { cal: 2800, pro: 210, car: 300, fat: 80, wat: 4, meals: 5 }
-        };
-        document.getElementById('login-screen').style.display = 'none';
-        err.style.display = 'none';
-        if (window._fbUser.role === 'coach') {
-          document.getElementById('coach-app').style.display = 'block';
-          window.currentRole = 'coach';
-          window.initCoach();
-        } else {
-          document.getElementById('client-app').style.display = 'block';
-          window.currentRole = 'client';
-          window.currentClientId = user.uid;
-          window.initClient();
-        }
-        return;
+        // Unknown error — sign out and show login
+        err.textContent = 'Something went wrong. Please log in again.';
+        err.style.display = 'block';
+        try { await signOut(AUTH); } catch(_) {}
       }
-      err.style.display = 'block';
     }
   } else {
+    // Not logged in — show login screen
     window._fbUser = null;
+    hideSplash();
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('coach-app').style.display = 'none';
     document.getElementById('client-app').style.display = 'none';
@@ -840,7 +823,20 @@ button{cursor:pointer;}
 <body>
 
 <!-- ═══ LOGIN SCREEN ═══ -->
-<div id="login-screen">
+<!-- SPLASH — shows while Firebase loads -->
+<div id="splash" style="position:fixed;inset:0;background:#080808;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;">
+  <div style="font-size:64px;margin-bottom:16px;filter:drop-shadow(0 0 24px rgba(249,115,22,.9));">🔥</div>
+  <div style="font-family:'Bebas Neue',sans-serif;font-size:38px;letter-spacing:4px;color:#f97316;">STRONG CULTURE</div>
+  <div style="font-size:11px;letter-spacing:5px;color:#555;text-transform:uppercase;margin-top:6px;">Coaching</div>
+  <div style="margin-top:32px;display:flex;gap:6px;">
+    <div style="width:8px;height:8px;background:#f97316;border-radius:50%;animation:pulse 1s infinite;"></div>
+    <div style="width:8px;height:8px;background:#f97316;border-radius:50%;animation:pulse 1s .2s infinite;"></div>
+    <div style="width:8px;height:8px;background:#f97316;border-radius:50%;animation:pulse 1s .4s infinite;"></div>
+  </div>
+  <style>@keyframes pulse{0%,100%{opacity:.2;}50%{opacity:1;}}</style>
+</div>
+
+<div id="login-screen" style="display:none;"><!-- hidden until Firebase checks auth -->
   <div class="ls-logo">
     <span class="ls-flame">🔥</span>
     <div class="ls-brand">STRONG CULTURE</div>
@@ -863,7 +859,7 @@ button{cursor:pointer;}
 <!-- ═══════════════════════════════════════════════
      COACH DASHBOARD
 ═══════════════════════════════════════════════ -->
-<div id="coach-app">
+<div id="coach-app" style="display:none;">
 <div class="coach-layout">
 
 <aside class="sb">
@@ -1165,7 +1161,7 @@ button{cursor:pointer;}
 <!-- ═══════════════════════════════════════════════
      CLIENT APP
 ═══════════════════════════════════════════════ -->
-<div id="client-app">
+<div id="client-app" style="display:none;">
   <div class="topbar">
     <div class="tb-logo" id="logo-tap" onclick="clientLogoTap()">🔥 <span>STRONG CULTURE</span></div>
     <div class="tb-right">
