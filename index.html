@@ -1211,10 +1211,6 @@ button{cursor:pointer;}
     <!-- HOME -->
     <div class="page on" id="pg-home">
       <div class="scr">
-        <div class="install-banner" id="install-banner">
-          <div style="font-size:28px;flex-shrink:0;">📲</div>
-          <div><div class="ib-title">Add to Home Screen</div><div class="ib-sub">Tap Share → "Add to Home Screen" for the full app experience.</div></div>
-        </div>
         <div style="margin-bottom:14px;">
           <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--sub);" id="h-greeting">GOOD MORNING</div>
           <div style="font-family:var(--H);font-size:28px;letter-spacing:2px;" id="h-name">ALEX JOHNSON</div>
@@ -1554,7 +1550,13 @@ button{cursor:pointer;}
     <div class="page" id="pg-profile">
       <div class="scr">
         <div class="profile-hero">
-          <div class="p-av" id="p-av">AJ</div>
+          <!-- Tappable avatar — tap to change profile photo -->
+          <label for="profile-photo-inp" style="cursor:pointer;display:block;width:70px;margin:0 auto 4px;position:relative;z-index:1;">
+            <div class="p-av" id="p-av" style="margin:0;overflow:hidden;">AJ</div>
+            <div style="position:absolute;bottom:0;right:0;width:22px;height:22px;background:var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;border:2px solid var(--dark);">📷</div>
+          </label>
+          <input type="file" id="profile-photo-inp" accept="image/*" style="display:none;" onchange="updateProfilePhoto(this)"/>
+          <div style="font-size:10px;color:var(--sub);margin-bottom:8px;position:relative;z-index:1;">Tap photo to change</div>
           <div class="p-name" id="p-name">ALEX JOHNSON</div>
           <div class="p-tier" id="p-tier">⚡ TRANSFORMATION</div>
           <div class="p-stats">
@@ -3448,7 +3450,13 @@ function initClient() {
   const hname = document.getElementById('h-name');
   if (hname) hname.textContent = (currentUser.fn||'').toUpperCase() + ' ' + (currentUser.ln||'').toUpperCase();
   const pav = document.getElementById('p-av');
-  if (pav) pav.textContent = (currentUser.fn||'?')[0] + (currentUser.ln||'?')[0];
+  if (pav) {
+    if (currentUser.profilePhoto) {
+      pav.innerHTML = `<img src="${currentUser.profilePhoto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>`;
+    } else {
+      pav.textContent = (currentUser.fn||'?')[0] + (currentUser.ln||'?')[0];
+    }
+  }
   const pname = document.getElementById('p-name');
   if (pname) pname.textContent = (currentUser.fn||'').toUpperCase() + ' ' + (currentUser.ln||'').toUpperCase();
   const ptier = document.getElementById('p-tier');
@@ -3978,6 +3986,54 @@ async function logBodyweight() {
   renderBWChart('week');
   updateBWDisplay();
   showToast(`${val}kg logged! 💪`);
+}
+
+// ── PROFILE PHOTO ──
+async function updateProfilePhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  showToast('Updating photo...');
+  try {
+    // Compress to a reasonable size
+    const b64 = await new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      const img = new Image();
+      img.onload = () => {
+        const SIZE = 300;
+        let w = img.width, h = img.height;
+        // Crop to square from centre
+        const min = Math.min(w, h);
+        const sx = (w - min) / 2, sy = (h - min) / 2;
+        canvas.width = SIZE; canvas.height = SIZE;
+        canvas.getContext('2d').drawImage(img, sx, sy, min, min, 0, 0, SIZE, SIZE);
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+      };
+      img.onerror = reject;
+      img.src = URL.createObjectURL(file);
+    });
+
+    // Update avatar in UI
+    const av = document.getElementById('p-av');
+    if (av) {
+      av.innerHTML = `<img src="${b64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>`;
+    }
+    // Update home screen avatar too if it exists
+    const hav = document.getElementById('h-av');
+    if (hav) hav.innerHTML = `<img src="${b64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>`;
+
+    // Save to Firebase
+    const uid = window._fbUser?.uid;
+    if (uid && window.FB) {
+      const { DB, doc, updateDoc } = window.FB;
+      await updateDoc(doc(DB, 'users', uid), { profilePhoto: b64 });
+      if (window._fbUser) window._fbUser.profilePhoto = b64;
+    }
+    showToast('Profile photo updated! 🔥');
+    input.value = '';
+  } catch(e) {
+    showToast('Photo error — try a smaller image');
+    console.log('Profile photo error:', e);
+  }
 }
 
 function updateBWDisplay() {
