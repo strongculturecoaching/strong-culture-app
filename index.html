@@ -1815,6 +1815,10 @@ function showCP(name, el) {
   document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('on'));
   document.getElementById('cp-' + name)?.classList.add('on');
   if (el?.classList) el.classList.add('on');
+  // Re-render sidebar when navigating to messages so clients always show
+  if (name === 'messages') {
+    renderCoachMsgSidebar();
+  }
 }
 
 // ── DASHBOARD ──
@@ -2890,6 +2894,39 @@ function renderCoachMsgSidebar() {
   const sb = document.getElementById('coach-msg-sb');
   if (!sb) return;
 
+  // If CLIENTS is empty, try re-fetching from Firebase directly
+  if (!CLIENTS.length && window.FB) {
+    sb.innerHTML = `<div style="padding:14px;font-size:12px;color:var(--sub);">Loading clients...</div>`;
+    const { DB, collection, getDocs } = window.FB;
+    getDocs(collection(DB, 'users')).then(snap => {
+      const clients = snap.docs
+        .filter(d => String(d.data().role) === 'client')
+        .map(d => {
+          const c = d.data();
+          return {
+            id: d.id, uid: d.id,
+            fn: String(c.fn||'Client'), ln: String(c.ln||''),
+            tier: String(c.tier||'strongstart'), goal: String(c.goal||''),
+            color: String(c.color||'#22c55e'), ciDue: c.ciDue===true||c.ciDue==='true',
+            macros: c.macros||{}, coachMsg: c.coachMsg||'', notes: c.notes||'',
+            email: c.email||'', sess: Number(c.sess)||3,
+            sw: Number(c.sw)||80, cw: Number(c.cw)||80, tw: Number(c.tw)||75,
+            week: Number(c.week)||1, adherence: Number(c.adherence)||0, streak: Number(c.streak)||0,
+            checkins: []
+          };
+        });
+      if (clients.length) {
+        window.CLIENTS = clients;
+        renderCoachMsgSidebar(); // re-render now we have data
+      } else {
+        sb.innerHTML = `<div style="padding:14px;font-size:12px;color:var(--sub);line-height:1.7;">No clients yet.<br/>Add a client to start messaging.</div>`;
+      }
+    }).catch(() => {
+      sb.innerHTML = `<div style="padding:14px;font-size:12px;color:var(--red);">Could not load clients.<br/>Check Firestore rules.</div>`;
+    });
+    return;
+  }
+
   if (!CLIENTS.length) {
     sb.innerHTML = `<div style="padding:14px;font-size:12px;color:var(--sub);line-height:1.7;">No clients yet.<br/>Add a client to start messaging.</div>`;
     return;
@@ -2898,15 +2935,31 @@ function renderCoachMsgSidebar() {
   sb.innerHTML = CLIENTS.map(c => {
     const cuid = String(c.uid || c.id);
     const isActive = cuid === String(currentCoachMsgClient);
-    return `<div class="msg-client ${isActive ? 'on' : ''}"
-      onclick="selectCoachMsgClient('${cuid}')">
+    // Sanitise tier for display — handle any value
+    const tierDisplay = String(c.tier||'').replace(/[-_]/g,' ');
+    return `<div class="msg-client ${isActive ? 'on' : ''}" data-msguid="${cuid}" style="cursor:pointer;">
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <div class="msg-client-name">${c.fn} ${c.ln}</div>
         ${c.ciDue ? '<div style="width:7px;height:7px;background:var(--orange);border-radius:50%;flex-shrink:0;"></div>' : ''}
       </div>
-      <div class="msg-client-preview" style="color:var(--sub);font-size:11px;margin-top:2px;">${c.tier} · ${c.goal||''}</div>
+      <div class="msg-client-preview" style="color:var(--sub);font-size:11px;margin-top:2px;">${tierDisplay}</div>
     </div>`;
   }).join('');
+
+  // Attach click handlers
+  sb.querySelectorAll('.msg-client[data-msguid]').forEach(el => {
+    el.addEventListener('click', () => {
+      const uid = el.getAttribute('data-msguid');
+      selectCoachMsgClient(uid);
+    });
+  });
+
+  // Auto-select first client if none selected
+  if (!currentCoachMsgClient && CLIENTS.length) {
+    const first = CLIENTS[0];
+    currentCoachMsgClient = String(first.uid || first.id);
+    renderCoachMsg(first);
+  }
 }
 
 function selectCoachMsgClient(uid) {
