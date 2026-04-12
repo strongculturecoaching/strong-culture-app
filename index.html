@@ -1900,7 +1900,7 @@ function renderClientGrid(list) {
     return;
   }
   document.getElementById('client-grid').innerHTML = list.map(c => `
-    <div class="cc ${c.tier}" data-uid="${c.uid||c.id}" style="cursor:pointer;">
+    <div class="cc ${(c.tier||'strongstart').replace(/\s+/g,'-')}" data-uid="${c.uid||c.id}" onclick="openClientDetail('${c.uid||c.id}')" style="cursor:pointer;-webkit-tap-highlight-color:rgba(249,115,22,0.2);">
       <div class="cc-top">
         <div class="cc-av" style="background:${c.color||'#22c55e'}">${(c.fn||'?')[0]}${(c.ln||'?')[0]}</div>
         <div>
