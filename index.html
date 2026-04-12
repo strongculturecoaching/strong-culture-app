@@ -986,6 +986,7 @@ button{cursor:pointer;}
   <!-- PRE-BUILT TEMPLATES -->
   <div class="card" style="margin-bottom:14px;">
     <div class="card-lbl">⚡ LOAD A PRE-BUILT PROGRAM</div>
+    <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--orange);text-transform:uppercase;margin-bottom:6px;">🏋️ GYM PROGRAMS</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
       <button class="btn btn-g btn-sm" onclick="wb_loadTemplate('fullbody1')">Full Body 1×/wk</button>
       <button class="btn btn-g btn-sm" onclick="wb_loadTemplate('fullbody2')">Full Body 2×/wk</button>
@@ -996,6 +997,13 @@ button{cursor:pointer;}
       <button class="btn btn-g btn-sm" onclick="wb_loadTemplate('fatloss3')">Fat Loss 3×/wk</button>
       <button class="btn btn-g btn-sm" onclick="wb_loadTemplate('hypertrophy4')">Hypertrophy 4×/wk</button>
       <button class="btn btn-g btn-sm" onclick="wb_loadTemplate('athletic5')">Athletic Performance 5×/wk</button>
+    </div>
+    <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--green);text-transform:uppercase;margin-bottom:6px;">🏠 AT HOME PROGRAMS</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+      <button class="btn btn-g btn-sm" style="border-color:var(--green);color:var(--green);" onclick="wb_loadTemplate('home3')">Home Full Body 3×/wk</button>
+      <button class="btn btn-g btn-sm" style="border-color:var(--green);color:var(--green);" onclick="wb_loadTemplate('home4')">Home Upper/Lower 4×/wk</button>
+      <button class="btn btn-g btn-sm" style="border-color:var(--green);color:var(--green);" onclick="wb_loadTemplate('homebw')">Bodyweight Only 4×/wk</button>
+      <button class="btn btn-g btn-sm" style="border-color:var(--green);color:var(--green);" onclick="wb_loadTemplate('homeband')">Resistance Band 3×/wk</button>
     </div>
     <div id="tmpl-preview" style="font-size:12px;color:var(--sub);font-style:italic;"></div>
   </div>
@@ -1642,18 +1650,88 @@ const DV = {
 };
 
 const EX_LIB = [
-  'Barbell Bench Press','Incline Dumbbell Press','Dumbbell Chest Flys','Chest Fly Machine','Pushups','Diamond Pushups',
-  'Barbell Bent Over Rows','Dumbbell Bent Over Rows','Seated Cable Rows','Lat Pulldown Machine','Pull Ups',
-  'Assisted Pull Up Machine','High Row Machine','Reverse Flys Machine','Face Pulls',
-  'Barbell Military Press','Seated Dumbbell Shoulder Press','Cable Lateral Raise','Overhead Press','Dumbbell Lateral Raise',
+  // ── CHEST ──
+  'Barbell Bench Press','Incline Barbell Bench Press','Decline Barbell Bench Press',
+  'Incline Dumbbell Press','Decline Dumbbell Press','Flat Dumbbell Press',
+  'Dumbbell Chest Flys','Incline Dumbbell Flys','Cable Chest Fly','Pec Dec Machine',
+  'Chest Fly Machine','Chest Press Machine','Pushups','Wide Pushups','Close Grip Pushups',
+  'Diamond Pushups','Archer Pushups','Decline Pushups','Incline Pushups','Pike Pushups',
+  'Explosive Pushups','Spiderman Pushups','Single Arm Pushup Negatives',
+  // ── BACK ──
+  'Barbell Bent Over Rows','Dumbbell Bent Over Rows','Single Arm Dumbbell Row',
+  'Seated Cable Rows','Lat Pulldown Machine','Wide Grip Lat Pulldown',
+  'Close Grip Lat Pulldown','Pull Ups','Chin Ups','Neutral Grip Pull Ups',
+  'Assisted Pull Up Machine','High Row Machine','Low Row Machine',
+  'Reverse Flys Machine','Face Pulls','Straight Arm Pulldown',
+  'Dumbbell Pullover','Barbell Pullover','Meadows Row','Pendlay Row',
+  'T-Bar Row','Inverted Row','Table Row','Doorframe Row','Superman Hold',
+  'Bird Dog','Dead Bug','Back Extension Glute Focus','Hyperextensions',
+  // ── SHOULDERS ──
+  'Barbell Military Press','Seated Dumbbell Shoulder Press','Arnold Press',
+  'Cable Lateral Raise','Dumbbell Lateral Raise','Machine Lateral Raise',
+  'Overhead Press','Front Raise Dumbbell','Front Raise Cable','Rear Delt Flys',
+  'Reverse Pec Dec','Barbell Upright Row','Dumbbell Upright Row',
+  'Landmine Press','Single Arm Cable Press','Behind Neck Press',
+  'Wall Handstand Hold','Pike Pushup Hold','Y-W-T Raises',
+  // ── BICEPS ──
   'Barbell Bicep Curl','Dumbbell Bicep Curl','Hammer Curl','EZ Bar Curl',
-  'Tricep Dips Machine','Tricep Rope Pushdown','Skull Crushers','Close Grip Bench Press',
-  'Barbell Deadlift','Romanian Deadlift','Sumo Deadlift','Hip Thrust Barbell','Hip Thrust Machine','Back Extension Glute Focus',
-  'Barbell Squat','Goblet Squat','Hack Squat Machine','Leg Press High Foot','Leg Press Low Foot',
-  'Seated Leg Extension','Seated Leg Curl','Standing Calf Raise','Seated Calf Raise','Donkey Calf Raise',
-  'Bodyweight Squat','Bodyweight Reverse Lunge','Walking Lunge','Step Ups','Box Jumps',
-  'Kettlebell Swings','Burpees','Mountain Climbers','Stairmaster','Treadmill Jog',
-  'Bicycle Crunches','Crunches','Russian Twists','Laying Leg Raises','Plank','Side Planks',
+  'Preacher Curl','Concentration Curl','Incline Dumbbell Curl',
+  'Cable Curl','Rope Hammer Curl','Reverse Curl','Zottman Curl',
+  'Isometric Towel Curl','Resistance Band Curl','Chin Up Hold',
+  // ── TRICEPS ──
+  'Tricep Dips Machine','Tricep Dips Parallel Bars','Bench Dips',
+  'Tricep Rope Pushdown','Tricep Bar Pushdown','Overhead Tricep Extension',
+  'Skull Crushers','Close Grip Bench Press','JM Press','Kickbacks',
+  'Diamond Pushup Hold','Chair Dips','Wall Pushup Tricep Focus',
+  'Single Arm Overhead Extension','Resistance Band Tricep Pushdown',
+  // ── GLUTES & HAMSTRINGS ──
+  'Barbell Deadlift','Romanian Deadlift','Sumo Deadlift','Trap Bar Deadlift',
+  'Hip Thrust Barbell','Hip Thrust Machine','Dumbbell Hip Thrust',
+  'Single Leg Hip Thrust','Glute Bridge','Single Leg Glute Bridge',
+  'Elevated Single Leg Glute Bridge','Back Extension Glute Focus',
+  'Cable Pull Through','Kettlebell Swings','Good Mornings',
+  'Seated Leg Curl','Lying Leg Curl','Nordic Hamstring Curl',
+  'Swiss Ball Hamstring Curl','Sliding Leg Curl','Reverse Hyperextension',
+  'Donkey Kicks','Fire Hydrants','Clamshells','Lateral Band Walks',
+  'Monster Walks','Frog Pumps','Banded Hip Thrust',
+  // ── QUADS & LEGS ──
+  'Barbell Squat','Front Squat','Hack Squat Machine','Leg Press High Foot',
+  'Leg Press Low Foot','Goblet Squat','Bulgarian Split Squat',
+  'Dumbbell Split Squat','Walking Lunge','Reverse Lunge','Lateral Lunge',
+  'Curtsy Lunge','Step Ups','Box Jumps','Jump Squats','Broad Jumps',
+  'Bodyweight Squat','Sissy Squat','Wall Sit','Terminal Knee Extension',
+  'Seated Leg Extension','Leg Press Single Leg','Cyclist Squat',
+  'Cossack Squat','Pistol Squat Negatives','Assisted Pistol Squat',
+  // ── CALVES ──
+  'Standing Calf Raise','Seated Calf Raise','Donkey Calf Raise',
+  'Single Leg Calf Raise','Smith Machine Calf Raise','Jump Rope',
+  'Calf Raise On Step','Tibia Raise','Banded Calf Raise',
+  // ── CORE & ABS ──
+  'Plank','Side Plank','Long Lever Plank','Plank Up Downs',
+  'Hollow Hold','Hollow Body Rock','V-Sit','L-Sit Hold',
+  'Hanging Knee Raises','Hanging Leg Raises','Toes To Bar',
+  'Bicycle Crunches','Crunches','Reverse Crunches','Cable Crunches',
+  'Russian Twists','Pallof Press','Dead Bug','Bird Dog',
+  'Ab Wheel Rollout','Dragon Flag Negatives','Copenhagen Plank',
+  'Suitcase Carry','Farmers Walk','Single Arm Farmers Carry',
+  'Laying Leg Raises','Flutter Kicks','Scissor Kicks','Mountain Climbers',
+  'Bear Crawl','Inchworm','Windshield Wipers',
+  // ── FULL BODY & CARDIO ──
+  'Burpees','Squat Thrusters','Man Makers','Turkish Get Up',
+  'Clean And Press','Power Clean','Snatch','Push Press',
+  'Box Jumps','Broad Jumps','Lateral Bounds','Depth Drops',
+  'Stairmaster','Treadmill Jog','Rowing Machine','Assault Bike',
+  'Sled Push','Battle Ropes','Medicine Ball Slams',
+  // ── AT HOME / BODYWEIGHT ──
+  'Pushup to Downward Dog','Tricep Extension On Floor','Towel Row',
+  'Table Inverted Row','Chair Step Ups','Couch Squat',
+  'Sofa Arm Dips','Floor Hip Thrust','Heel Elevated Squat',
+  'Single Leg Deadlift Bodyweight','Pulse Squat','Sumo Squat Hold',
+  'Resistance Band Squat','Resistance Band Romanian Deadlift',
+  'Resistance Band Row','Resistance Band Press','Resistance Band Pull Apart',
+  'Resistance Band Face Pull','Resistance Band Lateral Walk',
+  'Backpack Row','Backpack Curl','Backpack Press','Book Press',
+  'Wall Pushup','Towel Bicep Curl','Isometric Wall Sit',
 ];
 
 // Client data store
@@ -1843,6 +1921,19 @@ async function initCoach() {
   wb_setDays(4);
   renderExLib('');
   mb_updateBar();
+
+  // Event delegation on the grid — fires no matter when cards render
+  const grid = document.getElementById('client-grid');
+  if (grid && !grid._hasDelegate) {
+    grid._hasDelegate = true;
+    grid.addEventListener('click', function(e) {
+      const card = e.target.closest('[data-uid]');
+      if (card) {
+        const uid = card.getAttribute('data-uid');
+        if (uid) window.openClientDetail(uid);
+      }
+    });
+  }
 }
 
 function showCP(name, el) {
@@ -2680,7 +2771,7 @@ const WB_TEMPLATES = {
         {n:'Treadmill Jog',s:'1',r:'20min',t:''},
       ]},
       {day:'FRI',focus:'HYPERTROPHY',exercises:[
-        {n:'Incline DB Press',s:'4',r:'10-12',t:'3-0-1'},{n:'Lat Pulldown Machine',s:'4',r:'10-12',t:'2-1-2'},
+        {n:'Incline Dumbbell Press',s:'4',r:'10-12',t:'3-0-1'},{n:'Lat Pulldown Machine',s:'4',r:'10-12',t:'2-1-2'},
         {n:'Leg Press High Foot',s:'4',r:'12',t:'3-0-1'},{n:'Hip Thrust Barbell',s:'3',r:'12',t:'2-2-1'},
         {n:'Cable Lateral Raise',s:'3',r:'15',t:'2-0-2'},
       ]},
@@ -2691,6 +2782,101 @@ const WB_TEMPLATES = {
       ]},
     ],
     desc:'5 days blending strength, hypertrophy and conditioning. Best for athletic clients who want it all.'
+  },
+
+  // ── AT HOME PROGRAMS ──
+  home3: {
+    name:'Home Training — Full Body 3 Sessions/Week', days:[
+      {day:'MON',focus:'FULL BODY A',exercises:[
+        {n:'Pushups',s:'4',r:'12-15',t:'3-0-1'},{n:'Bulgarian Split Squat',s:'3',r:'10',t:'3-0-1'},
+        {n:'Single Arm Dumbbell Row',s:'3',r:'10',t:'2-1-1'},{n:'Glute Bridge',s:'3',r:'15',t:'2-2-1'},
+        {n:'Plank',s:'3',r:'45sec',t:''},{n:'Single Leg Calf Raise',s:'3',r:'15',t:'2-2-3'},
+      ]},
+      {day:'WED',focus:'FULL BODY B',exercises:[
+        {n:'Dumbbell Hip Thrust',s:'4',r:'12',t:'2-2-1'},{n:'Diamond Pushups',s:'3',r:'10-12',t:'3-0-1'},
+        {n:'Goblet Squat',s:'3',r:'15',t:'3-0-1'},{n:'Dumbbell Bent Over Rows',s:'3',r:'12',t:'2-1-1'},
+        {n:'Reverse Crunches',s:'3',r:'15',t:'2-0-1'},{n:'Superman Hold',s:'3',r:'12',t:''},
+      ]},
+      {day:'FRI',focus:'FULL BODY C',exercises:[
+        {n:'Walking Lunge',s:'3',r:'12 each',t:'2-0-1'},{n:'Pike Pushups',s:'3',r:'10-12',t:'3-0-1'},
+        {n:'Single Leg Glute Bridge',s:'3',r:'12 each',t:'2-2-1'},{n:'Inverted Row',s:'3',r:'10',t:'2-1-2'},
+        {n:'Hollow Hold',s:'3',r:'30sec',t:''},{n:'Mountain Climbers',s:'3',r:'20',t:''},
+      ]},
+    ],
+    desc:'3 days full body home training. Dumbbells or bodyweight. Covers all muscle groups efficiently.'
+  },
+
+  home4: {
+    name:'Home Training — Upper/Lower 4 Sessions/Week', days:[
+      {day:'MON',focus:'UPPER A — PUSH',exercises:[
+        {n:'Pushups',s:'4',r:'12-20',t:'3-0-1'},{n:'Pike Pushups',s:'3',r:'10-12',t:'3-0-1'},
+        {n:'Dumbbell Lateral Raise',s:'3',r:'15',t:'2-0-2'},{n:'Diamond Pushups',s:'3',r:'10',t:'3-0-1'},
+        {n:'Single Arm Overhead Extension',s:'3',r:'12',t:'3-0-1'},
+      ]},
+      {day:'TUE',focus:'LOWER A — GLUTES & HAMS',exercises:[
+        {n:'Dumbbell Hip Thrust',s:'4',r:'15',t:'2-2-1'},{n:'Romanian Deadlift',s:'3',r:'10',t:'3-1-1'},
+        {n:'Bulgarian Split Squat',s:'3',r:'10 each',t:'3-0-1'},{n:'Single Leg Glute Bridge',s:'3',r:'12 each',t:'2-2-1'},
+        {n:'Donkey Kicks',s:'3',r:'15 each',t:''},
+      ]},
+      {day:'THU',focus:'UPPER B — PULL',exercises:[
+        {n:'Inverted Row',s:'4',r:'10-12',t:'2-1-2'},{n:'Single Arm Dumbbell Row',s:'3',r:'12',t:'2-1-1'},
+        {n:'Dumbbell Bicep Curl',s:'3',r:'12',t:'2-0-1'},{n:'Hammer Curl',s:'3',r:'12',t:'2-0-1'},
+        {n:'Y-W-T Raises',s:'3',r:'12',t:'2-1-2'},
+      ]},
+      {day:'SAT',focus:'LOWER B — QUADS & CORE',exercises:[
+        {n:'Goblet Squat',s:'4',r:'15',t:'3-0-1'},{n:'Reverse Lunge',s:'3',r:'12 each',t:'2-0-1'},
+        {n:'Step Ups',s:'3',r:'12 each',t:'2-0-1'},{n:'Wall Sit',s:'3',r:'45sec',t:''},
+        {n:'Dead Bug',s:'3',r:'10 each',t:''},{n:'Single Leg Calf Raise',s:'3',r:'15',t:'2-2-3'},
+      ]},
+    ],
+    desc:'4 day upper/lower split at home. Dumbbells helpful but mostly bodyweight. Great for travel or home gym clients.'
+  },
+
+  homebw: {
+    name:'Bodyweight Only — 4 Sessions/Week', days:[
+      {day:'MON',focus:'PUSH & CORE',exercises:[
+        {n:'Pushups',s:'4',r:'15-20',t:'3-0-1'},{n:'Pike Pushups',s:'3',r:'12',t:'3-0-1'},
+        {n:'Diamond Pushups',s:'3',r:'10',t:'3-0-1'},{n:'Plank',s:'3',r:'60sec',t:''},
+        {n:'Hollow Hold',s:'3',r:'30sec',t:''},{n:'Mountain Climbers',s:'3',r:'20',t:''},
+      ]},
+      {day:'TUE',focus:'LOWER — GLUTES & LEGS',exercises:[
+        {n:'Bodyweight Squat',s:'4',r:'20',t:'3-0-1'},{n:'Glute Bridge',s:'4',r:'20',t:'2-2-1'},
+        {n:'Reverse Lunge',s:'3',r:'12 each',t:'2-0-1'},{n:'Single Leg Glute Bridge',s:'3',r:'15 each',t:'2-2-1'},
+        {n:'Donkey Kicks',s:'3',r:'20 each',t:''},{n:'Clamshells',s:'3',r:'20 each',t:''},
+      ]},
+      {day:'THU',focus:'PULL & BACK',exercises:[
+        {n:'Inverted Row',s:'4',r:'10-12',t:'2-1-2'},{n:'Superman Hold',s:'3',r:'12',t:''},
+        {n:'Bird Dog',s:'3',r:'10 each',t:''},{n:'Reverse Crunches',s:'3',r:'15',t:''},
+        {n:'Side Plank',s:'3',r:'30sec each',t:''},{n:'Dead Bug',s:'3',r:'10 each',t:''},
+      ]},
+      {day:'SAT',focus:'FULL BODY CIRCUIT',exercises:[
+        {n:'Burpees',s:'4',r:'10',t:''},{n:'Jump Squats',s:'3',r:'15',t:''},
+        {n:'Explosive Pushups',s:'3',r:'8',t:''},{n:'Mountain Climbers',s:'3',r:'20',t:''},
+        {n:'Squat Thrusters',s:'3',r:'12',t:''},{n:'Hollow Body Rock',s:'3',r:'15',t:''},
+      ]},
+    ],
+    desc:'Zero equipment needed. Pure bodyweight. Great for travel, beginners, or as a secondary program.'
+  },
+
+  homeband: {
+    name:'Resistance Band Training — 3 Sessions/Week', days:[
+      {day:'MON',focus:'UPPER BODY',exercises:[
+        {n:'Resistance Band Press',s:'4',r:'15',t:'3-0-1'},{n:'Resistance Band Row',s:'4',r:'15',t:'2-1-2'},
+        {n:'Resistance Band Curl',s:'3',r:'15',t:'2-0-1'},{n:'Resistance Band Tricep Pushdown',s:'3',r:'15',t:'2-0-1'},
+        {n:'Resistance Band Face Pull',s:'3',r:'15',t:'2-1-2'},{n:'Resistance Band Pull Apart',s:'3',r:'20',t:''},
+      ]},
+      {day:'WED',focus:'LOWER BODY',exercises:[
+        {n:'Resistance Band Squat',s:'4',r:'20',t:'3-0-1'},{n:'Resistance Band Romanian Deadlift',s:'3',r:'15',t:'3-1-1'},
+        {n:'Lateral Band Walks',s:'3',r:'15 each',t:''},{n:'Banded Hip Thrust',s:'4',r:'15',t:'2-2-1'},
+        {n:'Monster Walks',s:'3',r:'15 each',t:''},{n:'Fire Hydrants',s:'3',r:'15 each',t:''},
+      ]},
+      {day:'FRI',focus:'FULL BODY',exercises:[
+        {n:'Resistance Band Press',s:'3',r:'15',t:'3-0-1'},{n:'Resistance Band Squat',s:'3',r:'20',t:'3-0-1'},
+        {n:'Resistance Band Row',s:'3',r:'15',t:'2-1-2'},{n:'Banded Hip Thrust',s:'3',r:'15',t:'2-2-1'},
+        {n:'Resistance Band Curl',s:'3',r:'15',t:'2-0-1'},{n:'Plank',s:'3',r:'45sec',t:''},
+      ]},
+    ],
+    desc:'Resistance bands only. Perfect for travel, beginners, or clients easing back in after a break.'
   },
 };
 
