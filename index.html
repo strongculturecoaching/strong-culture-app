@@ -3403,14 +3403,24 @@ async function addClient() {
 //  CLIENT APP — INIT & NAV
 // ══════════════════════════════════════════════════════
 function initClient() {
-  currentUser = CLIENTS.find(c => c.id === currentClientId) || CLIENTS[0];
+  // Client data comes from Firebase auth profile, not the CLIENTS array
+  currentUser = window._fbUser || CLIENTS.find(c => String(c.uid||c.id) === String(currentClientId)) || CLIENTS[0];
+  if (!currentUser) { console.error('No client user data found'); return; }
+
   const h = new Date().getHours();
-  document.getElementById('h-greeting').textContent = h<12?'GOOD MORNING':h<17?'GOOD AFTERNOON':'GOOD EVENING';
-  document.getElementById('h-name').textContent = currentUser.fn.toUpperCase() + ' ' + currentUser.ln.toUpperCase();
-  document.getElementById('p-av').textContent = currentUser.fn[0] + currentUser.ln[0];
-  document.getElementById('p-name').textContent = currentUser.fn.toUpperCase() + ' ' + currentUser.ln.toUpperCase();
-  document.getElementById('p-tier').textContent = '⚡ ' + currentUser.tier.toUpperCase();
-  document.getElementById('h-coach-msg').textContent = currentUser.coachMsg;
+  const greet = document.getElementById('h-greeting');
+  if (greet) greet.textContent = h<12?'GOOD MORNING':h<17?'GOOD AFTERNOON':'GOOD EVENING';
+
+  const hname = document.getElementById('h-name');
+  if (hname) hname.textContent = (currentUser.fn||'').toUpperCase() + ' ' + (currentUser.ln||'').toUpperCase();
+  const pav = document.getElementById('p-av');
+  if (pav) pav.textContent = (currentUser.fn||'?')[0] + (currentUser.ln||'?')[0];
+  const pname = document.getElementById('p-name');
+  if (pname) pname.textContent = (currentUser.fn||'').toUpperCase() + ' ' + (currentUser.ln||'').toUpperCase();
+  const ptier = document.getElementById('p-tier');
+  if (ptier) ptier.textContent = '⚡ ' + (currentUser.tier||'strongstart').toUpperCase();
+  const hmsg = document.getElementById('h-coach-msg');
+  if (hmsg) hmsg.textContent = currentUser.coachMsg || 'Keep showing up. 💪';
   renderTodayCard();
   // Auto-select today's day in workout
   const todayIdx = Math.min(new Date().getDay() === 0 ? 6 : new Date().getDay() - 1, LIVE_PROGRAM.length - 1);
@@ -3434,6 +3444,23 @@ function initClient() {
   // Load Firebase data
   loadBWLog();
   loadWorkoutHistory();
+  // Load client's program from Firebase
+  if (window.FB && window._fbUser) {
+    const { DB, doc, getDoc } = window.FB;
+    getDoc(doc(DB, 'programs', window._fbUser.uid)).then(snap => {
+      if (snap.exists()) {
+        const prog = snap.data();
+        if (prog.days && prog.days.length) {
+          window.LIVE_PROGRAM = prog.days;
+          const todayIdx2 = Math.min(new Date().getDay()===0?6:new Date().getDay()-1, LIVE_PROGRAM.length-1);
+          currentDay = todayIdx2;
+          renderDayTabs();
+          renderExercises(currentDay);
+          renderTodayCard();
+        }
+      }
+    }).catch(() => {});
+  }
   // Service Worker registration
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
