@@ -1952,10 +1952,27 @@ function filterCC(tier, btn) {
 }
 
 // ── CLIENT DETAIL ──
-async function openClientDetail(uid) {
+// Simple synchronous wrapper — always works on mobile
+window.openClientDetail = function(uid) {
+  if (!uid) return;
+  uid = String(uid);
+  console.log('Opening client:', uid);
+
+  // Navigate to detail panel first
+  showCP('client-detail', null);
+
+  // Show loading immediately
+  const hdr = document.getElementById('cd-header');
+  if (hdr) hdr.innerHTML = `<div class="cd-header"><div class="cd-av" style="background:#a855f7;">...</div><div><div class="cd-name">Loading...</div></div></div>`;
+
+  // Load the data
+  _loadClientDetail(uid);
+};
+
+async function _loadClientDetail(uid) {
   let c = CLIENTS.find(x => String(x.uid||x.id) === String(uid));
 
-  // If not in local array, fetch fresh from Firebase
+  // Fetch fresh from Firebase if not in local array
   if (!c && window.FB) {
     try {
       const { DB, doc, getDoc } = window.FB;
@@ -1980,15 +1997,17 @@ async function openClientDetail(uid) {
           coachMsg: String(d.coachMsg||'Keep showing up. 💪'),
           checkins: []
         };
-        // Only add if not already in array
-        if (!CLIENTS.find(x => String(x.uid||x.id) === String(uid))) {
-          CLIENTS.push(c);
-        }
+        if (!CLIENTS.find(x => String(x.uid||x.id) === String(uid))) CLIENTS.push(c);
       }
     } catch(e) { console.log('Fetch client error:', e); }
   }
 
-  if (!c) { showToast('Client not found — try refreshing the page'); return; }
+  if (!c) {
+    document.getElementById('cd-header').innerHTML = `
+      <div class="cd-header"><div style="color:var(--red);">Client not found. Try refreshing.</div></div>`;
+    return;
+  }
+
   currentDetailId = uid;
   const cid = String(uid);
 
@@ -3872,13 +3891,19 @@ function fileToBase64(file) {
     const canvas = document.createElement('canvas');
     const img = new Image();
     img.onload = () => {
-      const MAX = 800;
+      // Max 400px — keeps base64 well under Firestore's 1MB doc limit
+      const MAX = 400;
       let w = img.width, h = img.height;
-      if (w > h) { if (w > MAX) { h = h*MAX/w; w = MAX; } }
-      else { if (h > MAX) { w = w*MAX/h; h = MAX; } }
+      if (w > h) { if (w > MAX) { h = Math.round(h*MAX/w); w = MAX; } }
+      else { if (h > MAX) { w = Math.round(w*MAX/h); h = MAX; } }
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      resolve(canvas.toDataURL('image/jpeg', 0.7));
+      const b64 = canvas.toDataURL('image/jpeg', 0.5);
+      // Warn if still too big
+      if (b64.length > 900000) {
+        console.warn('Photo may be too large for Firestore:', Math.round(b64.length/1000) + 'KB');
+      }
+      resolve(b64);
     };
     img.onerror = reject;
     img.src = URL.createObjectURL(file);
