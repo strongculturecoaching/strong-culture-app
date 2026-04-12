@@ -145,19 +145,11 @@ onAuthStateChanged(AUTH, async user => {
   }
 });
 
-// ── LOGIN ──
-window.doLogin = async function() {
-  const email = document.getElementById('l-email').value.trim();
-  const pass  = document.getElementById('l-pass').value;
-  const err   = document.getElementById('ls-err');
-  err.style.display = 'none';
-  try {
-    await signInWithEmailAndPassword(AUTH, email, pass);
-    // onAuthStateChanged handles the rest
-  } catch(e) {
-    err.textContent = 'Incorrect email or password';
-    err.style.display = 'block';
-  }
+// ── FIREBASE READY — expose sign-in for main script ──
+window._firebaseReady = true;
+window._fbSignIn = async function(email, pass) {
+  await signInWithEmailAndPassword(AUTH, email, pass);
+  // onAuthStateChanged handles routing to coach/client
 };
 
 // ── LOGOUT ──
@@ -3944,27 +3936,47 @@ function showToast(msg) {
 }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-// ── LOGIN (overridden by Firebase module — this is a fallback) ──
-if (!window.doLogin) {
-  window.doLogin = function() {
-    const pass = document.getElementById('l-pass').value;
-    const err  = document.getElementById('ls-err');
-    if (pass === 'coach123') {
-      err.style.display='none';
-      document.getElementById('login-screen').style.display='none';
-      document.getElementById('coach-app').style.display='block';
-      currentRole='coach'; initCoach();
-    } else if (pass === 'strongculture') {
-      err.style.display='none';
-      document.getElementById('login-screen').style.display='none';
-      document.getElementById('client-app').style.display='block';
-      currentRole='client'; initClient();
-    } else {
-      err.textContent='Incorrect email or password'; err.style.display='block';
+// ── LOGIN — defined immediately so button always works ──
+// Firebase module will override this with real auth when it loads
+window.doLogin = function() {
+  const email = (document.getElementById('l-email')?.value || '').trim().toLowerCase();
+  const pass  = document.getElementById('l-pass')?.value || '';
+  const err   = document.getElementById('ls-err');
+  if (!pass) { if(err){err.textContent='Enter your password';err.style.display='block';} return; }
+
+  // Show loading state
+  const btn = document.querySelector('.ls-btn');
+  if (btn) btn.textContent = 'CONNECTING...';
+  if (err) err.style.display = 'none';
+
+  // Try Firebase first — if loaded
+  if (window._firebaseReady && window._fbSignIn) {
+    window._fbSignIn(email, pass).catch(e => {
+      if (btn) btn.textContent = "LET'S GO →";
+      if (err) { err.textContent = 'Incorrect email or password'; err.style.display = 'block'; }
+    });
+    return;
+  }
+
+  // Firebase not loaded yet — retry for up to 5 seconds
+  let attempts = 0;
+  const retry = setInterval(() => {
+    attempts++;
+    if (window._firebaseReady && window._fbSignIn) {
+      clearInterval(retry);
+      window._fbSignIn(email, pass).catch(e => {
+        if (btn) btn.textContent = "LET'S GO →";
+        if (err) { err.textContent = 'Incorrect email or password'; err.style.display = 'block'; }
+      });
+    } else if (attempts > 10) {
+      clearInterval(retry);
+      if (btn) btn.textContent = "LET'S GO →";
+      if (err) { err.textContent = 'Connection failed — check your internet and try again'; err.style.display = 'block'; }
     }
-  };
-}
-document.getElementById('l-pass').addEventListener('keydown', e => { if(e.key==='Enter') (window.doLogin||doLogin)(); });
+  }, 500);
+};
+
+document.getElementById('l-pass').addEventListener('keydown', e => { if(e.key==='Enter') window.doLogin(); });
 
 // PWA install
 let deferredPrompt;
