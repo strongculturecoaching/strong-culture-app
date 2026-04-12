@@ -44,6 +44,26 @@ function hideSplash() {
   if (s) s.style.display = 'none';
 }
 
+// Show "Sign Out" on splash after 4 seconds in case auto-login is stuck
+setTimeout(() => {
+  const btn = document.getElementById('splash-signout');
+  if (btn && document.getElementById('splash')?.style.display !== 'none') {
+    btn.style.display = 'block';
+  }
+}, 4000);
+
+// Sign out from splash screen
+window.splashSignOut = async function() {
+  try {
+    if (window.FB?.AUTH) await window.FB.AUTH.signOut();
+    else if (window.doLogout) await window.doLogout();
+  } catch(e) {}
+  hideSplash();
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('coach-app').style.display = 'none';
+  document.getElementById('client-app').style.display = 'none';
+};
+
 onAuthStateChanged(AUTH, async user => {
   if (user) {
     try {
@@ -350,7 +370,7 @@ document.getElementById('pwa-manifest').href = URL.createObjectURL(blob);
   --H:'Bebas Neue',sans-serif;--B:'DM Sans',sans-serif;
   --r:14px;--r2:10px;--r3:8px;
 }
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased;touch-action:manipulation;}
 html{height:100%;}
 body{background:var(--black);color:var(--text);font-family:var(--B);height:100%;overflow-x:hidden;}
 ::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-thumb{background:var(--muted);border-radius:2px;}
@@ -833,6 +853,7 @@ button{cursor:pointer;}
     <div style="width:8px;height:8px;background:#f97316;border-radius:50%;animation:pulse 1s .2s infinite;"></div>
     <div style="width:8px;height:8px;background:#f97316;border-radius:50%;animation:pulse 1s .4s infinite;"></div>
   </div>
+  <button id="splash-signout" onclick="splashSignOut()" style="display:none;margin-top:28px;background:transparent;border:1px solid #333;color:#555;padding:8px 20px;border-radius:99px;font-size:12px;letter-spacing:1px;cursor:pointer;">SIGN OUT</button>
   <style>@keyframes pulse{0%,100%{opacity:.2;}50%{opacity:1;}}</style>
 </div>
 
@@ -1815,10 +1836,9 @@ function showCP(name, el) {
   document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('on'));
   document.getElementById('cp-' + name)?.classList.add('on');
   if (el?.classList) el.classList.add('on');
-  // Re-render sidebar when navigating to messages so clients always show
-  if (name === 'messages') {
-    renderCoachMsgSidebar();
-  }
+  // Re-render live data when navigating to these pages
+  if (name === 'messages') renderCoachMsgSidebar();
+  if (name === 'workout-builder' || name === 'macro-builder') populateClientSelects();
 }
 
 // ── DASHBOARD ──
@@ -2404,13 +2424,36 @@ function savePlan() {
 function populateClientSelects() {
   ['prog-client','mb-client'].forEach(sid => {
     const s = document.getElementById(sid);
+    if (!s) return;
+    // Clear existing options except the first placeholder
+    while (s.options.length > 1) s.remove(1);
+    // If no clients, try fetching fresh from Firebase
+    if (!CLIENTS.length && window.FB) {
+      const { DB, collection, getDocs } = window.FB;
+      getDocs(collection(DB, 'users')).then(snap => {
+        snap.docs.filter(d => String(d.data().role) === 'client').forEach(d => {
+          const c = d.data();
+          const o = document.createElement('option');
+          o.value = d.id;
+          o.textContent = String(c.fn||'Client') + ' ' + String(c.ln||'');
+          s.appendChild(o);
+        });
+      }).catch(() => {});
+      return;
+    }
+    // Populate from local CLIENTS array
     CLIENTS.forEach(c => {
-      const o = document.createElement('option'); o.value = c.id; o.textContent = c.fn + ' ' + c.ln; s.appendChild(o);
+      const o = document.createElement('option');
+      o.value = String(c.uid || c.id);
+      o.textContent = c.fn + ' ' + c.ln;
+      s.appendChild(o);
     });
   });
-  // Ex datalist
+  // Ex datalist — only populate once
   const dl = document.getElementById('ex-dl');
-  EX_LIB.forEach(e => { const o = document.createElement('option'); o.value = e; dl.appendChild(o); });
+  if (dl && dl.options.length === 0) {
+    EX_LIB.forEach(e => { const o = document.createElement('option'); o.value = e; dl.appendChild(o); });
+  }
 }
 
 // ── WORKOUT BUILDER ──
@@ -2781,14 +2824,15 @@ function wb_addToDay0(name) {
 // ── MACRO BUILDER ──
 function mb_loadClient(id) {
   if (!id) return;
-  const c = CLIENTS.find(x => x.id == id);
-  document.getElementById('mb-bw').value    = c.cw;
-  document.getElementById('mb-cal').value   = c.macros.cal;
-  document.getElementById('mb-pro').value   = c.macros.pro;
-  document.getElementById('mb-car').value   = c.macros.car;
-  document.getElementById('mb-fat').value   = c.macros.fat;
-  document.getElementById('mb-wat').value   = c.macros.wat;
-  document.getElementById('mb-meals').value = c.macros.meals;
+  const c = CLIENTS.find(x => String(x.uid||x.id) === String(id));
+  if (!c) return;
+  document.getElementById('mb-bw').value    = c.cw || 80;
+  document.getElementById('mb-cal').value   = (c.macros||{}).cal || 2200;
+  document.getElementById('mb-pro').value   = (c.macros||{}).pro || 165;
+  document.getElementById('mb-car').value   = (c.macros||{}).car || 220;
+  document.getElementById('mb-fat').value   = (c.macros||{}).fat || 65;
+  document.getElementById('mb-wat').value   = (c.macros||{}).wat || 3;
+  document.getElementById('mb-meals').value = (c.macros||{}).meals || 4;
   mb_updateBar();
 }
 
@@ -2877,15 +2921,23 @@ function mb_assign() {
 }
 
 function goToMacros(id) {
-  document.getElementById('mb-client').value = id;
-  mb_loadClient(id);
+  populateClientSelects(); // ensure dropdown is populated
+  setTimeout(() => {
+    document.getElementById('mb-client').value = String(id);
+    mb_loadClient(String(id));
+  }, 100);
   showCP('macro-builder', null);
 }
 function goToWorkout(id) {
-  const c = CLIENTS.find(x => x.id === id);
-  document.getElementById('prog-client').value = id;
-  document.getElementById('prog-days').value = c.sess;
-  wb_setDays(c.sess);
+  const c = CLIENTS.find(x => String(x.uid||x.id) === String(id));
+  populateClientSelects(); // ensure dropdown is populated
+  setTimeout(() => {
+    document.getElementById('prog-client').value = String(id);
+    if (c) {
+      document.getElementById('prog-days').value = c.sess || 4;
+      wb_setDays(c.sess || 4);
+    }
+  }, 100);
   showCP('workout-builder', null);
 }
 
