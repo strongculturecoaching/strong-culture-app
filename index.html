@@ -1423,21 +1423,51 @@ button{cursor:pointer;}
           <div class="ci-step">
             <div class="ci-step-lbl">02 — TRAINING</div>
             <div class="ci-step-title">HOW DID YOU TRAIN?</div>
-            <div style="margin-bottom:12px;"><div style="font-size:12px;font-weight:600;margin-bottom:7px;">Workouts completed</div><div class="rating-wrap">${[0,1,2,3,4,5,6,7].map(n=>`<button class="rb" onclick="pickR('wr',this)">${n}</button>`).join('')}</div></div>
-            <div><div style="font-size:12px;font-weight:600;margin-bottom:7px;">Energy levels (1–10)</div><div class="rating-wrap">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<button class="rb" onclick="pickR('er',this)">${n}</button>`).join('')}</div></div>
+            <div style="margin-bottom:12px;">
+              <div style="font-size:12px;font-weight:600;margin-bottom:7px;">Workouts completed</div>
+              <div class="rating-wrap">
+                <button class="rb" onclick="pickR('wr',this)">0</button><button class="rb" onclick="pickR('wr',this)">1</button><button class="rb" onclick="pickR('wr',this)">2</button><button class="rb" onclick="pickR('wr',this)">3</button><button class="rb" onclick="pickR('wr',this)">4</button><button class="rb" onclick="pickR('wr',this)">5</button><button class="rb" onclick="pickR('wr',this)">6</button><button class="rb" onclick="pickR('wr',this)">7</button>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:12px;font-weight:600;margin-bottom:7px;">Energy levels (1–10)</div>
+              <div class="rating-wrap">
+                <button class="rb" onclick="pickR('er',this)">1</button><button class="rb" onclick="pickR('er',this)">2</button><button class="rb" onclick="pickR('er',this)">3</button><button class="rb" onclick="pickR('er',this)">4</button><button class="rb" onclick="pickR('er',this)">5</button><button class="rb" onclick="pickR('er',this)">6</button><button class="rb" onclick="pickR('er',this)">7</button><button class="rb" onclick="pickR('er',this)">8</button><button class="rb" onclick="pickR('er',this)">9</button><button class="rb" onclick="pickR('er',this)">10</button>
+              </div>
+            </div>
           </div>
           <div class="ci-step">
             <div class="ci-step-lbl">03 — LIFESTYLE</div>
             <div class="ci-step-title">NUTRITION & SLEEP</div>
-            <div style="margin-bottom:12px;"><div style="font-size:12px;font-weight:600;margin-bottom:7px;">Nutrition adherence (1–10)</div><div class="rating-wrap">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<button class="rb" onclick="pickR('nr',this)">${n}</button>`).join('')}</div></div>
-            <div style="margin-bottom:12px;"><div style="font-size:12px;font-weight:600;margin-bottom:7px;">Average sleep (hrs/night)</div><div class="rating-wrap">${['4','5','6','7','8','9+'].map(n=>`<button class="rb" onclick="pickR('slr',this)">${n}</button>`).join('')}</div></div>
-            <div><div style="font-size:12px;font-weight:600;margin-bottom:7px;">Stress levels (1–10)</div><div class="rating-wrap">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<button class="rb" onclick="pickR('str',this)">${n}</button>`).join('')}</div></div>
+            <div style="margin-bottom:12px;">
+              <div style="font-size:12px;font-weight:600;margin-bottom:7px;">Nutrition adherence (1–10)</div>
+              <div class="rating-wrap">
+                <button class="rb" onclick="pickR('nr',this)">1</button><button class="rb" onclick="pickR('nr',this)">2</button><button class="rb" onclick="pickR('nr',this)">3</button><button class="rb" onclick="pickR('nr',this)">4</button><button class="rb" onclick="pickR('nr',this)">5</button><button class="rb" onclick="pickR('nr',this)">6</button><button class="rb" onclick="pickR('nr',this)">7</button><button class="rb" onclick="pickR('nr',this)">8</button><button class="rb" onclick="pickR('nr',this)">9</button><button class="rb" onclick="pickR('nr',this)">10</button>
+              </div>
+            </div>
+            <div style="margin-bottom:12px;">
+              <div style="font-size:12px;font-weight:600;margin-bottom:7px;">Average sleep (hrs/night)</div>
+              <div class="rating-wrap">
+                <button class="rb" onclick="pickR('slr',this)">4</button><button class="rb" onclick="pickR('slr',this)">5</button><button class="rb" onclick="pickR('slr',this)">6</button><button class="rb" onclick="pickR('slr',this)">7</button><button class="rb" onclick="pickR('slr',this)">8</button><button class="rb" onclick="pickR('slr',this)">9+</button>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:12px;font-weight:600;margin-bottom:7px;">Stress levels (1–10)</div>
+              <div class="rating-wrap">
+                <button class="rb" onclick="pickR('str',this)">1</button><button class="rb" onclick="pickR('str',this)">2</button><button class="rb" onclick="pickR('str',this)">3</button><button class="rb" onclick="pickR('str',this)">4</button><button class="rb" onclick="pickR('str',this)">5</button><button class="rb" onclick="pickR('str',this)">6</button><button class="rb" onclick="pickR('str',this)">7</button><button class="rb" onclick="pickR('str',this)">8</button><button class="rb" onclick="pickR('str',this)">9</button><button class="rb" onclick="pickR('str',this)">10</button>
+              </div>
+            </div>
           </div>
           <div class="ci-step">
             <div class="ci-step-lbl">04 — WINS & NOTES</div>
             <div class="ci-step-title">CELEBRATE & COMMUNICATE</div>
             <div style="margin-bottom:11px;"><div style="font-size:12px;font-weight:600;margin-bottom:7px;">🏆 Biggest win this week</div><input class="ci-inp" type="text" id="ci-win" placeholder="e.g. New PB on bench!"/></div>
-            <div style="margin-bottom:11px;"><div style="font-size:12px;font-weight:600;margin-bottom:7px;">📋 Workouts you'd like next week</div><div class="rating-wrap">${[1,2,3,4,5,6,7].map(n=>`<button class="rb" onclick="pickR('nw',this)">${n}</button>`).join('')}</div></div>
+            <div style="margin-bottom:11px;">
+              <div style="font-size:12px;font-weight:600;margin-bottom:7px;">📋 Workouts you'd like next week</div>
+              <div class="rating-wrap">
+                <button class="rb" onclick="pickR('nw',this)">1</button><button class="rb" onclick="pickR('nw',this)">2</button><button class="rb" onclick="pickR('nw',this)">3</button><button class="rb" onclick="pickR('nw',this)">4</button><button class="rb" onclick="pickR('nw',this)">5</button><button class="rb" onclick="pickR('nw',this)">6</button><button class="rb" onclick="pickR('nw',this)">7</button>
+              </div>
+            </div>
             <div><div style="font-size:12px;font-weight:600;margin-bottom:7px;">💬 Anything for Antz?</div><textarea class="ci-ta" id="ci-notes" placeholder="Questions, struggles, life stuff..."></textarea></div>
           </div>
 
