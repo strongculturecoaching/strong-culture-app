@@ -1274,18 +1274,30 @@ button{cursor:pointer;}
           <div class="wk-top">
             <div>
               <div class="wk-wk" id="wk-week">WEEK 1</div>
-              <div class="wk-title" id="wk-title">YOUR WORKOUT</div>
-              <div class="wk-meta" id="wk-meta">Tap a day to load exercises</div>
+              <div class="wk-title" id="wk-title">THIS WEEK'S WORKOUTS</div>
+              <div class="wk-meta" id="wk-meta">Complete all before Sunday check-in</div>
             </div>
             <div class="timer-badge"><div class="t-dot run"></div><span id="timer-val">00:00</span></div>
           </div>
         </div>
-        <div class="day-tabs" id="day-tabs"></div>
-        <div id="exercise-list"></div>
+
+        <!-- Workout card list — client picks which to do -->
+        <div id="workout-card-list"></div>
+
+        <!-- Active workout panel — shown when client opens a workout -->
+        <div id="active-workout-panel" style="display:none;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            <button onclick="closeActiveWorkout()" style="background:var(--card2);border:1px solid var(--border);border-radius:var(--r3);color:var(--sub);padding:7px 13px;font-size:13px;cursor:pointer;">← Back</button>
+            <div>
+              <div style="font-family:var(--H);font-size:20px;letter-spacing:1px;" id="active-wk-title">WORKOUT</div>
+              <div style="font-size:11px;color:var(--sub);" id="active-wk-meta"></div>
+            </div>
+          </div>
+          <div id="exercise-list"></div>
+        </div>
       </div>
-      <div class="sticky-log">
-        <button class="btn-big" onclick="logNextSet()">LOG NEXT SET →</button>
-        <button style="flex:0 0 auto;padding:13px 16px;background:#1e1e1e;border:1.5px solid var(--green);color:var(--green);font-size:15px;font-family:var(--H);letter-spacing:1px;border-radius:var(--r2);cursor:pointer;" onclick="finishWorkout()">FINISH ✓</button>
+      <div class="sticky-log" id="workout-complete-bar" style="display:none;">
+        <button class="btn-big" style="background:var(--green);box-shadow:0 5px 22px rgba(34,197,94,.4);" onclick="finishWorkout()">WORKOUT COMPLETE ✓</button>
       </div>
     </div>
 
@@ -1417,7 +1429,6 @@ button{cursor:pointer;}
             <div class="ci-step-title">MEASUREMENTS</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
               <div><div style="font-size:11px;color:var(--sub);margin-bottom:5px;">Weight (kg)</div><input class="ci-inp" type="number" id="ci-weight" placeholder="e.g. 82.5" step="0.1"/></div>
-              <div><div style="font-size:11px;color:var(--sub);margin-bottom:5px;">Waist (cm)</div><input class="ci-inp" type="number" id="ci-waist" placeholder="e.g. 88"/></div>
             </div>
           </div>
           <div class="ci-step">
@@ -1566,13 +1577,6 @@ button{cursor:pointer;}
           <div class="sr"><div class="sr-title">Carbs</div><div class="sr-val" id="pr-car">230g</div></div>
           <div class="sr"><div class="sr-title">Fat</div><div class="sr-val" style="color:var(--red)" id="pr-fat">70g</div></div>
           <div class="sr"><div class="sr-title">Water</div><div class="sr-val" style="color:var(--green)" id="pr-wat">3L</div></div>
-        </div>
-        <div class="card">
-          <div class="card-lbl">ADD TO HOME SCREEN</div>
-          <div style="background:var(--dark);border-radius:var(--r3);padding:11px;font-size:13px;color:#ccc;line-height:1.8;">
-            <strong style="color:var(--orange)">iPhone:</strong> Share button → "Add to Home Screen" → Add<br/>
-            <strong style="color:var(--orange)">Android:</strong> Menu (⋮) → "Add to Home Screen" → Add
-          </div>
         </div>
         <div class="card">
           <div class="card-lbl">ACCOUNT</div>
@@ -3452,16 +3456,9 @@ function initClient() {
   const hmsg = document.getElementById('h-coach-msg');
   if (hmsg) hmsg.textContent = currentUser.coachMsg || 'Keep showing up. 💪';
   renderTodayCard();
-  // Auto-select today's day in workout
-  const todayIdx = Math.min(new Date().getDay() === 0 ? 6 : new Date().getDay() - 1, LIVE_PROGRAM.length - 1);
-  currentDay = todayIdx;
-  renderDayTabs();
-  renderExercises(currentDay);
-  const d = LIVE_PROGRAM[currentDay];
-  if (d) {
-    const wt = document.getElementById('wk-title'); if(wt) wt.textContent = (d.title||d.focus||'Workout').toUpperCase();
-    const wm = document.getElementById('wk-meta');  if(wm) wm.textContent = d.focus + (d.exercises&&d.exercises.length ? ` · ${d.exercises.length} exercises` : ' · Rest day');
-  }
+  // Show workout cards — client picks their own order
+  renderWorkoutCards();
+  renderExercises(0); // pre-load first day's exercises silently
   renderMeals();
   renderClientMsgs();
   renderPBs('all', '');
@@ -3568,23 +3565,82 @@ function updateClientMacroDisplay() {
   const prwat = document.getElementById('pr-wat'); if(prwat) prwat.textContent = `${m.wat}L`;
 }
 
-// ── DAY TABS & EXERCISES ──
-function renderDayTabs() {
-  document.getElementById('day-tabs').innerHTML = LIVE_PROGRAM.map((d,i) => `
-    <div class="dt ${i===currentDay?'on':''} ${logData[i]?.completed?'done':''}" onclick="selectDay(${i})">
-      <div class="dt-name">${d.day}</div>
-      <div class="dt-f">${d.focus}</div>
-    </div>`).join('');
+// ── WORKOUT CARDS — client sees all workouts, picks any order ──
+let activeWorkoutIdx = null;
+
+function renderWorkoutCards() {
+  const container = document.getElementById('workout-card-list');
+  if (!container) return;
+
+  const workouts = LIVE_PROGRAM.filter(d => d.exercises && d.exercises.length > 0);
+
+  if (!workouts.length) {
+    container.innerHTML = `<div class="card" style="text-align:center;padding:28px;">
+      <div style="font-size:40px;margin-bottom:12px;">🏋️</div>
+      <div style="font-family:var(--H);font-size:22px;letter-spacing:2px;margin-bottom:8px;">NO PROGRAM YET</div>
+      <div style="font-size:13px;color:var(--sub);line-height:1.7;">Your coach hasn't pushed a program yet. Check in with Antz!</div>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = workouts.map((d, i) => {
+    const realIdx = LIVE_PROGRAM.indexOf(d);
+    const done = logData[realIdx]?.completed;
+    const setsLogged = Object.values(logData[realIdx]?.sets || {}).filter(s => s.done).length;
+    return `<div class="card" style="margin-bottom:10px;border-left:3px solid ${done ? 'var(--green)' : 'var(--orange)'};cursor:pointer;" onclick="openWorkout(${realIdx})">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div>
+          <div style="font-family:var(--H);font-size:20px;letter-spacing:1px;">${d.title||d.focus}</div>
+          <div style="font-size:12px;color:var(--sub);margin-top:2px;">${d.exercises.length} exercises</div>
+        </div>
+        <div style="text-align:right;">
+          ${done
+            ? `<div style="background:rgba(34,197,94,.15);border:1px solid var(--green);border-radius:99px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--green);letter-spacing:1px;">DONE ✓</div>`
+            : setsLogged > 0
+              ? `<div style="background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.3);border-radius:99px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--orange);">IN PROGRESS</div>`
+              : `<div style="background:var(--card2);border:1px solid var(--border);border-radius:99px;padding:5px 12px;font-size:11px;color:var(--sub);">TAP TO START →</div>`
+          }
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        ${d.exercises.slice(0,4).map(ex => `<div style="background:var(--dark);border-radius:99px;padding:4px 10px;font-size:11px;color:var(--sub);">${ex.name}</div>`).join('')}
+        ${d.exercises.length > 4 ? `<div style="background:var(--dark);border-radius:99px;padding:4px 10px;font-size:11px;color:var(--sub);">+${d.exercises.length - 4} more</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
 }
 
-function selectDay(i) {
-  currentDay = i;
-  renderDayTabs();
-  renderExercises(i);
-  const d = LIVE_PROGRAM[i];
-  document.getElementById('wk-title').textContent = d.title.toUpperCase();
-  document.getElementById('wk-meta').textContent = d.focus + (d.exercises.length ? ` · ${d.exercises.length} exercises` : '');
+function openWorkout(di) {
+  activeWorkoutIdx = di;
+  currentDay = di;
+  const d = LIVE_PROGRAM[di];
+
+  // Hide card list, show active panel
+  document.getElementById('workout-card-list').style.display = 'none';
+  document.getElementById('active-workout-panel').style.display = 'block';
+  document.getElementById('workout-complete-bar').style.display = 'flex';
+
+  // Update header
+  const wt = document.getElementById('wk-title'); if(wt) wt.textContent = (d.title||d.focus).toUpperCase();
+  const wm = document.getElementById('wk-meta'); if(wm) wm.textContent = `${d.exercises.length} exercises · Log your sets then tap complete`;
+  const at = document.getElementById('active-wk-title'); if(at) at.textContent = (d.title||d.focus).toUpperCase();
+  const am = document.getElementById('active-wk-meta'); if(am) am.textContent = `${d.exercises.length} exercises`;
+
+  renderExercises(di);
+  startTimer();
 }
+
+function closeActiveWorkout() {
+  activeWorkoutIdx = null;
+  document.getElementById('workout-card-list').style.display = 'block';
+  document.getElementById('active-workout-panel').style.display = 'none';
+  document.getElementById('workout-complete-bar').style.display = 'none';
+  renderWorkoutCards();
+}
+
+// Keep renderDayTabs as a no-op so existing calls don't crash
+function renderDayTabs() { renderWorkoutCards(); }
+function selectDay(i) { openWorkout(i); }
 
 function renderExercises(di) {
   const day = LIVE_PROGRAM[di];
@@ -4072,6 +4128,10 @@ async function finishWorkout() {
     } catch(e) { console.log('Session save error:', e); }
   }
 
+  // Mark this workout as completed in logData
+  if (!logData[currentDay]) logData[currentDay] = {};
+  logData[currentDay].completed = true;
+
   // Reset timer
   if (timerInt) clearInterval(timerInt);
   timerRunning = false; timerSecs = 0;
@@ -4084,17 +4144,17 @@ async function finishWorkout() {
   modal.innerHTML = `<div style="background:var(--card);border:1px solid var(--border);border-top:3px solid var(--green);border-radius:var(--r);padding:28px;text-align:center;max-width:360px;width:100%;">
     <div style="font-size:52px;margin-bottom:12px;filter:drop-shadow(0 0 14px rgba(34,197,94,.7));">🎉</div>
     <div style="font-family:var(--H);font-size:30px;letter-spacing:2px;color:var(--green);margin-bottom:6px;">WORKOUT DONE!</div>
-    <div style="font-size:14px;color:var(--sub);margin-bottom:20px;">${day.title}</div>
+    <div style="font-size:14px;color:var(--sub);margin-bottom:20px;">${day.title||day.focus}</div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px;">
       <div style="background:var(--dark);border-radius:var(--r2);padding:12px;"><div style="font-family:var(--H);font-size:22px;color:var(--orange)">${durationMins}m</div><div style="font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-top:2px;">Duration</div></div>
       <div style="background:var(--dark);border-radius:var(--r2);padding:12px;"><div style="font-family:var(--H);font-size:22px;color:var(--orange)">${totalSets}</div><div style="font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-top:2px;">Sets</div></div>
       <div style="background:var(--dark);border-radius:var(--r2);padding:12px;"><div style="font-family:var(--H);font-size:22px;color:var(--orange)">${Math.round(totalVolume)}kg</div><div style="font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:1px;margin-top:2px;">Volume</div></div>
     </div>
-    <button onclick="this.closest('div[style]').remove();goTab('progress');switchPTab('bodyweight');" style="width:100%;background:var(--green);border:none;border-radius:var(--r2);color:#000;padding:14px;font-family:var(--H);font-size:20px;letter-spacing:2px;cursor:pointer;">VIEW HISTORY →</button>
-    <button onclick="this.closest('div[style]').remove();" style="width:100%;background:transparent;border:none;color:var(--sub);padding:10px;font-size:13px;cursor:pointer;margin-top:6px;">CLOSE</button>
+    <button onclick="this.closest('div[style]').remove();closeActiveWorkout();" style="width:100%;background:var(--green);border:none;border-radius:var(--r2);color:#000;padding:14px;font-family:var(--H);font-size:20px;letter-spacing:2px;cursor:pointer;">BACK TO WORKOUTS →</button>
+    <button onclick="this.closest('div[style]').remove();goTab('progress');switchPTab('bodyweight');" style="width:100%;background:transparent;border:none;color:var(--sub);padding:10px;font-size:13px;cursor:pointer;margin-top:4px;">View Progress</button>
   </div>`;
   document.body.appendChild(modal);
-  showToast('Session saved! 🔥');
+  showToast('Workout saved! 🔥');
 }
 
 // ── PROGRESS PHOTOS ──
