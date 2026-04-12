@@ -1876,7 +1876,7 @@ function renderClientGrid(list) {
     return;
   }
   document.getElementById('client-grid').innerHTML = list.map(c => `
-    <div class="cc ${c.tier}" onclick="openClientDetail('${c.uid||c.id}')">
+    <div class="cc ${c.tier}" data-uid="${c.uid||c.id}" style="cursor:pointer;">
       <div class="cc-top">
         <div class="cc-av" style="background:${c.color||'#22c55e'}">${(c.fn||'?')[0]}${(c.ln||'?')[0]}</div>
         <div>
@@ -1897,6 +1897,14 @@ function renderClientGrid(list) {
         <div style="font-size:12px;color:var(--orange)">🔥 ${c.streak||0}wk</div>
       </div>
     </div>`).join('');
+
+  // Attach click handlers after rendering
+  document.querySelectorAll('.cc[data-uid]').forEach(card => {
+    card.addEventListener('click', () => {
+      const uid = card.getAttribute('data-uid');
+      openClientDetail(uid);
+    });
+  });
 }
 
 function filterCC(tier, btn) {
@@ -1906,12 +1914,43 @@ function filterCC(tier, btn) {
 }
 
 // ── CLIENT DETAIL ──
-function openClientDetail(uid) {
-  // Support both string UIDs and numeric legacy IDs
-  const c = CLIENTS.find(x => String(x.uid||x.id) === String(uid));
-  if (!c) { showToast('Client not found — try refreshing'); return; }
+async function openClientDetail(uid) {
+  let c = CLIENTS.find(x => String(x.uid||x.id) === String(uid));
+
+  // If not in local array, fetch fresh from Firebase
+  if (!c && window.FB) {
+    try {
+      const { DB, doc, getDoc } = window.FB;
+      const snap = await getDoc(doc(DB, 'users', uid));
+      if (snap.exists()) {
+        const d = snap.data();
+        c = {
+          id: uid, uid,
+          fn: String(d.fn||'Client'), ln: String(d.ln||''),
+          email: String(d.email||''), tier: String(d.tier||'strongstart'),
+          goal: String(d.goal||'General Fitness'), sess: Number(d.sess)||3,
+          sw: Number(d.sw)||80, cw: Number(d.cw)||80, tw: Number(d.tw)||75,
+          week: Number(d.week)||1, adherence: Number(d.adherence)||0,
+          ciDue: d.ciDue===true||d.ciDue==='true',
+          color: String(d.color||'#22c55e'), notes: String(d.notes||'').replace(/`/g,''),
+          streak: Number(d.streak)||0,
+          macros: {
+            cal: Number((d.macros||{}).cal)||2200, pro: Number((d.macros||{}).pro)||165,
+            car: Number((d.macros||{}).car)||220, fat: Number((d.macros||{}).fat)||65,
+            wat: Number((d.macros||{}).wat)||3, meals: Number((d.macros||{}).meals)||4,
+          },
+          coachMsg: String(d.coachMsg||'Keep showing up. 💪'),
+          checkins: []
+        };
+        // Add to local array for future clicks
+        CLIENTS.push(c);
+      }
+    } catch(e) { console.log('Fetch client error:', e); }
+  }
+
+  if (!c) { showToast('Client not found — try refreshing the page'); return; }
   currentDetailId = uid;
-  const cid = String(c.uid || c.id);
+  const cid = String(uid);
 
   // ── HEADER with editable name ──
   document.getElementById('cd-header').innerHTML = `
